@@ -26,12 +26,7 @@ Este archivo registra los cambios significativos y las versiones del proyecto SC
 ### Añadido
 - Integración de gráficos personalizados para el campo (`Estadio2.png`).
 - Sistema de partículas y efectos visuales básicos.
+- Estructura inicial del motor de juego SCAPS (coches y fútbol 2D).
 ### Cambiado
 - Modularización del motor de física y lógica del mundo.
 - Optimización de la carga de assets.
-
-## [0.1.0] - 2026-02-24
-### Añadido
-- Estructura base del proyecto SCAPS.
-- Configuración inicial del servidor Spain Capsules.
-- Prototipo inicial del minijuego de Billar.
