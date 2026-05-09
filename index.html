@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCAPS - Rocket League 2D</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="res/LOGO.png">
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/styles.css?v=6">
+</head>
+
+<body>
+
+    <!-- Intro BRANDING + LEGAL -->
+    <div id="intro-screen">
+        <div id="intro-slide-1" class="intro-slide active">
+            <div class="logo-container">
+                <img src="res/capsules.png" class="intro-logo rotating" alt="SCAPS Logo">
+                <div class="dev-text">Desarrollado por <span style="color:#5ad">En4bLeD_</span></div>
+            </div>
+        </div>
+        <div id="intro-slide-2" class="intro-slide">
+            <div class="legal-box extended">
+                <h3 style="color:#5ad; margin-bottom:15px; letter-spacing:2px;">NOTA DE DESARROLLO</h3>
+                <p>Este proyecto ha sido desarrollado de forma independiente por un único desarrollador, utilizando
+                    tecnologías de <strong>Inteligencia Artificial</strong> de vanguardia para la asistencia en
+                    programación y diseño.</p>
+                <p>Actualmente, el juego se encuentra en una <strong>fase muy temprana de desarrollo</strong>. El
+                    objetivo principal es experimentar con mecánicas de físicas en 2D y conectividad multijugador.</p>
+                <p>Se han tomado ideas, conceptos y mecánicas inspiradas en diversos títulos populares de la industria
+                    para crear esta experiencia. No obstante, cualquier similitud directa con productos comerciales
+                    existentes es meramente <strong>circunstancial y coincidencia absoluta</strong>.</p>
+                <div class="blink-text" style="margin-top:30px;">PULSA <span style="color:#f90">ESPACIO</span> PARA
+                    CONTINUAR</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-wrapper">
+        <canvas id="gameCanvas" width="1600" height="900"></canvas>
+
+        <!-- Menú Principal -->
+        <div id="main-menu" class="hidden">
+            <img src="res/LOGO.png" id="menu-logo" alt="SCAPS LOGO">
+
+            <div id="menu-initial" class="menu-buttons">
+                <button id="btn-play" class="menu-btn primary">Jugar</button>
+                <button id="btn-custom" class="menu-btn">Personalizar</button>
+                <button id="btn-settings" class="menu-btn">Ajustes</button>
+                <button id="btn-credits" class="menu-btn">Créditos</button>
+            </div>
+
+            <!-- Panel de Personalización -->
+            <div id="menu-custom" class="menu-buttons"
+                style="display: none; width: 500px; gap: 15px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; border: 1px solid #5ad;">
+                <h2 style="margin: 0; color: #5ad; text-shadow: 0 0 10px #5ad; font-size: 28px; text-align:center;">
+                    PERSONALIZAR</h2>
+
+                <div class="custom-row"
+                    style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <label>Seleccionar Estadio:</label>
+                    <select id="select-stadium"
+                        style="width:200px; padding:5px; background:#111; color:white; border:1px solid #444;"></select>
+                </div>
+
+                <div class="custom-row"
+                    style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <label>Tu Vehículo:</label>
+                    <select id="select-car-p1"
+                        style="width:200px; padding:5px; background:#111; color:white; border:1px solid #444;">
+                        <option value="res/Car1.png">Deportivo Azul (C1)</option>
+                        <option value="res/Car2.png">Deportivo Rojo (C2)</option>
+                        <option value="res/Car3.png">Deportivo Verde (C3)</option>
+                        <option value="res/Car4.png">Deportivo Amarillo (C4)</option>
+                        <option value="res/Car5.png">Deportivo Púrpura (C5)</option>
+                        <option value="res/Car6.png">Deportivo Blanco (C6)</option>
+                        <option value="res/Car7.png">Deportivo Negro (C7)</option>
+                        <option value="res/Car8.png">Deportivo Naranja (C8)</option>
+                        <option value="res/Car9.png">Deportivo Lima (C9)</option>
+                        <option value="res/Car10.png">Deportivo Rosa (C10)</option>
+                        <option value="">Clásico (Solo Color)</option>
+                    </select>
+                </div>
+
+                <div class="custom-row"
+                    style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <label>Vehículo Oponentes:</label>
+                    <select id="select-car-p2"
+                        style="width:200px; padding:5px; background:#111; color:white; border:1px solid #444;">
+                        <option value="random">Al Azar (Cualquiera)</option>
+                        <option value="res/Car1.png">Deportivo Azul (C1)</option>
+                        <option value="res/Car2.png">Deportivo Rojo (C2)</option>
+                        <option value="res/Car3.png">Deportivo Verde (C3)</option>
+                        <option value="res/Car4.png">Deportivo Amarillo (C4)</option>
+                        <option value="res/Car5.png">Deportivo Púrpura (C5)</option>
+                        <option value="res/Car6.png">Deportivo Blanco (C6)</option>
+                        <option value="res/Car7.png">Deportivo Negro (C7)</option>
+                        <option value="res/Car8.png">Deportivo Naranja (C8)</option>
+                        <option value="res/Car9.png">Deportivo Lima (C9)</option>
+                        <option value="res/Car10.png">Deportivo Rosa (C10)</option>
+                        <option value="">Clásico (Solo Color)</option>
+                    </select>
+                </div>
+
+                <button id="btn-custom-back" class="menu-btn" style="padding: 10px; font-size:18px; margin-top:10px;">←
+                    Volver</button>
+            </div>
+
+            <!-- Panel de Ajustes -->
+            <div id="menu-settings" class="menu-buttons"
+                style="display: none; width: 400px; gap: 15px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; border: 1px solid #f90;">
+                <h2 style="margin: 0; color: #f90; text-shadow: 0 0 10px #f90; font-size: 28px; text-align:center;">
+                    AJUSTES</h2>
+
+                <p style="text-align:center; color:#ccc; font-size:14px;">Configuración de herramientas y juego.</p>
+
+                <button class="menu-btn" onclick="window.open('editor.html','_blank')"
+                    style="font-size:18px; padding:12px; border-color:#f90; color:#f90;">🗺 ABRIR EDITOR DE
+                    MAPAS</button>
+
+                <button id="btn-settings-back" class="menu-btn"
+                    style="padding: 10px; font-size:18px; margin-top:10px;">← Volver</button>
+            </div>
+
+            <!-- Panel de Créditos -->
+            <div id="menu-credits" class="menu-buttons" style="display: none; width: 400px; gap: 8px;">
+                <h2
+                    style="margin: 0 0 6px; color: #f90; text-shadow: 0 0 10px #f90; font-size: 24px; text-align:center;">
+                    CRÉDITOS</h2>
+                <p
+                    style="font-size: 15px; line-height: 1.35; text-align: center; color: #fff; background: rgba(0,0,0,0.5); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin:0;">
+                    Diseñado y desarrollado por<br>
+                    <span style="color: #5ad; font-weight: bold; font-size: 22px;">En4bLeD__</span><br><br>
+                    Creado íntegramente con el potencial de la<br>
+                    <span style="color: #f90; font-weight: bold;">Inteligencia Artificial</span>.<br><br>
+                    <span style="font-size: 12px; opacity: 0.6;">Un experimento de codificación 100% asistida.</span>
+                </p>
+                <button id="btn-credits-back" class="menu-btn" style="padding: 10px; font-size:18px;">← Volver</button>
+            </div>
+
+            <div class="menu-footer">2026 &copy; ANTIGRAVITY ENGINE</div>
+        </div>
+
+        <div id="countdown-overlay">3</div>
+        <div id="goal-text-overlay">¡GOL!</div>
+        <div id="pause-menu"
+            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+            <h2 style="color: #5ad; font-size: 60px; margin-bottom: 40px; text-shadow: 0 0 20px #5ad;">PAUSA</h2>
+            <div class="menu-buttons">
+                <button id="btn-pause-continue" class="menu-btn primary">Continuar</button>
+                <button id="btn-toggle-music-pause" class="menu-btn" style="font-size:16px;">🎵 MÚSICA: ON</button>
+                <button id="btn-pause-restart" class="menu-btn">Reiniciar</button>
+                <button id="btn-pause-exit" class="menu-btn" style="border-color: #f33; color: #f33;">Salir al
+                    Menú</button>
+            </div>
+            <p style="color: rgba(255,255,255,0.4); margin-top: 30px;">Presiona ESC para continuar</p>
+        </div>
+
+        <div id="camera-mode-overlay">CÁMARA LIBRE</div>
+
+        <!-- Tabla de puntuaciones -->
+        <div id="scoreboard-overlay">
+            <!-- El contenido se genera dinámicamente -->
+        </div>
+
+        <div id="match-transition"></div>
+
+        <!-- Editor de Físicas (Debug) -->
+        <div id="physics-editor-panel" class="debug-panel">
+            <div class="debug-header">
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">⚙️</span> ENGINE CONFIGURATION
+                </span>
+                <button id="close-physics-editor">×</button>
+            </div>
+            <div class="debug-content">
+                <div class="debug-scroll">
+                    <div class="debug-section">
+                        <h4>🏎️ DINÁMICA DEL VEHÍCULO</h4>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Aceleración</span>
+                                <span class="control-value" id="val-car-accel">0.15</span>
+                            </div>
+                            <input type="range" id="input-car-accel" min="0.05" max="0.6" step="0.01" value="0.15">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Velocidad Máxima</span>
+                                <span class="control-value" id="val-car-max">7.5</span>
+                            </div>
+                            <input type="range" id="input-car-max" min="3" max="25" step="0.5" value="7.5">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Potencia del Turbo</span>
+                                <span class="control-value" id="val-car-boost">0.35</span>
+                            </div>
+                            <input type="range" id="input-car-boost" min="0.1" max="1.5" step="0.05" value="0.35">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Sensibilidad Giro</span>
+                                <span class="control-value" id="val-car-turn">0.05</span>
+                            </div>
+                            <input type="range" id="input-car-turn" min="0.01" max="0.15" step="0.005" value="0.05">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Fricción de Neumáticos</span>
+                                <span class="control-value" id="val-car-fric">0.985</span>
+                            </div>
+                            <input type="range" id="input-car-fric" min="0.90" max="0.999" step="0.001" value="0.985">
+                        </div>
+                    </div>
+
+                    <div class="debug-section">
+                        <h4>⚽ FÍSICAS DEL BALÓN</h4>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Elasticidad (Rebote)</span>
+                                <span class="control-value" id="val-ball-bounce">0.85</span>
+                            </div>
+                            <input type="range" id="input-ball-bounce" min="0.1" max="1.2" step="0.05" value="0.85">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Fricción Aire/Suelo</span>
+                                <span class="control-value" id="val-ball-fric">0.992</span>
+                            </div>
+                            <input type="range" id="input-ball-fric" min="0.95" max="1.0" step="0.001" value="0.992">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Fuerza de Impacto</span>
+                                <span class="control-value" id="val-ball-hit">1.2</span>
+                            </div>
+                            <input type="range" id="input-ball-hit" min="0.5" max="8.0" step="0.1" value="1.2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="debug-footer">
+                    <button id="btn-copy-physics" class="debug-btn primary">💾 GUARDAR CAMBIOS</button>
+                    <p style="font-size: 10px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 10px;">
+                        Los cambios se aplican en tiempo real al motor de físicas.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="mute-float-btn">🔊</div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js?v=101"></script>
+</body>
+
+</html>

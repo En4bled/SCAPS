@@ -1,0 +1,384 @@
+body {
+    background-color: #000; 
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+#game-wrapper {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: min(100vw - 40px, 1600px, (100vh - 40px) * 16 / 9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.7);
+    width: 100%;
+    height: 100%;
+}
+
+#countdown-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 250px; 
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 20px black;
+    display: none; 
+    z-index: 100;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+#goal-text-overlay {
+    position: absolute;
+    top: 40%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 200px; 
+    font-weight: bold;
+    color: gold; 
+    text-shadow: 0 0 25px black, 0 0 10px yellow; 
+    display: none; 
+    z-index: 110; 
+    animation: goal-pulse 1s ease-out infinite alternate; 
+    font-family: 'Rajdhani', sans-serif;
+}
+
+#camera-mode-overlay {
+    position: absolute;
+    bottom: 20px; 
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8); 
+    text-shadow: 0 0 5px black;
+    display: none; 
+    z-index: 120;
+    padding: 5px 15px;
+    background-color: rgba(0, 0, 0, 0.5); 
+    border-radius: 5px;
+    transition: opacity 0.5s ease-out; 
+}
+
+#scoreboard-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    background-color: rgba(10, 10, 10, 0.85);
+    border: 2px solid #555;
+    border-radius: 15px;
+    z-index: 200;
+    display: none; 
+    flex-direction: column;
+    padding: 10px 20px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    font-size: 24px;
+}
+
+.scoreboard-header {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr;
+    color: #aaa;
+    padding: 10px 15px;
+    border-bottom: 2px solid #444;
+    font-size: 20px;
+}
+
+.scoreboard-header span:not(:first-child), 
+.scoreboard-player span:not(:first-child) {
+    text-align: right;
+}
+
+.scoreboard-team-label {
+    font-size: 32px;
+    font-weight: bold;
+    padding: 15px 10px 5px 10px;
+}
+
+.scoreboard-team-label.blue { color: #5ad; }
+.scoreboard-team-label.orange { color: #f90; }
+
+.scoreboard-player {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr;
+    padding: 12px 15px;
+    border-radius: 5px;
+}
+
+.scoreboard-player.blue { background-color: rgba(85, 170, 221, 0.1); }
+.scoreboard-player.orange { background-color: rgba(255, 153, 0, 0.1); }
+.scoreboard-player:nth-child(even) { 
+    filter: brightness(1.2);
+}
+
+.scoreboard-player span {
+    font-weight: bold;
+    align-self: center;
+}
+
+@keyframes goal-pulse {
+    from { transform: translate(-50%, -50%) scale(1); opacity: 1;}
+    to { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8;}
+}
+
+/* --- INTRO SECUENCE --- */
+#intro-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.intro-slide {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.intro-slide.active { opacity: 1; }
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 80px;
+}
+
+.intro-logo { width: 300px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); }
+.intro-logo.rotating {
+    animation: intro-rotate 10s linear infinite;
+}
+
+@keyframes intro-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.dev-text {
+    font-size: 24px;
+    color: #fff;
+    letter-spacing: 3px;
+    font-weight: bold;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.legal-box.extended {
+    font-size: 16px;
+    color: #eee;
+    letter-spacing: 0.5px;
+    line-height: 1.8;
+    max-width: 800px;
+    background: rgba(255,255,255,0.03);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+.legal-box.extended p { margin-bottom: 20px; }
+
+@keyframes blink { 
+    0%, 100% { opacity: 1; } 
+    50% { opacity: 0.2; } 
+}
+
+.blink-text { 
+    margin-top: 20px; 
+    font-weight: bold; 
+    color: #fff; 
+    animation: blink 2.5s ease-in-out infinite; 
+    font-size: 18px; 
+    letter-spacing: 2px; 
+}
+
+/* --- MENÚ PRINCIPAL --- */
+#main-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('../res/fondo_menu.png') no-repeat center center;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    transition: opacity 1s ease-out;
+}
+
+#main-menu::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+    z-index: -1;
+    transition: all 2s ease-in-out;
+}
+
+#main-menu.blurred::before {
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(10px);
+}
+
+#main-menu.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#menu-logo {
+    width: 500px;
+    margin-bottom: 40px;
+    filter: drop-shadow(0 0 15px rgba(90,173,237,0.5));
+    animation: logo-float 4s ease-in-out infinite;
+}
+
+@keyframes logo-float {
+    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(90,173,237,0.4)); }
+    50% { transform: translateY(-15px) scale(1.03); filter: drop-shadow(0 0 40px rgba(255,153,0,0.6)); }
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 300px;
+}
+
+.menu-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 15px 30px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #5ad;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(85, 170, 221, 0.4);
+    letter-spacing: 2px;
+}
+
+.menu-btn.primary {
+    background: linear-gradient(90deg, rgba(85, 170, 221, 0.2), rgba(255, 153, 0, 0.2));
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-btn.primary:hover {
+    background: linear-gradient(90deg, #5ad, #f90);
+    border-color: white;
+    color: #000;
+}
+
+.menu-footer {
+    position: absolute;
+    bottom: 30px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+}
+
+#mute-float-btn {
+    position: absolute;
+    bottom: 25px;
+    right: 30px;
+    z-index: 1000;
+    font-size: 30px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: 0.3s;
+    user-select: none;
+}
+#mute-float-btn:hover { opacity: 1; transform: scale(1.2); }
+
+#match-transition {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 4000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+#match-transition.active { opacity: 1; }
+
+/* --- DEBUG / PHYSICS EDITOR --- */
+.debug-panel {
+    position: fixed;
+    top: 20px;
+    right: -400px; /* Oculto por defecto */
+    width: 350px;
+    max-height: calc(100vh - 40px);
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(15px);
+    border-left: 3px solid #5ad;
+.debug-panel { 
+    position: fixed; top: 20px; right: 20px; width: 350px; 
+    background: rgba(15, 15, 20, 0.85); 
+    backdrop-filter: blur(20px); 
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; 
+    color: white; z-index: 3000; 
+    display: none; flex-direction: column; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.debug-panel.active { display: flex; transform: scale(1); animation: slideIn 0.4s ease; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
+.debug-header { 
+    padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); 
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 800; font-size: 14px; letter-spacing: 1px; color: #5ad;
+}
+.debug-header button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; opacity: 0.5; transition: 0.2s; }
+.debug-header button:hover { opacity: 1; transform: rotate(90deg); }
+
+.debug-content { padding: 0; display: flex; flex-direction: column; height: 100%; }
+.debug-scroll { padding: 20px; max-height: 60vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #5ad rgba(0,0,0,0.1); }
+.debug-scroll::-webkit-scrollbar { width: 6px; }
+.debug-scroll::-webkit-scrollbar-thumb { background: #5ad; border-radius: 10px; }
+
+.debug-section { margin-bottom: 30px; }
+.debug-section h4 { 
+    transition: 0.3s;
+    margin-top: 10px;
+}
+.debug-btn:hover { background: #5ad; color: black; }

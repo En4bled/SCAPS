@@ -1,0 +1,10 @@
+{
+    "CAR_ACCEL": 0.16,
+    "CAR_MAX_SPEED": 15,
+    "CAR_BOOST_ACCEL": 0.7,
+    "CAR_TURN_SPEED": 0.07,
+    "CAR_FRICTION": 0.966,
+    "BALL_BOUNCINESS": 0.75,
+    "BALL_FRICTION": 0.958,
+    "BALL_HIT_FORCE": 2.9
+}

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SCAPS - Editor Avanzado de Mapa</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0a; color:#eee; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display:flex; height:100vh; overflow:hidden; }
+
+/* Sidebar Mejorada */
+#sidebar { 
+    width:420px; 
+    min-width:420px; 
+    background:#121218; 
+    border-right:1px solid #333; 
+    display:flex; 
+    flex-direction:column; 
+    overflow-y:auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #121218;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+#sidebar.collapsed { width: 0; min-width: 0; border: none; }
+#sidebar::-webkit-scrollbar { width: 6px; }
+#sidebar::-webkit-scrollbar-track { background: #121218; }
+#sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+#sidebar h1 { 
+    background: linear-gradient(135deg, #5ad, #f90); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    text-align: center; 
+    padding: 20px 10px; 
+    font-size: 26px; 
+    border-bottom: 1px solid #222;
+    font-weight: 800;
+}
+
+#sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    left: 420px;
+    transform: translateY(-50%);
+    z-index: 1001;
+    width: 24px;
+    height: 60px;
+    background: #121218;
+    border: 1px solid #444;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #5ad;
+    font-weight: bold;
+}
+#sidebar.collapsed + #sidebar-toggle { left: 0; }
+
+.section { border-bottom:1px solid #222; padding:15px; }
+.section h3 { color:#f90; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+.section h3 span { color:#5ad; font-size:10px; opacity:0.7; }
+
+.row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; }
+.row label { width:110px; color:#999; flex-shrink:0; }
+.row input[type=range] { flex:1; accent-color:#5ad; }
+.row input[type=number] { width:65px; background:#1a1a24; border:1px solid #333; color:#fff; padding:3px 6px; border-radius:4px; font-size:11px; }
+.row input[type=text] { flex:1; background:#1a1a24; border:1px solid #333; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px; }
+.row select { background:#1a1a24; border:1px solid #333; color:#fff; padding:4px; border-radius:4px; font-size:11px; flex:1; }
+.val { width:45px; text-align:right; color:#5ad; font-size:11px; font-weight:bold; }
+
+.btn-group { display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:8px; }
+button { background:#252530; border:1px solid #444; color:#ddd; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+button:hover { background:#303040; border-color:#5ad; color:#fff; }
+button.active { background:#5ad; color:#000; border-color:#fff; }
+button.primary { background:linear-gradient(135deg,#5ad, #48c); color:#fff; border:none; padding:12px; font-size:13px; text-transform:uppercase; letter-spacing:1px; }
+button.primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(90,173,237,0.3); }
+button.danger { border-color:#622; color:#f66; }
+button.danger:hover { background:#411; border-color:#f44; color:#fff; }
+
+#boost-list { max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:6px; padding:4px; margin-bottom:8px; }
+.item { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:11px; margin-bottom:2px; border:1px solid transparent; }
+.item:hover { background:rgba(255,255,255,0.05); }
+.item.selected { background:rgba(90,173,237,0.15); border-color:#5ad; }
+
+#canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:#08080c; overflow:hidden; }
+#mainCanvas { cursor:crosshair; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+#info-bar { position:absolute; bottom:15px; left:20px; background:rgba(18,18,24,0.9); padding:8px 16px; border-radius:8px; font-size:11px; color:#888; border:1px solid #333; }
+#mode-badge { position:absolute; top:20px; left:50%; transform:translateX(-50%); background:rgba(90,173,237,0.9); color:#000; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:800; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display:none; }
+
+/* Overlay Inicial */
+#editor-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: all;
+    backdrop-filter: blur(8px);
+    transition: opacity 0.5s;
+}
+#editor-overlay h2 { color: #f90; font-size: 32px; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 20px rgba(255,153,0,0.5); }
+#editor-overlay .arrow { font-size: 80px; color: #5ad; position: absolute; top: 100px; right: 120px; transform: rotate(-35deg); animation: bounce 1s infinite alternate; }
+@keyframes bounce { from { transform: rotate(-35deg) translateY(0); } to { transform: rotate(-35deg) translateY(-30px); } }
+
+/* Panel Flotante */
+#floating-map-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    background: rgba(18, 18, 24, 0.95);
+    border: 1px solid #444;
+    border-radius: 12px;
+    z-index: 2100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#floating-map-panel.collapsed { width: 45px; height: 45px; border-radius: 50%; }
+#map-panel-header {
+    padding: 12px 15px;
+    background: rgba(255, 153, 0, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+#floating-map-panel.collapsed #map-panel-content { display: none; }
+#floating-map-panel.collapsed #map-panel-header { background: #f90; padding: 0; justify-content: center; height: 45px; border-bottom: none; }
+#floating-map-panel.collapsed #map-panel-header span { display: none; }
+
+#map-list { max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 10px; border: 1px solid #333; }
+.map-item { padding: 10px 15px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; transition: 0.2s; }
+.map-item:hover { background: rgba(90, 173, 237, 0.15); color: #5ad; }
+.map-item.active { border-left: 4px solid #f90; background: rgba(255, 153, 0, 0.05); color: #f90; font-weight: bold; }
+
+.tabs { display:flex; background:#1a1a24; border-radius:8px; padding:3px; margin-bottom:15px; }
+.tab { flex:1; padding:6px; text-align:center; font-size:10px; font-weight:bold; cursor:pointer; border-radius:6px; color:#666; transition:0.2s; }
+.tab.active { background:#252530; color:#5ad; }
+
+.file-input-wrapper { position:relative; flex:1; }
+.file-input-wrapper input[type=file] { position:absolute; left:0; top:0; opacity:0; width:100%; height:100%; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h1 style="line-height: 1.1; margin-top: 10px;">⚽ SCAPS<br><span style="font-size: 0.5em; color: #5ad; letter-spacing: 2px; -webkit-text-fill-color: #5ad;">EDITOR DE MAPAS</span></h1>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="world">MUNDO/FONDO</div>
+    <div class="tab" data-tab="field">CAMPO/POLÍGONO</div>
+    <div class="tab" data-tab="goals">PORTERÍAS</div>
+    <div class="tab" data-tab="entities">SPAWNS/BOOSTS</div>
+  </div>
+
+  <div id="tab-world" class="tab-content">
+    <div class="section">
+        <h3>🖼 Imagen de Estadio</h3>
+        <div class="row">
+            <label>Seleccionar</label>
+            <div class="file-input-wrapper">
+                <button style="width:100%">📁 Abrir Explorador</button>
+                <input type="file" id="bgFile" accept="image/*">
+            </div>
+        </div>
+        <div class="row"><label>Ruta Actual</label><input type="text" id="bgUrl" value=""></div>
+        <div class="row"><label>Escala</label><input type="range" id="bgScaleR" min="0.5" max="3" step="0.001" value="1.0"><input type="number" id="bgScale" step="0.001" style="width:70px"></div>
+        <div class="row"><label>Offset X</label><input type="range" id="bgOXR" min="-1500" max="1500" step="1" value="0"><input type="number" id="bgOX" style="width:70px"></div>
+        <div class="row"><label>Offset Y</label><input type="range" id="bgOYR" min="-1500" max="1500" step="1" value="0"><input type="number" id="bgOY" style="width:70px"></div>
+    </div>
+    <div class="section">
+        <h3>🌍 Dimensiones del Mundo</h3>
+        <div class="row"><label>Ancho (W)</label><input type="range" id="worldWR" min="1000" max="5000" step="10" value="2000"><input type="number" id="worldW" value="2000" style="width:70px"></div>
+        <div class="row"><label>Alto (H)</label><input type="range" id="worldHR" min="1000" max="5000" step="10" value="3000"><input type="number" id="worldH" value="3000" style="width:70px"></div>
+    </div>
+  </div>
+
+  <div id="tab-field" class="tab-content" style="display:none">
+    <div class="section">
+        <h3>📐 Área de Juego Poligonal</h3>
+        <div class="btn-group">
+            <button id="btn-mode-poly" title="Añadir/Mover puntos del polígono">🖋️ Editar Puntos</button>
+            <button id="btn-clear-poly" class="danger">🗑️ Limpiar Todo</button>
+        </div>
+    </div>
+    <div class="section">
+        <h3>📏 Referencia Rectangular</h3>
+        <div class="row"><label>Ancho Ref.</label><input type="number" id="fieldW" value="1600"><input type="range" id="fieldWr" min="500" max="4000" step="10" value="1600"></div>
+        <div class="row"><label>Alto Ref.</label><input type="number" id="fieldH" value="2300"><input type="range" id="fieldHr" min="500" max="4000" step="10" value="2300"></div>
+        <button id="btn-poly-from-rect" style="width:100%; margin-top:5px;">Convertir Rect. a Polígono</button>
+    </div>
+  </div>
+
+  <div id="tab-goals" class="tab-content" style="display:none">
+    <div class="section">
+        <h3>🥅 Portería Superior (Naranja)</h3>
+        <div class="row"><label>X</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"></div>
+        <div class="row"><label>Y (Linea)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"></div>
+        <div class="row"><label>Ancho</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="1000"></div>
+        <div class="row"><label>Fondo</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="500"></div>
+    </div>
+    <div class="section">
+        <h3>🥅 Portería Inferior (Azul)</h3>
+        <div class="row"><label>X</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"></div>
+        <div class="row"><label>Y (Linea)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"></div>
+        <div class="row"><label>Ancho</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="1000"></div>
+        <div class="row"><label>Fondo</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="500"></div>
+    </div>
+  </div>
+
+  <div id="tab-entities" class="tab-content" style="display:none">
+    <div class="section">
+        <h3>🚗 Spawns de Jugadores</h3>
+        <div id="spawn-list" style="margin-bottom:10px;">
+            <div class="item selected" data-idx="0">🔵 Jugador 1</div>
+            <div class="item" data-idx="1">🔵 Jugador 2</div>
+            <div class="item" data-idx="2">🟠 Jugador 3</div>
+            <div class="item" data-idx="3">🟠 Jugador 4</div>
+        </div>
+        <div class="row"><label>Ángulo</label><input type="number" id="spawnA" step="0.1"><input type="range" id="spawnAR" min="0" max="6.28" step="0.01"></div>
+        <button id="btn-mode-spawn" style="width:100%">📍 Reposicionar Seleccionado</button>
+    </div>
+    <div class="section">
+        <h3>⚡ Paneles de Boost</h3>
+        <div id="boost-list"></div>
+        <div class="btn-group">
+            <button id="btn-add-boost-big">➕ BOOST</button>
+            <button id="btn-add-boost-mini">➕ CHAPA</button>
+        </div>
+        <button id="btn-del-boost" class="danger" style="width:100%; margin-top:5px;">🗑 Eliminar Seleccionado</button>
+        <button id="btn-mode-boost" style="width:100%; margin-top:5px;">📍 Mover Seleccionado</button>
+    </div>
+    <div class="section">
+        <h3>⚽ Pelota</h3>
+        <button id="btn-mode-ball" style="width:100%">📍 Posicionar Pelota</button>
+    </div>
+  </div>
+</div>
+
+<button id="sidebar-toggle" title="Plegar/Desplegar Ajustes">◀</button>
+
+<div id="canvas-wrap">
+  <div id="editor-overlay">
+    <div class="arrow">↗</div>
+    <h2>Abre el mapa para editar</h2>
+    <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor o crea uno nuevo</p>
+  </div>
+
+  <canvas id="mainCanvas"></canvas>
+  <div id="info-bar">Cámara: 0, 0 | Zoom: 100% | Sin Servidor</div>
+  <div id="mode-badge">MODO: EDICIÓN DE POLÍGONO</div>
+
+  <div id="floating-map-panel">
+    <div id="map-panel-header" title="Click para plegar/desplegar">
+        <span style="font-weight: 800; font-size: 11px; letter-spacing: 1px;">💾 GESTOR DE MAPAS</span>
+        <span class="toggle-icon">📁</span>
+    </div>
+    <div id="map-panel-content" style="padding: 15px;">
+        <div class="row"><label>Nombre</label><input type="text" id="mapName" placeholder="Nuevo mapa..." style="flex:1; padding:8px; background:#222; border:1px solid #444; color:white; border-radius:4px; font-size: 11px;"></div>
+        <button id="btn-save-json" class="primary" style="width:100%; margin: 10px 0;">💾 GUARDAR MAPA ACTUAL</button>
+        <div style="font-size: 10px; color: #f90; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px;">Tus Mapas:</div>
+        <div id="map-list"></div>
+        <div class="btn-group" style="margin-top:10px; opacity: 0.6;">
+            <button id="btn-reset" class="danger" style="font-size:9px;">Nuevo / Vaciar</button>
+            <button id="btn-export-js" style="font-size:9px;">Descargar JS</button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as CONST from './js/core/constants.js';
+
+const DEFAULTS = {
+    bgUrl: '', bgScale: 1.0, bgOX: 0, bgOY: 0,
+    worldW: 2000, worldH: 3000,
+    poly: [],
+    goals: {
+        top: { x: 1000, y: 300, w: 300, d: 100 },
+        bottom: { x: 1000, y: 2700, w: 300, d: 100 }
+    },
+    spawns: [
+        { x: 1000, y: 2500, a: 0 }, { x: 500, y: 2500, a: 0 },
+        { x: 1000, y: 500, a: Math.PI }, { x: 1500, y: 500, a: Math.PI }
+    ],
+    boosts: [],
+    ball: { x: 1000, y: 1500 },
+    zoom: 0.2,
+    mode: 'none',
+    selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1,
+    isDragging: false, dragType: null, // 'spawn', 'boost', 'ball', 'poly'
+    panX: 0, panY: 0, isPanning: false, lastMouse: { x: 0, y: 0 },
+    isLoaded: false
+};
+
+let S = JSON.parse(JSON.stringify(DEFAULTS));
+
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+const infoBar = document.getElementById('info-bar');
+const overlay = document.getElementById('editor-overlay');
+const bgImg = new Image();
+const ballImg = new Image(); ballImg.src = 'res/Ball1.png';
+
+function syncUI() {
+    document.getElementById('worldW').value = S.worldW; document.getElementById('worldWR').value = S.worldW;
+    document.getElementById('worldH').value = S.worldH; document.getElementById('worldHR').value = S.worldH;
+    document.getElementById('bgUrl').value = S.bgUrl;
+    document.getElementById('bgScale').value = S.bgScale; document.getElementById('bgScaleR').value = S.bgScale;
+    document.getElementById('bgOX').value = S.bgOX; document.getElementById('bgOXR').value = S.bgOX;
+    document.getElementById('bgOY').value = S.bgOY; document.getElementById('bgOYR').value = S.bgOY;
+    const syncGoal = (prefix, data) => {
+        document.getElementById(prefix+'X').value = data.x; document.getElementById(prefix+'XR').value = data.x;
+        document.getElementById(prefix+'Y').value = data.y; document.getElementById(prefix+'YR').value = data.y;
+        document.getElementById(prefix+'W').value = data.w; document.getElementById(prefix+'WR').value = data.w;
+        document.getElementById(prefix+'D').value = data.d; document.getElementById(prefix+'DR').value = data.d;
+    };
+    syncGoal('goalT', S.goals.top); syncGoal('goalB', S.goals.bottom);
+    if (S.selectedSpawn >= 0 && S.spawns[S.selectedSpawn]) {
+        document.getElementById('spawnA').value = S.spawns[S.selectedSpawn].a; 
+        document.getElementById('spawnAR').value = S.spawns[S.selectedSpawn].a;
+    }
+}
+
+function render() {
+    if (!canvas.width) return;
+    ctx.fillStyle = '#0f0f14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!S.isLoaded) { overlay.style.display = 'flex'; return; }
+    overlay.style.display = 'none';
+
+    ctx.save();
+    ctx.translate(S.panX, S.panY);
+    
+    // Si no hay zoom definido o es muy pequeño, calculamos uno inicial para que encaje
+    if (S.zoom <= 0.05) {
+        S.zoom = Math.min(canvas.width / (S.worldW * 1.1), canvas.height / (S.worldH * 1.1));
+        S.panX = 0; S.panY = 0;
+    }
+
+    const z = S.zoom, ox = (canvas.width - S.worldW * z) / 2, oy = (canvas.height - S.worldH * z) / 2;
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(z, z);
+
+    if (bgImg.complete && bgImg.naturalWidth > 0 && S.bgUrl) {
+        const iw = S.worldW * S.bgScale, ih = S.worldH * S.bgScale;
+        ctx.drawImage(bgImg, (S.worldW - iw)/2 + S.bgOX, (S.worldH - ih)/2 + S.bgOY, iw, ih);
+    }
+
+    if (S.poly.length > 1) {
+        ctx.beginPath(); ctx.moveTo(S.poly[0].x, S.poly[0].y);
+        for(let i=1; i<S.poly.length; i++) ctx.lineTo(S.poly[i].x, S.poly[i].y);
+        ctx.closePath(); ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; ctx.lineWidth = 15; ctx.lineJoin = 'round'; ctx.stroke();
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.05)'; ctx.fill();
+        if (S.mode === 'poly') {
+            S.poly.forEach((p, i) => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, i === S.selectedPoint ? 25 : 15, 0, Math.PI*2);
+                ctx.fillStyle = i === S.selectedPoint ? '#fff' : '#5ad'; ctx.fill();
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
+            });
+        }
+    }
+
+    const drawGoal = (g, color) => {
+        ctx.save(); ctx.translate(g.x, g.y); ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
+        const topY = g.y < S.worldH / 2 ? -g.d : 0;
+        ctx.fillRect(-g.w/2, topY, g.w, g.d); ctx.strokeRect(-g.w/2, topY, g.w, g.d);
+        ctx.beginPath(); ctx.moveTo(-g.w/2, 0); ctx.lineTo(g.w/2, 0); ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
+        ctx.restore();
+    };
+    drawGoal(S.goals.top, '#f90'); drawGoal(S.goals.bottom, '#5ad');
+
+    S.spawns.forEach((sp, i) => {
+        ctx.save(); ctx.translate(sp.x, sp.y); ctx.rotate(sp.a);
+        const sel = S.mode === 'spawn' && S.selectedSpawn === i, color = i < 2 ? '#5ad' : '#f90';
+        ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(-25, -40, 50, 80, 10); ctx.fill();
+        if (sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 10; ctx.stroke(); }
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(15, -30); ctx.lineTo(-15, -30); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center'; ctx.shadowBlur = 4; ctx.shadowColor = 'black';
+        ctx.fillText("JUGADOR "+(i+1), sp.x, sp.y + 65); ctx.shadowBlur = 0;
+    });
+
+    S.boosts.forEach((b, i) => {
+        const r = b.big ? 60 : 35, sel = S.mode === 'boost' && S.selectedBoost === i;
+        ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI*2);
+        ctx.fillStyle = b.big ? 'rgba(255,180,0,0.4)' : 'rgba(90,173,237,0.4)'; ctx.fill();
+        ctx.strokeStyle = sel ? '#fff' : (b.big ? '#f90' : '#5ad'); ctx.lineWidth = sel ? 10 : 3; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(b.big ? "BOOST" : "CHAPA", b.x, b.y + r + 20);
+    });
+
+    ctx.save(); ctx.translate(S.ball.x, S.ball.y);
+    if (S.mode === 'ball') { ctx.beginPath(); ctx.arc(0, 0, 75, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke(); }
+    if (ballImg.complete) { ctx.drawImage(ballImg, -55, -55, 110, 110); }
+    ctx.font = 'bold 18px monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText("BALON", 0, 75);
+    ctx.restore();
+
+    ctx.restore(); ctx.restore();
+}
+
+function canvasToWorld(cx, cy) {
+    const W = canvas.width, H = canvas.height, z = S.zoom;
+    const ox = (W - S.worldW * z) / 2, oy = (H - S.worldH * z) / 2;
+    return { x: Math.round((cx - ox - S.panX) / z), y: Math.round((cy - oy - S.panY) / z) };
+}
+
+canvas.addEventListener('mousedown', e => {
+    if (!S.isLoaded) return;
+    const r = canvas.getBoundingClientRect(), wp = canvasToWorld(e.clientX - r.left, e.clientY - r.top);
+    
+    if (e.button === 1 || e.button === 2) { S.isPanning = true; S.lastMouse = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; return; }
+    if (e.button !== 0) return;
+
+    let hit = false;
+
+    // 1. Prioridad: Polígono (Puntos)
+    if (S.mode === 'poly') {
+        let foundPoint = -1;
+        S.poly.forEach((p, i) => { if (Math.sqrt((p.x-wp.x)**2 + (p.y-wp.y)**2) < 30 / S.zoom) foundPoint = i; });
+        if (foundPoint !== -1) {
+            S.selectedPoint = foundPoint; S.isDragging = true; S.dragType = 'poly'; hit = true;
+        } else {
+            // Si no tocamos punto pero estamos en modo poly, añadimos uno nuevo
+            S.poly.push(wp); S.selectedPoint = S.poly.length - 1; S.isDragging = true; S.dragType = 'poly'; hit = true;
+        }
+    }
+
+    // 2. Spawns
+    if (!hit) {
+        S.spawns.forEach((sp, i) => {
+            if (Math.sqrt((sp.x-wp.x)**2 + (sp.y-wp.y)**2) < 60) {
+                S.mode = 'spawn'; S.selectedSpawn = i; S.isDragging = true; S.dragType = 'spawn'; hit = true;
+                renderSpawnList(); switchTab('entities');
+            }
+        });
+    }
+
+    // 3. Boosts
+    if (!hit) {
+        S.boosts.forEach((b, i) => {
+            const radius = b.big ? 60 : 35;
+            if (Math.sqrt((b.x-wp.x)**2 + (b.y-wp.y)**2) < radius) {
+                S.mode = 'boost'; S.selectedBoost = i; S.isDragging = true; S.dragType = 'boost'; hit = true;
+                renderBoostList(); switchTab('entities');
+            }
+        });
+    }
+
+    // 4. Balón
+    if (!hit) {
+        if (Math.sqrt((S.ball.x-wp.x)**2 + (S.ball.y-wp.y)**2) < 55) {
+            S.mode = 'ball'; S.isDragging = true; S.dragType = 'ball'; hit = true;
+            switchTab('entities');
+        }
+    }
+
+    // 5. Click en vacío: Deseleccionar
+    if (!hit) {
+        S.mode = 'none';
+        S.selectedSpawn = -1;
+        S.selectedBoost = -1;
+        S.selectedPoint = -1;
+        S.isDragging = false;
+        S.dragType = null;
+        renderSpawnList(); renderBoostList();
+    }
+
+    render();
+});
+
+canvas.addEventListener('contextmenu', e => { e.preventDefault(); });
+canvas.addEventListener('mousemove', e => {
+    if (!S.isLoaded) return;
+    if (S.isPanning) { const dx = e.clientX - S.lastMouse.x, dy = e.clientY - S.lastMouse.y; S.panX += dx; S.panY += dy; S.lastMouse = { x: e.clientX, y: e.clientY }; render(); return; }
+    const r = canvas.getBoundingClientRect(), wp = canvasToWorld(e.clientX - r.left, e.clientY - r.top);
+    infoBar.textContent = `Mundo: ${wp.x}, ${wp.y} | Zoom: ${Math.round(S.zoom*100)}% | Modo: ${S.mode}`;
+    
+    if (S.isDragging) {
+        if (S.dragType === 'poly' && S.selectedPoint !== -1) { S.poly[S.selectedPoint].x = wp.x; S.poly[S.selectedPoint].y = wp.y; }
+        else if (S.dragType === 'spawn' && S.selectedSpawn !== -1) { S.spawns[S.selectedSpawn].x = wp.x; S.spawns[S.selectedSpawn].y = wp.y; }
+        else if (S.dragType === 'boost' && S.selectedBoost !== -1) { S.boosts[S.selectedBoost].x = wp.x; S.boosts[S.selectedBoost].y = wp.y; }
+        else if (S.dragType === 'ball') { S.ball.x = wp.x; S.ball.y = wp.y; }
+        render();
+    }
+});
+window.addEventListener('mouseup', () => { S.isPanning = false; S.isDragging = false; S.dragType = null; canvas.style.cursor = 'default'; });
+canvas.addEventListener('wheel', e => { e.preventDefault(); if (e.deltaY < 0) S.zoom *= 1.1; else S.zoom /= 1.1; S.zoom = Math.max(0.05, Math.min(S.zoom, 5)); render(); }, { passive: false });
+
+function toggleSidebar(forceOpen = false) {
+    const sb = document.getElementById('sidebar'), btn = document.getElementById('sidebar-toggle');
+    if (forceOpen) { sb.classList.remove('collapsed'); btn.innerText = '◀'; } else { sb.classList.toggle('collapsed'); btn.innerText = sb.classList.contains('collapsed') ? '▶' : '◀'; }
+}
+function switchTab(t) { toggleSidebar(true); document.querySelectorAll('.tab').forEach(x => { if (x.dataset.tab === t) { x.classList.add('active'); document.getElementById('tab-' + t).style.display = 'block'; } else { x.classList.remove('active'); const other = x.dataset.tab; if(document.getElementById('tab-' + other)) document.getElementById('tab-' + other).style.display = 'none'; } }); }
+
+document.getElementById('sidebar-toggle').onclick = () => toggleSidebar();
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+document.getElementById('map-panel-header').onclick = () => document.getElementById('floating-map-panel').classList.toggle('collapsed');
+
+document.getElementById('bgFile').onchange = e => {
+    const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = ev => { S.bgUrl = ev.target.result; bgImg.src = S.bgUrl; document.getElementById('bgUrl').value = "Imagen Cargada"; render(); }; reader.readAsDataURL(file); }
+};
+
+function renderSpawnList() { document.querySelectorAll('#spawn-list .item').forEach((it, i) => { it.classList.toggle('selected', i === S.selectedSpawn); it.onclick = () => { S.selectedSpawn = i; renderSpawnList(); syncUI(); render(); }; }); }
+function renderBoostList() { const list = document.getElementById('boost-list'); list.innerHTML = ''; S.boosts.forEach((b, i) => { const div = document.createElement('div'); div.className = 'item' + (i === S.selectedBoost ? ' selected' : ''); div.innerHTML = `<span style="color:${b.big?'#f90':'#5ad'}">${b.big?'⚡':'·'}</span> ${b.big?'BOOST':'CHAPA'} ${i}`; div.onclick = () => { S.selectedBoost = i; renderBoostList(); render(); }; list.appendChild(div); }); }
+
+const bindS = (id, key, target) => {
+    const elNum = document.getElementById(id), elRange = document.getElementById(id + 'R');
+    const update = (val) => { val = parseFloat(val); if (isNaN(val)) return; if (target) target[key] = val; else S[key] = val; render(); };
+    if (elNum) elNum.oninput = (e) => update(e.target.value); if (elRange) elRange.oninput = (e) => update(e.target.value);
+};
+bindS('bgScale', 'bgScale'); bindS('bgOX', 'bgOX'); bindS('bgOY', 'bgOY'); bindS('worldW', 'worldW'); bindS('worldH', 'worldH');
+['goalT','goalB'].forEach(p => { const target = p==='goalT'?S.goals.top:S.goals.bottom; ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), target)); });
+
+document.getElementById('spawnA').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
+document.getElementById('spawnAR').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
+['poly','spawn','boost','ball'].forEach(m => document.getElementById('btn-mode-'+m).onclick = () => { S.mode = m; render(); });
+document.getElementById('btn-clear-poly').onclick = () => { S.poly = []; render(); };
+document.getElementById('btn-poly-from-rect').onclick = () => { const fw = +document.getElementById('fieldW').value, fh = +document.getElementById('fieldH').value, fx = (S.worldW-fw)/2, fy = (S.worldH-fh)/2; S.poly = [{x:fx, y:fy}, {x:fx+fw, y:fy}, {x:fx+fw, y:fy+fh}, {x:fx, y:fy+fh}]; render(); };
+document.getElementById('btn-add-boost-big').onclick = () => { S.boosts.push({x:S.worldW/2, y:S.worldH/2, big:true}); S.selectedBoost = S.boosts.length-1; renderBoostList(); render(); };
+document.getElementById('btn-add-boost-mini').onclick = () => { S.boosts.push({x:S.worldW/2, y:S.worldH/2, big:false}); S.selectedBoost = S.boosts.length-1; renderBoostList(); render(); };
+document.getElementById('btn-del-boost').onclick = () => { if(S.selectedBoost !== -1) { S.boosts.splice(S.selectedBoost, 1); S.selectedBoost = -1; renderBoostList(); render(); } };
+document.getElementById('btn-reset').onclick = () => { S = JSON.parse(JSON.stringify(DEFAULTS)); S.isLoaded = true; bgImg.src = ''; syncUI(); renderBoostList(); render(); };
+
+document.getElementById('btn-save-json').onclick = async () => {
+    const ni = document.getElementById('mapName'), n = ni.value.trim(), b = document.getElementById('btn-save-json');
+    if (!n) { alert("Nombre requerido"); ni.focus(); return; }
+    
+    // Limpiamos el objeto S para guardar solo lo necesario
+    const configToSave = {
+        bgUrl: S.bgUrl,
+        bgScale: S.bgScale,
+        bgOX: S.bgOX,
+        bgOY: S.bgOY,
+        worldW: S.worldW,
+        worldH: S.worldH,
+        poly: S.poly,
+        goals: S.goals,
+        spawns: S.spawns,
+        boosts: S.boosts,
+        ball: S.ball
+    };
+
+    b.innerHTML = '⏳...'; b.disabled = true;
+    try { 
+        const res = await (await fetch('save_map.php', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ name: n, config: configToSave }) 
+        })).json(); 
+        
+        if (res.status === 'success') { 
+            b.innerHTML = '✅ OK'; 
+            loadMapList(); 
+            setTimeout(() => { b.innerHTML = '💾 GUARDAR MAPA ACTUAL'; b.disabled = false; }, 2000); 
+        } else { 
+            b.innerHTML = '❌ ERROR'; b.disabled = false; 
+        } 
+    } catch(e) { b.innerHTML = '❌ ERROR'; b.disabled = false; }
+};
+
+const loadMapList = async () => {
+    const list = document.getElementById('map-list');
+    try {
+        const maps = await (await fetch('get_maps.php')).json();
+        list.innerHTML = '';
+        maps.forEach(m => {
+            const div = document.createElement('div'); div.className = 'map-item'; div.innerHTML = `<span>${m.toUpperCase()}</span> <span>📂</span>`;
+            div.onclick = async () => {
+                const config = await (await fetch(`maps/${m}.json`)).json();
+                // Merge con DEFAULTS para asegurar que no faltan propiedades de estado del editor
+                S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), config);
+                S.isLoaded = true; 
+                S.zoom = 0; // Forzamos recálculo de zoom en el siguiente render
+                document.getElementById('mapName').value = m;
+                bgImg.src = S.bgUrl; syncUI(); renderBoostList(); render();
+            };
+            list.appendChild(div);
+        });
+    } catch(e) {}
+};
+
+document.getElementById('btn-export-js').onclick = () => {
+    const boostArr = JSON.stringify(S.boosts.map(b=>({x:b.x, y:b.y, isBig:b.big})), null, 4);
+    const code = `export const WORLD_W = ${S.worldW}; export const WORLD_H = ${S.worldH}; export const FIELD_POLYGON = ${JSON.stringify(S.poly)}; export const GOAL_TOP = ${JSON.stringify(S.goals.top)}; export const GOAL_BOTTOM = ${JSON.stringify(S.goals.bottom)}; export const SPAWN_POINTS = ${JSON.stringify(S.spawns)}; export const BOOST_POSITIONS = ${boostArr};`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([code], {type:'text/javascript'})); a.download = 'constants.js'; a.click();
+};
+
+loadMapList();
+window.addEventListener('resize', () => { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render(); });
+canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Archivos temporales de Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Archivos de configuración de editores
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# Logs de XAMPP / Apache si estuvieran aquí
+*.log
+
+# Si en el futuro usas npm
+node_modules/
+
+# Archivos de respaldo o versiones viejas si no quieres subirlos
+"PRIMERAS VERSIONES/"
