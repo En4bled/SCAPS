@@ -89,17 +89,9 @@ async function init() {
         }
 
         window.addEventListener('keydown', (e) => {
-            // Manejo de la Intro
-            if (introPhase === 2 && e.code === 'Space') {
-                introPhase = 3;
-                const introScreen = getEl('intro-screen');
-                if (introScreen) introScreen.style.display = 'none';
-                
-                if (mainMenuEl) {
-                    mainMenuEl.classList.remove('hidden');
-                    mainMenuEl.style.display = 'flex';
-                }
-                showMenuScreen('initial');
+            // Manejo de la Intro (Salto suave al menú)
+            if (introPhase < 3 && e.code === 'Space') {
+                transitionToPhase(3);
                 return;
             }
 
@@ -289,22 +281,63 @@ function applySpawns() { allCars.forEach((car, i) => { const sp = CONST.SPAWN_PO
 
 function startIntro() {
     introPhase = 1;
-    const introScreen = document.getElementById('intro-screen');
     const slide1 = document.getElementById('intro-slide-1');
-    const slide2 = document.getElementById('intro-slide-2');
+    const introScreen = document.getElementById('intro-screen');
     
     if (introScreen) introScreen.style.display = 'flex';
-    if (slide1) slide1.classList.add('active');
-    if (slide2) slide2.classList.remove('active');
-
-    // Transición automática al slide 2 después de 3 segundos
+    
+    // Escena 1: Logo (Fade In automático por CSS al añadir active)
     setTimeout(() => {
-        if (introPhase === 1) {
-            introPhase = 2;
-            if (slide1) slide1.classList.remove('active');
-            if (slide2) slide2.classList.add('active');
-        }
-    }, 3000);
+        if (slide1) slide1.classList.add('active');
+    }, 100);
+
+    // Tras 3 segundos, iniciamos el Fade Out de la Escena 1 y pasamos a la 2
+    setTimeout(() => {
+        if (introPhase === 1) transitionToPhase(2);
+    }, 3500);
+}
+
+async function transitionToPhase(newPhase) {
+    if (newPhase <= introPhase) return; // Evitar transiciones repetidas
+    
+    const slide1 = document.getElementById('intro-slide-1');
+    const slide2 = document.getElementById('intro-slide-2');
+    const introScreen = document.getElementById('intro-screen');
+
+    if (newPhase === 2) {
+        introPhase = 2;
+        // Fade out de la escena 1
+        if (slide1) slide1.classList.remove('active');
+        
+        // Esperamos a que termine el fade out (1.5s en CSS) antes de mostrar la 2
+        setTimeout(() => {
+            if (introPhase === 2 && slide2) {
+                slide2.classList.add('active');
+                // Programamos el paso a la Escena 3 (Menú)
+                setTimeout(() => {
+                    if (introPhase === 2) transitionToPhase(3);
+                }, 5000); // La nota legal se lee más lento
+            }
+        }, 1500);
+
+    } else if (newPhase === 3) {
+        introPhase = 3;
+        // Fade out de cualquier slide activo
+        if (slide1) slide1.classList.remove('active');
+        if (slide2) slide2.classList.remove('active');
+
+        // Esperamos el fade out final
+        setTimeout(() => {
+            if (introScreen) introScreen.style.display = 'none';
+            if (mainMenuEl) {
+                mainMenuEl.classList.remove('hidden');
+                mainMenuEl.style.display = 'flex';
+                // La música comienza AQUÍ
+                initAudio(player1, allCars);
+            }
+            showMenuScreen('initial');
+        }, 1500);
+    }
 }
 function showMenuScreen(screenId) {
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if(m) m.style.display = 'none'; });
