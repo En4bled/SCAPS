@@ -167,7 +167,12 @@ canvas {
     gap: 80px;
 }
 
-.intro-logo { width: 300px; }
+.intro-logo { 
+    width: 300px; 
+    filter: none !important; 
+    box-shadow: none !important;
+    -webkit-filter: none !important;
+}
 
 .dev-text {
     font-size: 24px;
