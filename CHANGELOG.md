@@ -2,6 +2,21 @@
 
 Este archivo registra los cambios significativos y las versiones del proyecto SCAPS.
 
+## [0.5.0] - 2026-05-10
+### Añadido
+- Nueva escena de **Match Setup** (Selección de Partida) previa al inicio del juego.
+- Galería visual de mapas con miniaturas dinámicas (`map1.png` - `map10.png`).
+- Panel de selección de modos (Online, 2vs2, 3vs3, Torneo).
+- Sistema de desplazamiento suave con deslizador (scrollbar) estilo neón rojo.
+- Integración de fondo cinematográfico (`fondo_menu.png`) y efectos de desenfoque.
+- **Map Editor**: Barra de herramientas flotante centralizada con iconos minimalistas (Undo/Redo/Reset).
+- **Map Editor**: Gestor de mapas compacto 2x2 con miniaturas asíncronas.
+
+### Corregido
+- Errores de visibilidad del Menú Principal tras transiciones de escena.
+- Sincronización de estados de selección de mapa y carga de archivos JSON.
+- Consistencia estética global entre el Editor, el Menú y el Selector.
+
 ## [0.4.0] - 2026-05-10
 ### Añadido
 - Marquesina dinámica en el menú principal con ciclo de colores azul/naranja.
