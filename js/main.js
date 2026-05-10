@@ -354,7 +354,9 @@ async function transitionToPhase(newPhase) {
             if (mainMenuEl) {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
-                // La música comienza AQUÍ
+                // La música y el botón de mute comienzan AQUÍ
+                const muteBtn = document.getElementById('mute-float-btn');
+                if (muteBtn) muteBtn.style.display = 'block';
                 initAudio(player1, allCars);
             }
             showMenuScreen('initial');

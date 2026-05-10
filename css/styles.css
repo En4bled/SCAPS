@@ -371,6 +371,7 @@ canvas {
     transition: 0.3s;
     user-select: none;
     text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 5px rgba(0,0,0,0.8); /* Añadido sombreado */
+    display: none; /* Oculto por defecto durante la intro */
 }
 #mute-float-btn:hover { opacity: 1; transform: scale(1.2); }
 
