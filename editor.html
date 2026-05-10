@@ -331,10 +331,32 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 <script type="module">
 import * as CONST from './js/core/constants.js';
 
+const DEFAULTS = {
+    bgUrl: '', bgScale: 1.0, bgOX: 0, bgOY: 0,
+    worldW: 2000, worldH: 3000,
+    poly: [],
+    goals: {
+        top: { x: 1000, y: 300, w: 300, d: 100 },
+        bottom: { x: 1000, y: 2700, w: 300, d: 100 }
+    },
+    spawns: [
+        { x: 1000, y: 2500, a: 0 }, { x: 500, y: 2500, a: 0 },
+        { x: 1000, y: 500, a: Math.PI }, { x: 1500, y: 500, a: Math.PI }
+    ],
+    boosts: [],
+    ball: { x: 1000, y: 1500 },
+    zoom: 0.2,
+    mode: 'none',
+    selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1,
+    isDragging: false, dragType: null,
+    panX: 0, panY: 0, isPanning: false, lastMouse: { x: 0, y: 0 },
+    isLoaded: false
+};
+
 let S = JSON.parse(JSON.stringify(DEFAULTS));
 let hasChanges = false;
-let historyStack = [];
-let historyIndex = -1;
+let historyStack = [JSON.stringify(DEFAULTS)];
+let historyIndex = 0;
 
 function saveHistory() {
     // Eliminar estados futuros si estamos en medio de la pila
@@ -592,30 +614,69 @@ function toggleSidebar(forceOpen = false) {
     const sb = sidebar;
     if (forceOpen) { sb.classList.remove('collapsed'); }
 }
-function switchTab(t) { toggleSidebar(true); document.querySelectorAll('.tab').forEach(x => { if (x.dataset.tab === t) { x.classList.add('active'); document.getElementById('tab-' + t).style.display = 'block'; } else { x.classList.remove('active'); const other = x.dataset.tab; if(document.getElementById('tab-' + other)) document.getElementById('tab-' + other).style.display = 'none'; } }); }
-
-document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
-document.getElementById('map-panel-toggle').onclick = () => {
-    const panel = document.getElementById('floating-map-panel');
-    const btn = document.getElementById('map-panel-toggle');
-    panel.classList.toggle('collapsed');
-    btn.innerText = panel.classList.contains('collapsed') ? '◀' : '▶';
+window.switchTab = (t) => {
+    document.querySelectorAll('.tab').forEach(x => {
+        const tabName = x.dataset.tab;
+        if (tabName === t) {
+            x.classList.add('active');
+            if (document.getElementById('tab-' + t)) document.getElementById('tab-' + t).style.display = 'block';
+        } else {
+            x.classList.remove('active');
+            if (document.getElementById('tab-' + tabName)) document.getElementById('tab-' + tabName).style.display = 'none';
+        }
+    });
 };
 
-document.getElementById('bgFile').onchange = e => {
-    const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = ev => { S.bgUrl = ev.target.result; bgImg.src = S.bgUrl; document.getElementById('bgUrl').value = "Imagen Cargada"; render(); }; reader.readAsDataURL(file); }
-};
-
-function renderSpawnList() { document.querySelectorAll('#spawn-list .item').forEach((it, i) => { it.classList.toggle('selected', i === S.selectedSpawn); it.onclick = () => { S.selectedSpawn = i; renderSpawnList(); syncUI(); render(); }; }); }
-function renderBoostList() { const list = document.getElementById('boost-list'); list.innerHTML = ''; S.boosts.forEach((b, i) => { const div = document.createElement('div'); div.className = 'item' + (i === S.selectedBoost ? ' selected' : ''); div.innerHTML = `<span style="color:${b.big?'#f90':'#5ad'}">${b.big?'⚡':'·'}</span> ${b.big?'BOOST':'CHAPA'} ${i}`; div.onclick = () => { S.selectedBoost = i; renderBoostList(); render(); }; list.appendChild(div); }); }
+document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => window.switchTab(t.dataset.tab);
+});
 
 const bindS = (id, key, target) => {
     const elNum = document.getElementById(id), elRange = document.getElementById(id + 'R');
-    const update = (val) => { val = parseFloat(val); if (isNaN(val)) return; if (target) target[key] = val; else S[key] = val; render(); };
-    if (elNum) elNum.oninput = (e) => update(e.target.value); if (elRange) elRange.oninput = (e) => update(e.target.value);
+    const update = (val) => { 
+        val = parseFloat(val); 
+        if (isNaN(val)) return; 
+        if (target) target[key] = val; else S[key] = val; 
+        saveHistory();
+        render(); 
+    };
+    if (elNum) elNum.oninput = (e) => { update(e.target.value); if(elRange) elRange.value = e.target.value; }; 
+    if (elRange) elRange.oninput = (e) => { update(e.target.value); if(elNum) elNum.value = e.target.value; };
 };
+document.getElementById('bgFile').onchange = e => {
+    const file = e.target.files[0]; 
+    if (file) { 
+        const reader = new FileReader(); 
+        reader.onload = ev => { S.bgUrl = ev.target.result; bgImg.src = S.bgUrl; document.getElementById('bgUrl').value = "Imagen Cargada"; saveHistory(); render(); }; 
+        reader.readAsDataURL(file); 
+    }
+};
+
+window.renderSpawnList = () => { 
+    document.querySelectorAll('#spawn-list .item').forEach((it, i) => { 
+        it.classList.toggle('selected', i === S.selectedSpawn); 
+        it.onclick = () => { S.selectedSpawn = i; window.renderSpawnList(); syncUI(); render(); }; 
+    }); 
+};
+
+window.renderBoostList = () => { 
+    const list = document.getElementById('boost-list'); 
+    list.innerHTML = ''; 
+    S.boosts.forEach((b, i) => { 
+        const div = document.createElement('div'); 
+        div.className = 'item' + (i === S.selectedBoost ? ' selected' : ''); 
+        div.innerHTML = `<span style="color:${b.big?'#f90':'#5ad'}">${b.big?'⚡':'·'}</span> ${b.big?'BOOST':'CHAPA'} ${i}`; 
+        div.onclick = () => { S.selectedBoost = i; window.renderBoostList(); render(); }; 
+        list.appendChild(div); 
+    }); 
+};
+
+// Vinculación de entradas
 bindS('bgScale', 'bgScale'); bindS('bgOX', 'bgOX'); bindS('bgOY', 'bgOY'); bindS('worldW', 'worldW'); bindS('worldH', 'worldH');
-['goalT','goalB'].forEach(p => { const target = p==='goalT'?S.goals.top:S.goals.bottom; ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), target)); });
+['goalT','goalB'].forEach(p => { 
+    const target = p==='goalT'?S.goals.top:S.goals.bottom; 
+    ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), target)); 
+});
 
 document.getElementById('spawnA').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
 document.getElementById('spawnAR').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
