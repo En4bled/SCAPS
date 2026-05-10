@@ -7,6 +7,7 @@ Este archivo registra los cambios significativos y las versiones del proyecto SC
 - Marquesina dinámica en el menú principal con ciclo de colores azul/naranja.
 - Sonidos de interacción: clic (`Modern2.wav`) y hover (`Minimalist8.wav`).
 - Efecto de difuminado (Glassmorphism) en los botones del menú.
+- Tamaño de los botones del menú reducido para una interfaz más compacta.
 ### Cambiado
 - Rediseño de la intro con fundidos encadenados (Fade in/out) entre escenas.
 - Sincronización del estado de silencio (Mute) entre el botón flotante y el menú de pausa.
