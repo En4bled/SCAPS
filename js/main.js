@@ -15,7 +15,7 @@ let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 
 let score = { blue: 0, orange: 0 };
-let gameState = 'menu'; 
+let gameState = 'intro'; 
 let isPaused = false;
 let countdownTimer = 3; 
 let gameTime = 300; 
@@ -89,9 +89,11 @@ async function init() {
         }
 
         window.addEventListener('keydown', (e) => {
-            // Manejo de la Intro (Salto suave al menú)
-            if (introPhase < 3 && e.code === 'Space') {
-                transitionToPhase(3);
+            // Manejo de la Intro (Solo se puede saltar en la Escena 2)
+            if (gameState === 'intro' && e.code === 'Space') {
+                if (introPhase === 2) {
+                    transitionToPhase(3);
+                }
                 return;
             }
 
@@ -319,10 +321,7 @@ async function transitionToPhase(newPhase) {
         setTimeout(() => {
             if (introPhase === 2 && slide2) {
                 slide2.classList.add('active');
-                // Programamos el paso a la Escena 3 (Menú)
-                setTimeout(() => {
-                    if (introPhase === 2) transitionToPhase(3);
-                }, 5000); // La nota legal se lee más lento
+                // NOTA: Eliminamos el setTimeout automático para que espere al ESPACIO
             }
         }, 1500);
 
@@ -332,9 +331,15 @@ async function transitionToPhase(newPhase) {
         if (slide1) slide1.classList.remove('active');
         if (slide2) slide2.classList.remove('active');
 
-        // Esperamos el fade out final
+        // Esperamos el fade out final del contenedor negro
+        if (introScreen) introScreen.style.opacity = '0';
+
         setTimeout(() => {
             if (introScreen) introScreen.style.display = 'none';
+            
+            // CAMBIO DE ESTADO AQUÍ: Solo cuando ya no se ve la intro
+            gameState = 'menu';
+            
             if (mainMenuEl) {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
