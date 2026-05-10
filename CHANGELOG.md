@@ -9,9 +9,10 @@ Este archivo registra los cambios significativos y las versiones del proyecto SC
 - Efecto de difuminado (Glassmorphism) en los botones del menú.
 - Tamaño de los botones del menú reducido para una interfaz más compacta.
 ### Cambiado
-- Rediseño de la intro con fundidos encadenados (Fade in/out) entre escenas.
-- Sincronización del estado de silencio (Mute) entre el botón flotante y el menú de pausa.
-- Ajustes de posición y legibilidad en el menú principal.
+- Efecto de resplandor neón dinámico en el logo del menú principal.
+- Efecto hover neón global (degradado azul/naranja) aplicado a todos los botones.
+### Cambiado
+- Ajustes de posición y altura en el logo, botones y botón de mute.
 - Logo del menú principal reducido y con efecto de resplandor tipo neón dinámico (Azul/Naranja).
 - Logo de la intro ahora estático y sin filtros por requerimiento estético.
 
