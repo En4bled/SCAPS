@@ -84,9 +84,9 @@ async function init() {
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
         player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'res/Car1.png');
-        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT AZUL", 'res/Car2.png');
-        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 1", 'res/Car3.png');
-        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 2", 'res/Car4.png');
+        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'res/Car2.png');
+        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'res/Car3.png');
+        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'res/Car4.png');
 
         // Inicializar objetos de teclas para los bots y asignar roles
         player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
@@ -352,8 +352,8 @@ function spawnGoalEffects(x, y) {
 
 function updateUI(dt) {
     if (gameState === 'zooming') {
-        // Factor de 0.005 para una duración de unos 5 segundos
-        currentZoom += (targetZoom - currentZoom) * 0.005;
+        // Factor de 0.012 para una duración de unos 3 segundos
+        currentZoom += (targetZoom - currentZoom) * 0.012;
         if (Math.abs(targetZoom - currentZoom) < 0.005) {
             currentZoom = targetZoom;
             gameState = 'panning';
@@ -713,8 +713,8 @@ async function finalizeStartGame() {
         if (mainMenuEl) mainMenuEl.classList.add('hidden');
         if (trans) trans.classList.remove('active');
         
-        // Preparar cinemática de Zoom In
-        currentZoom = 0.25;
+        // Preparar cinemática de Zoom In (desde más lejos para ver todo el estadio)
+        currentZoom = 0.1;
         targetZoom = 0.85;
         
         // Forzar posición inicial de la cámara al centro del mundo

@@ -79,7 +79,9 @@ export class Car {
             this.speed += currentAccel; isAccelerating = true;
         } 
         else if (keys[this.controls.down]) { 
-            this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL; 
+            if (this.speed > -maxSpeed / 2) {
+                this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL; 
+            }
         } 
         
         if (!isAccelerating && !keys[this.controls.down]) {
@@ -87,8 +89,6 @@ export class Car {
         } else {
             if (isAccelerating && this.speed > maxSpeed) this.speed = maxSpeed; 
         }
-        
-        if (this.speed < -maxSpeed / 2) this.speed = -maxSpeed / 2;
         
         if (this.speed !== 0) {
             let turnDirection = 0;
@@ -158,16 +158,42 @@ export class Car {
             const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
             const bottom = CONST.CONFIG.GOAL_TOP.y + CONST.CONFIG.GOAL_TOP.w/2;
             const back = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.d;
-            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy = 0; }
-            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy = 0; }
-            if (this.x - this.radius < back) { this.x = back + this.radius; this.vx = 0; }
+            const bounce = CONST.CONFIG.CAR_WALL_BOUNCE;
+            if (this.y - this.radius < top) { 
+                this.y = top + this.radius; 
+                this.vy = Math.abs(this.vy) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
+            if (this.y + this.radius > bottom) { 
+                this.y = bottom - this.radius; 
+                this.vy = -Math.abs(this.vy) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
+            if (this.x - this.radius < back) { 
+                this.x = back + this.radius; 
+                this.vx = Math.abs(this.vx) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
         } else if (inGoalRight) {
             const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
             const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
             const back = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.d;
-            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy = 0; }
-            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy = 0; }
-            if (this.x + this.radius > back) { this.x = back - this.radius; this.vx = 0; }
+            const bounce = CONST.CONFIG.CAR_WALL_BOUNCE;
+            if (this.y - this.radius < top) { 
+                this.y = top + this.radius; 
+                this.vy = Math.abs(this.vy) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
+            if (this.y + this.radius > bottom) { 
+                this.y = bottom - this.radius; 
+                this.vy = -Math.abs(this.vy) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
+            if (this.x + this.radius > back) { 
+                this.x = back - this.radius; 
+                this.vx = -Math.abs(this.vx) * (1 + bounce); 
+                this.speed *= -0.5;
+            }
         } else {
             // Solo si no estamos en zona de portería, aplicamos la colisión con los muros del campo
             checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);

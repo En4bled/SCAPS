@@ -1,4 +1,30 @@
 # Changelog - SCAPS
+
+## [0.9.5] - 2026-05-10 - *Striker Engine V4 & Physics Polish*
+### Añadido
+- **Striker Engine V4 (IA Vectorial)**: 
+    - Lógica basada en productos escalares y cruzados para un posicionamiento táctico perfecto.
+    - Los bots ahora calculan un "Strike Point" detrás del balón alineado con la portería rival.
+    - Maniobras de rodeo dinámicas para evitar golpear el balón hacia la propia portería.
+    - Protocolo de escape de emergencia para bots atascados dentro de las redes.
+- **Físicas de Colisión Pro**:
+    - Implementado sistema de impulso elástico (conservación de momento) para choques coche-coche.
+    - Rebotes realistas contra paredes que preservan la orientación visual y permiten rebotes marcha atrás.
+    - Eliminados bugs de aceleración infinita (catapultas) al rozar muros.
+
+### Cambiado
+- **Cinemática de Inicio**:
+    - Zoom inicial reducido a 0.1 para mostrar el estadio completo al arrancar.
+    - Duración de la cinemática ajustada a 3 segundos para un inicio más dinámico.
+- **IA de Bots**:
+    - Mayor agresividad hacia el balón y uso optimizado del Turbo y Derrape táctico.
+    - Los bots ahora detectan el "fuera de juego" y se reposicionan inteligentemente.
+
+### Corregido
+- **Atascos en Portería**: Los bots ya no se quedan vibrando dentro de las redes gracias al nuevo modo de escape.
+- **Error de Sintaxis**: Corregido un `Unexpected token }` en el motor de físicas.
+- **Física de Rebote**: Eliminado el "pegado" a las paredes mediante la proyección correcta de vectores de velocidad.
+
  
 ## [0.9.0] - 2026-05-10 - *Cinematic Experience & AI Overhaul*
 ### Añadido
