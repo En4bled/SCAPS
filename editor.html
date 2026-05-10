@@ -98,21 +98,19 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 #editor-overlay .arrow { font-size: 80px; color: #5ad; position: absolute; top: 100px; right: 120px; transform: rotate(-35deg); animation: bounce 1s infinite alternate; }
 @keyframes bounce { from { transform: rotate(-35deg) translateY(0); } to { transform: rotate(-35deg) translateY(-30px); } }
 
-/* Panel Flotante */
+/* Gestor de Mapas como Sidebar Derecha Real */
 #floating-map-panel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
     width: 320px;
+    min-width: 320px;
     background: #121218;
     border-left: 1px solid #333;
     z-index: 2100;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.3s, min-width 0.3s;
+    position: relative;
 }
-#floating-map-panel.collapsed { transform: translateX(320px); }
+#floating-map-panel.collapsed { width: 0; min-width: 0; border: none; overflow: hidden; }
 
 #map-panel-toggle {
     position: absolute;
@@ -131,6 +129,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     justify-content: center;
     color: #f90;
     font-weight: bold;
+    z-index: 2200;
 }
 
 #map-list { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; }
@@ -293,18 +292,22 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 </div>
 <div id="resizer"></div>
 
-<div id="canvas-wrap">
   <div id="editor-overlay">
-    <div class="arrow">↗</div>
     <h2>Abre el mapa para editar</h2>
-    <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor o crea uno nuevo</p>
+    <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor a la derecha o crea uno nuevo</p>
+  </div>
+
+  <div style="position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 1005;">
+    <button id="btn-undo" title="Deshacer (Ctrl+Z)" style="width: 40px; height: 40px; border-radius: 50%; background: #252530; border: 1px solid #555;">↩️</button>
+    <button id="btn-redo" title="Rehacer (Ctrl+Y)" style="width: 40px; height: 40px; border-radius: 50%; background: #252530; border: 1px solid #555;">↪️</button>
   </div>
 
   <canvas id="mainCanvas"></canvas>
   <div id="info-bar">Cámara: 0, 0 | Zoom: 100% | Sin Servidor</div>
   <div id="mode-badge">MODO: EDICIÓN DE POLÍGONO</div>
+</div>
 
-  <div id="floating-map-panel">
+<div id="floating-map-panel">
     <button id="map-panel-toggle" title="Plegar/Desplegar Gestor">▶</button>
     
     <div id="map-panel-content" style="padding: 15px; display: flex; flex-direction: column; height: 100%;">
@@ -328,29 +331,37 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 <script type="module">
 import * as CONST from './js/core/constants.js';
 
-const DEFAULTS = {
-    bgUrl: '', bgScale: 1.0, bgOX: 0, bgOY: 0,
-    worldW: 2000, worldH: 3000,
-    poly: [],
-    goals: {
-        top: { x: 1000, y: 300, w: 300, d: 100 },
-        bottom: { x: 1000, y: 2700, w: 300, d: 100 }
-    },
-    spawns: [
-        { x: 1000, y: 2500, a: 0 }, { x: 500, y: 2500, a: 0 },
-        { x: 1000, y: 500, a: Math.PI }, { x: 1500, y: 500, a: Math.PI }
-    ],
-    boosts: [],
-    ball: { x: 1000, y: 1500 },
-    zoom: 0.2,
-    mode: 'none',
-    selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1,
-    isDragging: false, dragType: null, // 'spawn', 'boost', 'ball', 'poly'
-    panX: 0, panY: 0, isPanning: false, lastMouse: { x: 0, y: 0 },
-    isLoaded: false
+let S = JSON.parse(JSON.stringify(DEFAULTS));
+let hasChanges = false;
+let historyStack = [];
+let historyIndex = -1;
+
+function saveHistory() {
+    // Eliminar estados futuros si estamos en medio de la pila
+    if (historyIndex < historyStack.length - 1) {
+        historyStack = historyStack.slice(0, historyIndex + 1);
+    }
+    historyStack.push(JSON.stringify(S));
+    if (historyStack.length > 50) historyStack.shift();
+    else historyIndex++;
+    hasChanges = true;
+}
+
+window.undo = () => {
+    if (historyIndex > 0) {
+        historyIndex--;
+        S = JSON.parse(historyStack[historyIndex]);
+        syncUI(); render(); renderBoostList();
+    }
 };
 
-let S = JSON.parse(JSON.stringify(DEFAULTS));
+window.redo = () => {
+    if (historyIndex < historyStack.length - 1) {
+        historyIndex++;
+        S = JSON.parse(historyStack[historyIndex]);
+        syncUI(); render(); renderBoostList();
+    }
+};
 
 const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
@@ -546,7 +557,10 @@ canvas.addEventListener('mousemove', e => {
         render();
     }
 });
-window.addEventListener('mouseup', () => { S.isPanning = false; S.isDragging = false; S.dragType = null; canvas.style.cursor = 'default'; });
+window.addEventListener('mouseup', () => { 
+    if (S.isDragging) saveHistory();
+    S.isPanning = false; S.isDragging = false; S.dragType = null; canvas.style.cursor = 'default'; 
+});
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (e.deltaY < 0) S.zoom *= 1.1; else S.zoom /= 1.1; S.zoom = Math.max(0.05, Math.min(S.zoom, 5)); render(); }, { passive: false });
 
 // Resizer de la Sidebar Izquierda
@@ -608,70 +622,74 @@ document.getElementById('btn-poly-from-rect').onclick = () => { const fw = +docu
 document.getElementById('btn-add-boost-big').onclick = () => { S.boosts.push({x:S.worldW/2, y:S.worldH/2, big:true}); S.selectedBoost = S.boosts.length-1; renderBoostList(); render(); };
 document.getElementById('btn-add-boost-mini').onclick = () => { S.boosts.push({x:S.worldW/2, y:S.worldH/2, big:false}); S.selectedBoost = S.boosts.length-1; renderBoostList(); render(); };
 document.getElementById('btn-del-boost').onclick = () => { if(S.selectedBoost !== -1) { S.boosts.splice(S.selectedBoost, 1); S.selectedBoost = -1; renderBoostList(); render(); } };
-document.getElementById('btn-reset').onclick = () => { S = JSON.parse(JSON.stringify(DEFAULTS)); S.isLoaded = true; bgImg.src = ''; syncUI(); renderBoostList(); render(); };
+document.getElementById('btn-reset').onclick = async () => {
+    if (hasChanges) {
+        const confirmSave = confirm("Tienes cambios sin guardar. ¿Quieres guardarlos antes de crear un nuevo mapa?");
+        if (confirmSave) { await saveCurrentMap(); }
+    }
+    S = JSON.parse(JSON.stringify(DEFAULTS)); 
+    S.isLoaded = true; 
+    bgImg.src = ''; 
+    syncUI(); 
+    renderBoostList(); 
+    render();
+    hasChanges = false;
+    historyStack = [JSON.stringify(S)];
+    historyIndex = 0;
+};
 
-document.getElementById('btn-save-json').onclick = async () => {
+async function saveCurrentMap() {
     const ni = document.getElementById('mapName'), n = ni.value.trim(), b = document.getElementById('btn-save-json');
-    if (!n) { alert("Nombre requerido"); ni.focus(); return; }
+    if (!n) { alert("Nombre requerido para guardar"); ni.focus(); return false; }
     
-    // Limpiamos el objeto S para guardar solo lo necesario
     const configToSave = {
-        bgUrl: S.bgUrl,
-        bgScale: S.bgScale,
-        bgOX: S.bgOX,
-        bgOY: S.bgOY,
-        worldW: S.worldW,
-        worldH: S.worldH,
-        poly: S.poly,
-        goals: S.goals,
-        spawns: S.spawns,
-        boosts: S.boosts,
-        ball: S.ball
+        bgUrl: S.bgUrl, bgScale: S.bgScale, bgOX: S.bgOX, bgOY: S.bgOY,
+        worldW: S.worldW, worldH: S.worldH, poly: S.poly, goals: S.goals,
+        spawns: S.spawns, boosts: S.boosts, ball: S.ball
     };
 
     b.innerHTML = '⏳...'; b.disabled = true;
     try { 
         const res = await (await fetch('save_map.php', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ name: n, config: configToSave }) 
         })).json(); 
-        
         if (res.status === 'success') { 
             b.innerHTML = '✅ OK'; 
+            hasChanges = false;
             loadMapList(); 
             setTimeout(() => { b.innerHTML = '💾 GUARDAR MAPA ACTUAL'; b.disabled = false; }, 2000); 
-        } else { 
-            b.innerHTML = '❌ ERROR'; b.disabled = false; 
+            return true;
         } 
-    } catch(e) { b.innerHTML = '❌ ERROR'; b.disabled = false; }
-};
+    } catch(e) {}
+    b.innerHTML = '❌ ERROR'; b.disabled = false; return false;
+}
 
-const loadMapList = async () => {
+document.getElementById('btn-save-json').onclick = saveCurrentMap;
+document.getElementById('btn-undo').onclick = () => window.undo();
+document.getElementById('btn-redo').onclick = () => window.redo();
+
+window.loadMapList = async () => {
     const list = document.getElementById('map-list');
     try {
         const maps = await (await fetch('get_maps.php')).json();
         list.innerHTML = '';
         for (const m of maps) {
-            const config = await (await fetch(`maps/${m}.json`)).json();
             const div = document.createElement('div'); 
             div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
             div.innerHTML = `
-                <div class="map-info">
-                    <span>${m.toUpperCase()}</span>
-                </div>
-                <div class="map-preview">
-                    <canvas id="preview-${m}"></canvas>
-                </div>
+                <div class="map-info"><span>${m.toUpperCase()}</span></div>
+                <div class="map-preview"><canvas id="preview-${m}"></canvas></div>
                 <div class="map-actions">
-                    <button class="btn-icon" title="Cargar / Editar" onclick="event.stopPropagation(); loadMap('${m}')">📂</button>
-                    <button class="btn-icon" title="Duplicar" onclick="event.stopPropagation(); duplicateMap('${m}')">📋</button>
-                    <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); renameMap('${m}')">✏️</button>
-                    <button class="btn-icon del" title="Eliminar" onclick="event.stopPropagation(); deleteMap('${m}')">🗑️</button>
+                    <button class="btn-icon" title="Cargar" onclick="event.stopPropagation(); window.loadMap('${m}')">📂</button>
+                    <button class="btn-icon" title="Clonar" onclick="event.stopPropagation(); window.duplicateMap('${m}')">📋</button>
+                    <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); window.renameMap('${m}')">✏️</button>
+                    <button class="btn-icon del" title="Borrar" onclick="event.stopPropagation(); window.deleteMap('${m}')">🗑️</button>
                 </div>
             `;
-            div.onclick = () => loadMap(m);
+            div.onclick = () => window.loadMap(m);
             list.appendChild(div);
+            const config = await (await fetch(`maps/${m}.json`)).json();
             renderThumbnail(`preview-${m}`, config);
         }
     } catch(e) {}
@@ -701,14 +719,18 @@ function renderThumbnail(canvasId, map) {
 }
 
 window.loadMap = async (m) => {
+    if (hasChanges) {
+        if (!confirm("Tienes cambios sin guardar. ¿Cargar otro mapa de todas formas?")) return;
+    }
     try {
         const config = await (await fetch(`maps/${m}.json`)).json();
         S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), config);
-        S.isLoaded = true; 
-        S.zoom = 0; 
+        S.isLoaded = true; S.zoom = 0; 
         document.getElementById('mapName').value = m;
         bgImg.src = S.bgUrl; syncUI(); renderBoostList(); render();
-        loadMapList();
+        hasChanges = false;
+        historyStack = [JSON.stringify(S)]; historyIndex = 0;
+        window.loadMapList();
     } catch(e) { alert("Error cargando mapa"); }
 };
 
@@ -746,7 +768,12 @@ window.renameMap = async (m) => {
 
 // Export JS removido
 
-loadMapList();
+window.loadMapList();
+window.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); window.undo(); }
+    if (e.ctrlKey && e.key === 'y') { e.preventDefault(); window.redo(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveCurrentMap(); }
+});
 window.addEventListener('resize', () => { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render(); });
 canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
 render();
