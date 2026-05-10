@@ -69,6 +69,26 @@ button.primary:hover { filter: brightness(1.1); transform: translateY(-1px); box
 button.danger { border-color:#622; color:#f66; }
 button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
+.btn-reset-small { 
+    background: transparent; border: none; color: #555; 
+    font-size: 14px; cursor: pointer; padding: 2px 5px; 
+    transition: 0.2s; border-radius: 4px;
+}
+.btn-reset-small:hover { color: #f90; background: rgba(255,153,0,0.1); }
+
+.toolbar-canvas { 
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 20px; z-index: 1100; 
+}
+.btn-tool { 
+    background: transparent; border: none; 
+    color: #fff; font-size: 30px; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: 0.2s;
+}
+.btn-tool:hover { transform: scale(1.2); filter: drop-shadow(0 0 10px #5ad); }
+.btn-tool.danger:hover { filter: drop-shadow(0 0 10px #f44); }
+
 #boost-list { max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:6px; padding:4px; margin-bottom:8px; }
 .item { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:11px; margin-bottom:2px; border:1px solid transparent; }
 .item:hover { background:rgba(255,255,255,0.05); }
@@ -133,55 +153,41 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
 #map-list { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; }
 .map-item { 
-    padding: 12px; 
+    padding: 10px; 
     border-radius: 8px;
     background: #1a1a24;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     cursor: pointer; 
     display: flex; 
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
     border: 1px solid #333;
     transition: 0.2s;
 }
-.map-item:hover { border-color: #5ad; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-.map-item.active { border-color: #f90; border-width: 2px; }
+.map-item:hover { border-color: #5ad; background: #20202c; }
+.map-item.active { border-color: #f90; background: #252535; }
 
 .map-preview {
-    width: 100%;
-    height: 120px;
+    width: 100px;
+    height: 65px;
     background: #08080c;
     border-radius: 4px;
-    border-top: 1px solid #222;
-    margin-top: 4px;
+    border: 1px solid #222;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0;
 }
 .map-preview canvas { width: 100%; height: 100%; object-fit: contain; }
 
-.btn-new-map {
-    width: 45px;
-    height: 45px;
-    background: #f90;
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    font-size: 20px;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex; align-items: center; justify-content: center;
+.map-actions { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 4px; 
+    flex-grow: 1;
 }
-.btn-new-map:hover { transform: scale(1.1); filter: brightness(1.1); }
-
-.map-info { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #fff; letter-spacing: 1px; }
-.map-actions { display: flex; gap: 4px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
 .btn-icon { 
-    width: 28px; height: 28px; 
-    display: flex; align-items: center; justify-content: center; 
-    background: rgba(0,0,0,0.3); border: 1px solid #444; border-radius: 4px;
-    font-size: 12px; cursor: pointer; transition: 0.2s;
+    width: 100%; height: 26px; 
+    background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 4px;
+    font-size: 11px;
 }
 .btn-icon:hover { background: #5ad; color: #000; border-color: #fff; transform: scale(1.1); }
 .btn-icon.del:hover { background: #f44; color: #fff; }
@@ -218,13 +224,33 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
         </div>
         <div class="row"><label>Ruta Actual</label><input type="text" id="bgUrl" value=""></div>
         <div class="row"><label>Escala</label><input type="range" id="bgScaleR" min="0.5" max="3" step="0.001" value="1.0"><input type="number" id="bgScale" step="0.001" style="width:70px"></div>
-        <div class="row"><label>Offset X</label><input type="range" id="bgOXR" min="-1500" max="1500" step="1" value="0"><input type="number" id="bgOX" style="width:70px"></div>
-        <div class="row"><label>Offset Y</label><input type="range" id="bgOYR" min="-1500" max="1500" step="1" value="0"><input type="number" id="bgOY" style="width:70px"></div>
+        <div class="row">
+            <label>Offset X</label>
+            <input type="range" id="bgOXR" min="-1500" max="1500" step="1" value="0">
+            <input type="number" id="bgOX" style="width:70px">
+            <button class="btn-reset-small" onclick="resetVal('bgOX')">↺</button>
+        </div>
+        <div class="row">
+            <label>Offset Y</label>
+            <input type="range" id="bgOYR" min="-1500" max="1500" step="1" value="0">
+            <input type="number" id="bgOY" style="width:70px">
+            <button class="btn-reset-small" onclick="resetVal('bgOY')">↺</button>
+        </div>
     </div>
     <div class="section">
         <h3>🌍 Dimensiones del Mundo</h3>
-        <div class="row"><label>Ancho (W)</label><input type="range" id="worldWR" min="1000" max="5000" step="10" value="2000"><input type="number" id="worldW" value="2000" style="width:70px"></div>
-        <div class="row"><label>Alto (H)</label><input type="range" id="worldHR" min="1000" max="5000" step="10" value="3000"><input type="number" id="worldH" value="3000" style="width:70px"></div>
+        <div class="row">
+            <label>Ancho (W)</label>
+            <input type="range" id="worldWR" min="1000" max="5000" step="10" value="2000">
+            <input type="number" id="worldW" value="2000" style="width:70px">
+            <button class="btn-reset-small" onclick="resetVal('worldW')">↺</button>
+        </div>
+        <div class="row">
+            <label>Alto (H)</label>
+            <input type="range" id="worldHR" min="1000" max="5000" step="10" value="3000">
+            <input type="number" id="worldH" value="3000" style="width:70px">
+            <button class="btn-reset-small" onclick="resetVal('worldH')">↺</button>
+        </div>
     </div>
   </div>
 
@@ -247,17 +273,17 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
   <div id="tab-goals" class="tab-content" style="display:none">
     <div class="section">
         <h3>🥅 Portería Izquierda (Azul)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="2000"></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="1000"></div>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('top','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('top','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('top','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="1000"><button class="btn-reset-small" onclick="resetGoalVal('top','d')">↺</button></div>
     </div>
     <div class="section">
         <h3>🥅 Portería Derecha (Naranja)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="2000"></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="1000"></div>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="1000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','d')">↺</button></div>
     </div>
   </div>
 
@@ -297,9 +323,12 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor a la derecha o crea uno nuevo</p>
   </div>
 
-  <div style="position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 1005;">
-    <button id="btn-undo" title="Deshacer (Ctrl+Z)" style="width: 40px; height: 40px; border-radius: 50%; background: #252530; border: 1px solid #555;">↩️</button>
-    <button id="btn-redo" title="Rehacer (Ctrl+Y)" style="width: 40px; height: 40px; border-radius: 50%; background: #252530; border: 1px solid #555;">↪️</button>
+  <div class="toolbar-canvas">
+    <div style="display: flex; gap: 15px;">
+      <button id="btn-undo" class="btn-tool" title="Deshacer (Ctrl+Z)">↩️</button>
+      <button id="btn-redo" class="btn-tool" title="Rehacer (Ctrl+Y)">↪️</button>
+    </div>
+    <button id="btn-reset-all" class="btn-tool danger" title="Restablecer todos los ajustes" style="margin-left: 30px;">🔃</button>
   </div>
 
   <canvas id="mainCanvas"></canvas>
@@ -393,6 +422,31 @@ const overlay = document.getElementById('editor-overlay');
 const bgImg = new Image();
 const ballImg = new Image(); ballImg.src = 'res/Ball1.png';
 
+window.resetVal = (key) => {
+    if (DEFAULTS[key] !== undefined) {
+        S[key] = DEFAULTS[key];
+        syncUI(); saveHistory(); render();
+    }
+};
+
+window.resetAll = () => {
+    if (confirm("¿Estás seguro de restablecer TODOS los ajustes de este mapa a sus valores por defecto?")) {
+        const name = document.getElementById('mapName').value;
+        const isLoaded = S.isLoaded;
+        S = JSON.parse(JSON.stringify(DEFAULTS));
+        S.isLoaded = isLoaded;
+        document.getElementById('mapName').value = name;
+        syncUI(); saveHistory(); render();
+    }
+};
+
+window.resetGoalVal = (goalKey, prop) => {
+    const goalName = goalKey === 'top' ? 'top' : 'bottom';
+    if (DEFAULTS.goals[goalName] && DEFAULTS.goals[goalName][prop] !== undefined) {
+        S.goals[goalName][prop] = DEFAULTS.goals[goalName][prop];
+        syncUI(); saveHistory(); render();
+    }
+};
 function syncUI() {
     document.getElementById('worldW').value = S.worldW; document.getElementById('worldWR').value = S.worldW;
     document.getElementById('worldH').value = S.worldH; document.getElementById('worldHR').value = S.worldH;
@@ -401,6 +455,7 @@ function syncUI() {
     document.getElementById('bgOX').value = S.bgOX; document.getElementById('bgOXR').value = S.bgOX;
     document.getElementById('bgOY').value = S.bgOY; document.getElementById('bgOYR').value = S.bgOY;
     const syncGoal = (prefix, data) => {
+        if (!data) return;
         document.getElementById(prefix+'X').value = data.x; document.getElementById(prefix+'XR').value = data.x;
         document.getElementById(prefix+'Y').value = data.y; document.getElementById(prefix+'YR').value = data.y;
         document.getElementById(prefix+'W').value = data.w; document.getElementById(prefix+'WR').value = data.w;
@@ -732,6 +787,8 @@ async function saveCurrentMap() {
 document.getElementById('btn-save-json').onclick = saveCurrentMap;
 document.getElementById('btn-undo').onclick = () => window.undo();
 document.getElementById('btn-redo').onclick = () => window.redo();
+document.getElementById('btn-reset-all').onclick = () => window.resetAll();
+
 
 window.loadMapList = async () => {
     const list = document.getElementById('map-list');
@@ -740,50 +797,68 @@ window.loadMapList = async () => {
         list.innerHTML = '';
         for (const m of maps) {
             try {
-                const div = document.createElement('div'); 
-                div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
+                const div = document.createElement('div');
+                div.className = 'map-item';
                 div.innerHTML = `
-                    <div class="map-info"><span>${m.toUpperCase()}</span></div>
-                    <div class="map-preview"><canvas id="preview-${m}"></canvas></div>
+                <div class="map-preview"><canvas id="preview-${m}"></canvas></div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 800; font-size: 10px; margin-bottom: 5px; color: #fff;">${m.toUpperCase()}</div>
                     <div class="map-actions">
                         <button class="btn-icon" title="Cargar" onclick="event.stopPropagation(); window.loadMap('${m}')">📂</button>
                         <button class="btn-icon" title="Clonar" onclick="event.stopPropagation(); window.duplicateMap('${m}')">📋</button>
                         <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); window.renameMap('${m}')">✏️</button>
                         <button class="btn-icon del" title="Borrar" onclick="event.stopPropagation(); window.deleteMap('${m}')">🗑️</button>
                     </div>
-                `;
+                </div>
+            `;
                 div.onclick = () => window.loadMap(m);
                 list.appendChild(div);
                 
                 const configResp = await fetch(`maps/${m}.json`);
                 if (configResp.ok) {
                     const config = await configResp.json();
-                    renderThumbnail(`preview-${m}`, config);
+                    await renderThumbnail(`preview-${m}`, config);
                 }
             } catch (err) { console.error("Error cargando miniatura para:", m, err); }
         }
     } catch(e) { console.error("Error cargando lista de mapas:", e); }
 };
 
-function renderThumbnail(canvasId, map) {
+async function renderThumbnail(canvasId, map) {
     const cv = document.getElementById(canvasId);
     if (!cv) return;
     const ctxT = cv.getContext('2d');
-    cv.width = 300; cv.height = 200;
-    const scale = Math.min(cv.width / map.worldW, cv.height / map.worldH) * 0.8;
+    cv.width = 300; cv.height = 180;
+    const scale = Math.min(cv.width / map.worldW, cv.height / map.worldH) * 0.9;
     const ox = (cv.width - map.worldW * scale) / 2, oy = (cv.height - map.worldH * scale) / 2;
     
-    ctxT.fillStyle = '#08080c'; ctxT.fillRect(0,0,cv.width,cv.height);
+    ctxT.fillStyle = '#050508'; ctxT.fillRect(0,0,cv.width,cv.height);
     ctxT.save(); ctxT.translate(ox, oy); ctxT.scale(scale, scale);
     
+    // Imagen de fondo en miniatura
+    if (map.bgUrl) {
+        const thumbImg = new Image(); thumbImg.src = map.bgUrl;
+        await new Promise(r => thumbImg.onload = r);
+        const iw = map.worldW * (map.bgScale||1), ih = map.worldH * (map.bgScale||1);
+        ctxT.globalAlpha = 0.6;
+        ctxT.drawImage(thumbImg, (map.worldW - iw)/2 + (map.bgOX||0), (map.worldH - ih)/2 + (map.bgOY||0), iw, ih);
+        ctxT.globalAlpha = 1.0;
+    }
+
     // Polígono
     if (map.poly && map.poly.length > 1) {
         ctxT.beginPath(); ctxT.moveTo(map.poly[0].x, map.poly[0].y);
         map.poly.forEach(p => ctxT.lineTo(p.x, p.y));
-        ctxT.closePath(); ctxT.strokeStyle = '#5ad'; ctxT.lineWidth = 40; ctxT.stroke();
+        ctxT.closePath(); ctxT.strokeStyle = 'rgba(90,173,237,0.8)'; ctxT.lineWidth = 40; ctxT.stroke();
     }
     // Porterías
-    const drawG = (g, c) => { ctxT.fillStyle = c; ctxT.fillRect(g.x-g.d/2, g.y-g.w/2, g.d, g.w); };
+    const drawG = (g, c) => { 
+        if (!g) return;
+        ctxT.fillStyle = c; 
+        const isLeft = g.x < map.worldW / 2;
+        const dx = isLeft ? -g.d : 0;
+        ctxT.fillRect(g.x + dx, g.y - g.w/2, g.d, g.w); 
+    };
     if (map.goals) { drawG(map.goals.top, '#5ad'); drawG(map.goals.bottom, '#f90'); }
     ctxT.restore();
 }
