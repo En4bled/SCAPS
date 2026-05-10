@@ -308,7 +308,7 @@ canvas {
 
 .menu-footer {
     position: absolute;
-    bottom: 55px; /* Subido para dejar sitio a la marquesina */
+    bottom: 35px; /* Ajustado para la marquesina más delgada */
     font-size: 14px;
     color: rgba(255, 255, 255, 0.9);
     letter-spacing: 2px;
@@ -323,7 +323,7 @@ canvas {
     background: rgba(0, 0, 0, 0.8);
     border-top: 2px solid #5ad;
     overflow: hidden;
-    padding: 10px 0;
+    padding: 4px 0; /* Más compacta */
     white-space: nowrap;
     animation: marquee-border-cycle 10s infinite alternate;
 }

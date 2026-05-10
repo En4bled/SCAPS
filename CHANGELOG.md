@@ -2,6 +2,17 @@
 
 Este archivo registra los cambios significativos y las versiones del proyecto SCAPS.
 
+## [0.4.0] - 2026-05-10
+### Añadido
+- Marquesina dinámica en el menú principal con ciclo de colores azul/naranja.
+- Sonidos de interacción: clic (`Modern2.wav`) y hover (`Minimalist8.wav`).
+- Efecto de difuminado (Glassmorphism) en los botones del menú.
+### Cambiado
+- Rediseño de la intro con fundidos encadenados (Fade in/out) entre escenas.
+- Sincronización del estado de silencio (Mute) entre el botón flotante y el menú de pausa.
+- Ajustes de posición y legibilidad en el menú principal.
+- Logo de la intro ahora estático y sin filtros por requerimiento estético.
+
 ## [0.3.1] - 2026-05-09
 ### Añadido
 - Configuración de control de versiones con Git.
