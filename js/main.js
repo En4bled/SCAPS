@@ -15,8 +15,9 @@ let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
 let selectedMap = 'Principal', selectedMode = 'online';
-let currentMapPage = 1;
-const MAPS_PER_PAGE = 3;
+let selectedCarP1 = 'res/Car1.png', selectedCarP2 = 'res/Car2.png';
+let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1;
+const MAPS_PER_PAGE = 3, CARS_PER_PAGE = 8;
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
@@ -109,6 +110,26 @@ async function init() {
 
         // Listeners del selector
         if (btnStartGame) btnStartGame.onclick = () => finalizeStartGame();
+        
+        const btnCustomBack = getEl('btn-custom-back');
+        if (btnCustomBack) btnCustomBack.onclick = () => {
+            const inputName = getEl('input-player-name');
+            if (inputName && player1) player1.name = inputName.value.toUpperCase();
+            showMenuScreen('initial');
+            playSound('menu_click');
+        };
+
+        // Listeners Paginación Coches
+        const btnP1Prev = getEl('btn-car-p1-prev');
+        const btnP1Next = getEl('btn-car-p1-next');
+        const btnP2Prev = getEl('btn-car-p2-prev');
+        const btnP2Next = getEl('btn-car-p2-next');
+
+        if (btnP1Prev) btnP1Prev.onclick = () => { if (currentCarPageP1 > 1) { currentCarPageP1--; renderCarSelection(); playSound('menu_click'); } };
+        if (btnP1Next) btnP1Next.onclick = () => { if (currentCarPageP1 < 2) { currentCarPageP1++; renderCarSelection(); playSound('menu_click'); } };
+        if (btnP2Prev) btnP2Prev.onclick = () => { if (currentCarPageP2 > 1) { currentCarPageP2--; renderCarSelection(); playSound('menu_click'); } };
+        if (btnP2Next) btnP2Next.onclick = () => { if (currentCarPageP2 < 2) { currentCarPageP2++; renderCarSelection(); playSound('menu_click'); } };
+
         const btnMapConfirm = getEl('setup-map-confirm');
         if (btnMapConfirm) btnMapConfirm.onclick = () => finalizeStartGame();
 
@@ -433,10 +454,97 @@ async function transitionToPhase(newPhase) {
 }
 function showMenuScreen(screenId) {
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
+    
+    const logo = document.getElementById('menu-logo');
+    if (logo) logo.style.display = (screenId === 'initial') ? 'block' : 'none';
+
     if (screenId === 'initial' && menuInitial) menuInitial.style.display = 'flex';
     else if (screenId === 'credits' && menuCredits) menuCredits.style.display = 'flex';
-    else if (screenId === 'custom' && menuCustom) menuCustom.style.display = 'flex';
+    else if (screenId === 'custom' && menuCustom) {
+        menuCustom.style.display = 'flex';
+        renderCarSelection();
+    }
     else if (screenId === 'settings' && menuSettings) menuSettings.style.display = 'flex';
+}
+
+function renderCarSelection() {
+    const listP1 = document.getElementById('custom-car-p1-list');
+    const listP2 = document.getElementById('custom-car-p2-list');
+    if (!listP1 || !listP2) return;
+
+    const carImages = [
+        'res/Car1.png', 'res/Car2.png', 'res/Car3.png', 'res/Car4.png', 'res/Car5.png',
+        'res/Car6.png', 'res/Car7.png', 'res/Car8.png', 'res/Car9.png', 'res/Car10.png'
+    ];
+
+    const totalPages = Math.ceil(carImages.length / CARS_PER_PAGE);
+
+    // Actualizar Paginación P1
+    const infoP1 = document.getElementById('car-p1-page-info');
+    if (infoP1) infoP1.innerText = currentCarPageP1;
+    const btnP1Prev = document.getElementById('btn-car-p1-prev');
+    const btnP1Next = document.getElementById('btn-car-p1-next');
+    if (btnP1Prev) { btnP1Prev.disabled = (currentCarPageP1 === 1); btnP1Prev.style.opacity = (currentCarPageP1 === 1) ? '0.3' : '1'; }
+    if (btnP1Next) { btnP1Next.disabled = (currentCarPageP1 === totalPages); btnP1Next.style.opacity = (currentCarPageP1 === totalPages) ? '0.3' : '1'; }
+
+    // Actualizar Paginación P2
+    const infoP2 = document.getElementById('car-p2-page-info');
+    if (infoP2) infoP2.innerText = currentCarPageP2;
+    const btnP2Prev = document.getElementById('btn-car-p2-prev');
+    const btnP2Next = document.getElementById('btn-car-p2-next');
+    if (btnP2Prev) { btnP2Prev.disabled = (currentCarPageP2 === 1); btnP2Prev.style.opacity = (currentCarPageP2 === 1) ? '0.3' : '1'; }
+    if (btnP2Next) { btnP2Next.disabled = (currentCarPageP2 === totalPages); btnP2Next.style.opacity = (currentCarPageP2 === totalPages) ? '0.3' : '1'; }
+
+    // Renderizar Listas
+    listP1.innerHTML = '';
+    listP2.innerHTML = '';
+
+    const startIdxP1 = (currentCarPageP1 - 1) * CARS_PER_PAGE;
+    const pageCarsP1 = carImages.slice(startIdxP1, startIdxP1 + CARS_PER_PAGE);
+
+    const startIdxP2 = (currentCarPageP2 - 1) * CARS_PER_PAGE;
+    const pageCarsP2 = carImages.slice(startIdxP2, startIdxP2 + CARS_PER_PAGE);
+
+    pageCarsP1.forEach(img => {
+        const card = createCarCard(img, selectedCarP1 === img, '#5ad');
+        card.onclick = () => { selectedCarP1 = img; renderCarSelection(); playSound('menu_click'); };
+        listP1.appendChild(card);
+    });
+
+    pageCarsP2.forEach(img => {
+        const card = createCarCard(img, selectedCarP2 === img, '#f90');
+        card.onclick = () => { selectedCarP2 = img; renderCarSelection(); playSound('menu_click'); };
+        listP2.appendChild(card);
+    });
+}
+
+function createCarCard(imgUrl, isSelected, neonColor) {
+    const card = document.createElement('div');
+    card.style.cssText = `
+        background: rgba(255,255,255,0.05);
+        border: 2px solid ${isSelected ? neonColor : 'rgba(255,255,255,0.1)'};
+        border-radius: 8px;
+        padding: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: ${isSelected ? '0 0 10px ' + neonColor : 'none'};
+        height: 60px;
+    `;
+    card.onmouseover = () => { if (!isSelected) card.style.borderColor = 'rgba(255,255,255,0.3)'; };
+    card.onmouseout = () => { if (!isSelected) card.style.borderColor = 'rgba(255,255,255,0.1)'; };
+    
+    const img = document.createElement('img');
+    img.src = imgUrl;
+    img.style.width = 'auto';
+    img.style.height = '100%';
+    img.style.maxHeight = '50px';
+    img.style.filter = isSelected ? 'none' : 'grayscale(0.5) brightness(0.7)';
+    
+    card.appendChild(img);
+    return card;
 }
 
 async function startGame() {
@@ -524,6 +632,12 @@ async function loadSetupMaps() {
 async function finalizeStartGame() {
     const trans = document.getElementById('match-transition'); if (trans) trans.classList.add('active');
     if (setupOverlay) setupOverlay.style.display = 'none';
+
+    // Aplicar personalización a los coches
+    if (player1) player1.imgUrl = selectedCarP1;
+    if (player1_teammate) player1_teammate.imgUrl = selectedCarP1;
+    if (player2) player2.imgUrl = selectedCarP2;
+    if (player2_teammate) player2_teammate.imgUrl = selectedCarP2;
 
     try {
         const resp = await fetch(`maps/${selectedMap}.json?t=${Date.now()}`);

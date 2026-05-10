@@ -1,5 +1,5 @@
 # ⚽ SCAPS - Documentación Técnica (Edición Amigable)
-**Versión:** 1.7 - "Audio & UI Overhaul"
+**Versión:** 1.8 - "Customization & UI Refinement"
 
 ¡Hola! Esta guía técnica está escrita para que **cualquiera** pueda entender cómo está construido nuestro motor del juego. Vamos a explicar qué hace cada parte del código de forma sencilla y directa.
 
@@ -11,7 +11,8 @@ Piensa en `main.js` como el director de orquesta. Es el primer archivo que se ca
 ### Funciones Estrella de `main.js`:
 *   `loop()`: Es el latido del corazón del juego. Se ejecuta 60 veces por segundo. Le dice a la pantalla: "Dibuja el menú" o "Dibuja los coches", dependiendo de en qué escena estemos.
 *   `cambiarEscena(nuevaEscena)`: Es la máquina del tiempo. Borra todo lo que estás viendo y carga los elementos de la nueva fase (por ejemplo, pasar del Menú al Juego).
-*   **Paginación de Mapas**: Hemos implementado una lógica de navegación por páginas en el selector de estadios. En lugar de un scrollbar, el código filtra el array de mapas y solo dibuja 3 a la vez, gestionando flechas de "Anterior" y "Siguiente".
+*   **Paginación de Mapas y Coches**: Hemos implementado una lógica de navegación por páginas en el selector de estadios y en el de vehículos. Esto permite tener catálogos amplios sin saturar la pantalla ni usar barras de desplazamiento.
+*   **Gestión de UI Dinámica**: El sistema ahora sabe cuándo ocultar elementos decorativos (como el logo) para dar prioridad a los paneles de configuración, asegurando que el juego siempre se vea limpio.
 
 ---
 

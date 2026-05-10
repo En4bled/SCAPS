@@ -1,5 +1,21 @@
 # Changelog - SCAPS
 
+## [0.8.0] - 2026-05-10 - *Customization & UI Refinement*
+### Añadido
+- **Rediseño Total del Menú Personalizar**: 
+    - Selección de nombre de piloto con persistencia visual en el juego.
+    - Galería de miniaturas para elegir el aspecto del vehículo (Tu Vehículo y Oponentes).
+    - Paginación de vehículos (8 por página) con miniaturas compactas de 60px para evitar desbordamientos.
+- **Gestión Inteligente de Logo**: El logo del menú principal se oculta automáticamente al entrar en submenús, maximizando el espacio de trabajo.
+
+### Cambiado
+- **Menú de Pausa**: Unificada la altura de los controles de música (regulador y mute) a 50px para coincidir con el resto de botones.
+- **Optimización de Layout**: El panel de personalización es ahora más compacto y eficiente, respetando los límites visuales del fondo del juego.
+
+### Corregido
+- **Rebosamiento de Interfaz**: Solucionados los problemas de desbordamiento en el menú de personalización mediante el uso de miniaturas reducidas y paginación 4x2.
+
+
 ## [0.7.0] - 2026-05-10 - *UI & Audio Overhaul*
 ### Añadido
 - **Sistema de Audio Dinámico**: Nueva playlist de 8 canciones con reproducción aleatoria (Shuffle), metadatos (título/artista) y notificaciones visuales en la parte superior.
