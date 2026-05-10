@@ -123,6 +123,11 @@ async function init() {
         // Iniciar la secuencia de intro
         startIntro();
 
+        // Sonido global para botones
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', () => playSound('menu_click'));
+        });
+
         // Iniciar el loop principal
         requestAnimationFrame(gameLoop);
         console.log("SCAPS: Motor en marcha.");

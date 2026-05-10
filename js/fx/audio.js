@@ -90,13 +90,10 @@ export function playSound(type, intensity = 1.0) {
     const now = audioCtx.currentTime;
 
     if (type === 'menu_click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-        gainNode.gain.setValueAtTime(0.2, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
+        const clickSnd = new Audio('sound/Modern2.wav');
+        clickSnd.volume = 0.5;
+        clickSnd.play().catch(e => {});
+        return;
     } 
     else if (type === 'ball_hit') {
         osc.type = 'triangle';
