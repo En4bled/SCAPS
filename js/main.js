@@ -158,6 +158,10 @@ function gameLoop(timestamp) {
 function renderFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Si estamos en la intro o en el menú, no dibujamos nada en el canvas.
+    // Esto asegura una transición limpia a través de negro.
+    if (gameState === 'intro' || gameState === 'menu') return;
+
     let targetX = player1.x, targetY = player1.y, targetRot = 0, vOffset = 0;
     if (gameState === 'menu') { 
         targetX = player1.x + mouseX * 200; targetY = player1.y + mouseY * 200; targetRot = mouseX * 0.05; 
@@ -175,11 +179,14 @@ function renderFrame() {
     ctx.translate(-currentCamX, -currentCamY);
     
     drawAll();
-    drawCarNames(ctx, allCars, player1, cameraMode, gameState);
+    
+    // Solo dibujar nombres y HUD si estamos en partida
+    if (gameState !== 'menu' && gameState !== 'intro') {
+        drawCarNames(ctx, allCars, player1, cameraMode, gameState);
+        drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
+    }
     
     ctx.restore();
-    
-    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
 }
 
 function updateAll(dt) {
@@ -272,6 +279,10 @@ function resetAfterGoal() {
 
 function drawAll() {
     drawField(ctx); 
+    
+    // Si estamos en el menú o intro, solo dibujamos el campo como fondo
+    if (gameState === 'menu' || gameState === 'intro') return;
+
     skidMarks.forEach(s => s.draw(ctx)); 
     boostPads.forEach(pad => pad.draw(ctx)); 
     particles.forEach(p => p.draw(ctx)); 
