@@ -250,15 +250,21 @@ canvas {
 }
 
 #menu-logo {
-    width: 480px;
-    margin-bottom: 60px; /* Más espacio para no pisar botones */
-    filter: drop-shadow(0 0 15px rgba(90,173,237,0.5));
-    animation: logo-float 4s ease-in-out infinite;
+    width: 380px; /* Tamaño más contenido */
+    margin-bottom: 50px;
+    filter: drop-shadow(0 0 15px rgba(90,173,237,0.6));
+    animation: logo-neon-float 4s ease-in-out infinite;
 }
 
-@keyframes logo-float {
-    0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(90,173,237,0.4)); }
-    50% { transform: translateY(-15px) scale(1.03); filter: drop-shadow(0 0 40px rgba(255,153,0,0.6)); }
+@keyframes logo-neon-float {
+    0%, 100% { 
+        transform: translateY(0) scale(1); 
+        filter: drop-shadow(0 0 15px rgba(90,173,237,0.8)); 
+    }
+    50% { 
+        transform: translateY(-12px) scale(1.02); 
+        filter: drop-shadow(0 0 35px rgba(255,153,0,0.8)); 
+    }
 }
 
 .menu-buttons {

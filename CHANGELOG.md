@@ -11,6 +11,7 @@ Este archivo registra los cambios significativos y las versiones del proyecto SC
 - Rediseño de la intro con fundidos encadenados (Fade in/out) entre escenas.
 - Sincronización del estado de silencio (Mute) entre el botón flotante y el menú de pausa.
 - Ajustes de posición y legibilidad en el menú principal.
+- Logo del menú principal reducido y con efecto de resplandor tipo neón dinámico (Azul/Naranja).
 - Logo de la intro ahora estático y sin filtros por requerimiento estético.
 
 ## [0.3.1] - 2026-05-09
