@@ -9,22 +9,20 @@ body { background:#0a0a0a; color:#eee; font-family:'Segoe UI', Tahoma, Geneva, V
 
 /* Sidebar Mejorada */
 #sidebar { 
-    width:420px; 
-    min-width:420px; 
+    width:350px; 
+    min-width:350px; 
     background:#121218; 
     border-right:1px solid #333; 
     display:flex; 
     flex-direction:column; 
     overflow-y:auto;
-    scrollbar-width: thin;
-    scrollbar-color: #444 #121218;
+    scrollbar-width: none;
+    z-index: 2100;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
+#sidebar::-webkit-scrollbar { display: none; }
 #sidebar.collapsed { width: 0; min-width: 0; border: none; }
-#sidebar::-webkit-scrollbar { width: 6px; }
-#sidebar::-webkit-scrollbar-track { background: #121218; }
-#sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
 #sidebar h1 { 
     background: linear-gradient(135deg, #5ad, #f90); 
@@ -48,14 +46,15 @@ body { background:#0a0a0a; color:#eee; font-family:'Segoe UI', Tahoma, Geneva, V
 
 /* Sidebar Toggle removido de la izquierda */
 
-.section { border-bottom:1px solid #222; padding:15px; }
-.section h3 { color:#f90; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+.tab-content { display:none; padding:10px; }
+.section { border-bottom:1px solid #222; margin-bottom:10px; padding:10px; border-top:1px solid #222; padding-top:10px; }
+.section h3 { color:#5ad; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
 .section h3 span { color:#5ad; font-size:10px; opacity:0.7; }
 
-.row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; }
-.row label { width:110px; color:#999; flex-shrink:0; }
-.row input[type=range] { flex:1; accent-color:#5ad; }
-.row input[type=number] { width:65px; background:#1a1a24; border:1px solid #333; color:#fff; padding:3px 6px; border-radius:4px; font-size:11px; }
+.row { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px; }
+.row label { width:110px; color:#999; flex-shrink:0; font-size:10px; font-weight:bold; }
+.row input[type=range] { width: 100px; accent-color:#5ad; }
+.row input[type=number] { width:45px; background:#1a1a24; border:1px solid #333; color:#fff; padding:3px 6px; border-radius:4px; font-size:10px; text-align: center; }
 .row input[type=text] { flex:1; background:#1a1a24; border:1px solid #333; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px; }
 .row select { background:#1a1a24; border:1px solid #333; color:#fff; padding:4px; border-radius:4px; font-size:11px; flex:1; }
 .val { width:45px; text-align:right; color:#5ad; font-size:11px; font-weight:bold; }
@@ -76,33 +75,80 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 }
 .btn-reset-small:hover { color: #f90; background: rgba(255,153,0,0.1); }
 
-.toolbar-canvas { 
-    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 20px; z-index: 1100; 
+/* Barra Superior de Herramientas */
+#top-toolbar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 50px;
+    background: #121218;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 2500;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+#top-toolbar.collapsed { transform: translateY(-100%); }
+
+#toolbar-toggle {
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 24px;
+    background: #121218;
+    border: 1px solid #333;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5ad;
+    font-size: 14px;
+    z-index: 2600;
+}
+
 .btn-tool { 
     background: transparent; border: none; 
-    color: #fff; font-size: 30px; 
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: 0.2s;
+    color: #fff; cursor: pointer; display: flex; 
+    flex-direction: column; align-items: center; justify-content: center;
+    transition: 0.2s; gap: 2px; padding: 5px 10px;
 }
-.btn-tool:hover { transform: scale(1.2); filter: drop-shadow(0 0 10px #5ad); }
-.btn-tool.danger:hover { filter: drop-shadow(0 0 10px #f44); }
+.btn-tool i { font-size: 24px; font-style: normal; }
+.btn-tool small { font-size: 9px; font-weight: 800; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+.btn-tool:hover { transform: translateY(-2px); }
+.btn-tool:hover i { filter: drop-shadow(0 0 10px #5ad); transform: scale(1.1); }
+.btn-tool:hover small { color: #5ad; }
+.btn-tool.active i { filter: drop-shadow(0 0 10px #fff); }
+.btn-tool.active small { color: #fff; }
+.btn-tool.danger:hover i { filter: drop-shadow(0 0 10px #f44); }
+.btn-tool.danger:hover small { color: #f44; }
+
+.toolbar-group { display: flex; align-items: center; gap: 20px; }
+.zoom-group { display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; gap: 2px; border: 1px solid #333; }
+.btn-zoom { 
+    background: transparent; border: none; color: #888; font-size: 10px; 
+    font-weight: bold; padding: 4px 8px; cursor: pointer; border-radius: 4px;
+}
+.btn-zoom:hover { background: #252530; color: #fff; }
+.btn-zoom.active { background: #5ad; color: #000; }
+.toolbar-divider { width: 1px; height: 30px; background: #333; margin: 0 5px; }
 
 #boost-list { max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:6px; padding:4px; margin-bottom:8px; }
 .item { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:11px; margin-bottom:2px; border:1px solid transparent; }
 .item:hover { background:rgba(255,255,255,0.05); }
 .item.selected { background:rgba(90,173,237,0.15); border-color:#5ad; }
 
-#canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:#08080c; overflow:hidden; }
-#mainCanvas { cursor:crosshair; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-#info-bar { position:absolute; bottom:15px; left:20px; background:rgba(18,18,24,0.9); padding:8px 16px; border-radius:8px; font-size:11px; color:#888; border:1px solid #333; }
+#info-bar { position:absolute; bottom:15px; left:20px; background:rgba(18,18,24,0.9); padding:8px 16px; border-radius:8px; font-size:11px; color:#888; border:1px solid #333; z-index: 2000; }
 #mode-badge { 
-    position:absolute; top:20px; left:50%; transform:translateX(-50%); 
+    position:absolute; top:70px; left:50%; transform:translateX(-50%); 
     background:rgba(90,173,237,0.95); color:#000; padding:10px 25px; 
     border-radius:50px; font-size:14px; font-weight:800; 
     box-shadow: 0 4px 25px rgba(0,0,0,0.5); display:none; 
-    align-items: center; gap: 15px; z-index: 2000;
+    align-items: center; gap: 15px; z-index: 2400;
     border: 2px solid #fff;
 }
 #mode-badge button {
@@ -110,7 +156,6 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     border-radius: 20px; cursor: pointer; font-size: 11px; 
     font-weight: 800; transition: 0.2s; text-transform: uppercase;
 }
-#mode-badge button:hover { background: #333; transform: scale(1.05); }
 
 /* Overlay Inicial */
 #editor-overlay {
@@ -118,19 +163,21 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
-    z-index: 1000; /* Reducido para no tapar elementos de la interfaz superior */
+    z-index: 2000;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    pointer-events: none; /* Por defecto no bloquea clics si no es necesario */
     backdrop-filter: blur(8px);
     transition: opacity 0.5s;
+    text-align: center;
 }
-#editor-overlay.active { pointer-events: all; opacity: 1; }
+#editor-overlay h2 { color: #fff; font-size: 28px; margin-bottom: 10px; }
+#editor-overlay p { color: #aaa; font-size: 14px; }
+#editor-overlay.active { pointer-events: all; opacity: 1; visibility: visible; }
 #editor-overlay:not(.active) { opacity: 0; pointer-events: none; visibility: hidden; }
 
-/* Gestor de Mapas como Sidebar Derecha Real */
+/* Gestor de Mapas Sidebar Derecha */
 #floating-map-panel {
     width: 320px;
     min-width: 320px;
@@ -141,8 +188,10 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     flex-direction: column;
     transition: width 0.3s, min-width 0.3s;
     position: relative;
+    height: 100vh;
 }
-#floating-map-panel.collapsed { width: 0; min-width: 0; border: none; overflow: hidden; }
+#floating-map-panel.collapsed { width: 0; min-width: 0; border: none; overflow: visible; }
+#floating-map-panel.collapsed #map-panel-content { display: none; }
 
 #map-panel-toggle {
     position: absolute;
@@ -161,7 +210,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     justify-content: center;
     color: #f90;
     font-weight: bold;
-    z-index: 2200;
+    z-index: 3000; /* Aseguramos que esté por encima de todo */
 }
 
 #map-list { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; }
@@ -205,24 +254,36 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 .btn-icon:hover { background: #5ad; color: #000; border-color: #fff; transform: scale(1.1); }
 .btn-icon.del:hover { background: #f44; color: #fff; }
 
-.tabs { display:flex; background:#1a1a24; border-radius:8px; padding:3px; margin-bottom:15px; }
-.tab { flex:1; padding:6px; text-align:center; font-size:10px; font-weight:bold; cursor:pointer; border-radius:6px; color:#666; transition:0.2s; }
-.tab.active { background:#252530; color:#5ad; }
+.tabs { display:flex; flex-wrap: wrap; background: transparent; padding:0; margin: 0 15px 20px 15px; gap: 8px; }
+.tab { width: calc(50% - 4px); background:#1a1a24; padding: 12px 4px; text-align:center; font-size:9px; font-weight:bold; cursor:pointer; border-radius:8px; color:#666; transition:0.2s; box-sizing: border-box; border: 1px solid #333; }
+.tab.active { background:#252530; color:#5ad; border-color: #5ad; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+
 
 .file-input-wrapper { position:relative; flex:1; display:flex; gap:5px; align-items:center; }
 .file-input-wrapper input[type=file] { position:absolute; left:0; top:0; opacity:0; width:100%; height:100%; cursor:pointer; }
+
+#canvas-wrap { flex:1; position:relative; display:flex; flex-direction: column; background:#08080c; overflow:hidden; }
+#mainCanvas { cursor:crosshair; flex: 1; display: block; }
+</style>
+
 </style>
 </head>
 <body>
 
 <div id="sidebar">
-  <h1 style="line-height: 1.1; margin-top: 10px;">⚽ SCAPS<br><span style="font-size: 0.5em; color: #5ad; letter-spacing: 2px; -webkit-text-fill-color: #5ad;">EDITOR DE MAPAS</span></h1>
+  <h1 style="line-height: 1.0; margin-top: 2px; text-align: center; margin-bottom: 5px;">
+    <img src="res/LOGO.png" alt="SCAPS" style="height: 70px; width: auto; margin-bottom: 0;">
+    <br>
+    <span style="font-size: 0.5em; color: #5ad; letter-spacing: 4px; -webkit-text-fill-color: #5ad; font-weight: 800; text-transform: uppercase;">EDITOR DE MAPAS</span>
+  </h1>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="world">MUNDO/FONDO</div>
-    <div class="tab" data-tab="field">CAMPO/POLÍGONO</div>
-    <div class="tab" data-tab="goals">BALÓN/PORTERÍAS</div>
-    <div class="tab" data-tab="entities">SPAWNS/BOOSTS</div>
+  <div class="tabs" style="margin-top: 5px; margin-bottom: 15px;">
+
+    <div class="tab active" data-tab="world" onclick="switchTab('world')">MUNDO/FONDO</div>
+    <div class="tab" data-tab="field" onclick="switchTab('field')">CAMPO/POLÍGONO</div>
+    <div class="tab" data-tab="goals" onclick="switchTab('goals')">BALÓN/PORTERÍAS</div>
+    <div class="tab" data-tab="entities" onclick="switchTab('entities')">SPAWNS/BOOSTS</div>
   </div>
 
   <div id="tab-world" class="tab-content">
@@ -284,12 +345,12 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
   </div>
 
   <div id="tab-goals" class="tab-content" style="display:none">
-    <div class="section">
-        <h3>🥅 Portería Izquierda (Azul)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('top','x')">↺</button></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="500" max="2500"><button class="btn-reset-small" onclick="resetGoalVal('top','y')">↺</button></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="200" max="1200"><button class="btn-reset-small" onclick="resetGoalVal('top','w')">↺</button></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="500"><button class="btn-reset-small" onclick="resetGoalVal('top','d')">↺</button></div>
+    <div class="section" style="border-left: 4px solid #5ad; padding-left: 10px; background: rgba(90, 173, 237, 0.05);">
+        <h3 style="color: #5ad;">🥅 Portería Azul (Izquierda)</h3>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="2000" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="500" max="2500" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="200" max="1200" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="500" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','d')">↺</button></div>
         <div class="row">
             <label>Imagen Red</label>
             <div class="file-input-wrapper">
@@ -298,13 +359,23 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
                 <button onclick="document.getElementById('goalTFile').click()" style="width:40px">📁</button>
             </div>
         </div>
+        <div style="background: rgba(90, 173, 237, 0.05); padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px dashed rgba(90, 173, 237, 0.3);">
+            <h4 style="font-size: 10px; color: #5ad; margin-bottom: 8px; text-transform: uppercase;">Ajustes Visuales (Sprite)</h4>
+            <div class="row"><label>X Sprite</label><input type="number" id="goalTNetX"><input type="range" id="goalTNetXR" min="0" max="2000" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','netX')">↺</button></div>
+            <div class="row"><label>Y Sprite</label><input type="number" id="goalTNetY"><input type="range" id="goalTNetYR" min="500" max="2500" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','netY')">↺</button></div>
+            <div class="row"><label>Ancho Sprite</label><input type="number" id="goalTNetW"><input type="range" id="goalTNetWR" min="200" max="1500" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','netW')">↺</button></div>
+            <div class="row"><label>Fondo Sprite</label><input type="number" id="goalTNetD"><input type="range" id="goalTNetDR" min="50" max="800" style="accent-color: #5ad;"><button class="btn-reset-small" onclick="resetGoalVal('top','netD')">↺</button></div>
+        </div>
+
     </div>
-    <div class="section">
-        <h3>🥅 Portería Derecha (Naranja)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="2000" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','x')">↺</button></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="500" max="2500"><button class="btn-reset-small" onclick="resetGoalVal('bottom','y')">↺</button></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="200" max="1200"><button class="btn-reset-small" onclick="resetGoalVal('bottom','w')">↺</button></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="500"><button class="btn-reset-small" onclick="resetGoalVal('bottom','d')">↺</button></div>
+
+
+    <div class="section" style="border-left: 4px solid #f90; padding-left: 10px; background: rgba(249, 144, 0, 0.05);">
+        <h3 style="color: #f90;">🥅 Portería Naranja (Derecha)</h3>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="2000" max="5000" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="500" max="2500" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="200" max="1200" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="500" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','d')">↺</button></div>
         <div class="row">
             <label>Imagen Red</label>
             <div class="file-input-wrapper">
@@ -313,7 +384,17 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
                 <button onclick="document.getElementById('goalBFile').click()" style="width:40px">📁</button>
             </div>
         </div>
+        <div style="background: rgba(255, 153, 0, 0.05); padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px dashed rgba(255, 153, 0, 0.3);">
+            <h4 style="font-size: 10px; color: #f90; margin-bottom: 8px; text-transform: uppercase;">Ajustes Visuales (Sprite)</h4>
+            <div class="row"><label>X Sprite</label><input type="number" id="goalBNetX"><input type="range" id="goalBNetXR" min="2000" max="5000" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','netX')">↺</button></div>
+            <div class="row"><label>Y Sprite</label><input type="number" id="goalBNetY"><input type="range" id="goalBNetYR" min="500" max="2500" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','netY')">↺</button></div>
+            <div class="row"><label>Ancho Sprite</label><input type="number" id="goalBNetW"><input type="range" id="goalBNetWR" min="200" max="1500" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','netW')">↺</button></div>
+            <div class="row"><label>Fondo Sprite</label><input type="number" id="goalBNetD"><input type="range" id="goalBNetDR" min="50" max="800" style="accent-color: #f90;"><button class="btn-reset-small" onclick="resetGoalVal('bottom','netD')">↺</button></div>
+        </div>
+
     </div>
+
+
     <div class="section">
         <h3>⚽ Pelota</h3>
         <button id="btn-mode-ball" style="width:100%">📍 Posicionar Pelota</button>
@@ -344,48 +425,68 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     </div>
   </div>
 </div>
-<div id="resizer"></div>
 
 <div id="canvas-wrap">
+  <div id="top-toolbar">
+    <div class="toolbar-group">
+        <button id="btn-undo" class="btn-tool" title="Deshacer (Ctrl+Z)"><i>↩️</i><small>Deshacer</small></button>
+        <button id="btn-redo" class="btn-tool" title="Rehacer (Ctrl+Y)"><i>↪️</i><small>Rehacer</small></button>
+    </div>
+    
+    <div class="toolbar-group" style="margin-left: 60px;">
+        <button id="btn-reset-all" class="btn-tool danger" title="Restablecer todo"><i>🔃</i><small>Restablecer</small></button>
+    </div>
+
+    <div class="toolbar-group" style="margin-left: auto; flex-direction: column; gap: 5px; align-items: center;">
+        <div class="zoom-group">
+            <button class="btn-zoom" data-z="0.2" onclick="setZoom(0.2)">20%</button>
+            <button class="btn-zoom" data-z="0.5" onclick="setZoom(0.5)">50%</button>
+            <button class="btn-zoom" data-z="0.7" onclick="setZoom(0.7)">70%</button>
+            <button class="btn-zoom" data-z="1" onclick="setZoom(1)">100%</button>
+        </div>
+        <small style="font-size: 9px; font-weight: 800; color: #666; letter-spacing: 1px;">ZOOM</small>
+    </div>
+
+    <div class="toolbar-group" style="margin-left: 20px;">
+        <button id="btn-grid" class="btn-tool" title="Alternar Rejilla (G)"><i>🌐</i><small>Rejilla</small></button>
+    </div>
+    <button id="toolbar-toggle" title="Mostrar/Ocultar Barra">▲</button>
+  </div>
+
+
   <div id="editor-overlay" class="active">
     <h2>Abre el mapa para editar</h2>
     <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor a la derecha o crea uno nuevo</p>
   </div>
 
-  <div class="toolbar-canvas">
-    <div style="display: flex; gap: 15px;">
-      <button id="btn-undo" class="btn-tool" title="Deshacer (Ctrl+Z)">↩️</button>
-      <button id="btn-redo" class="btn-tool" title="Rehacer (Ctrl+Y)">↪️</button>
-    </div>
-    <button id="btn-reset-all" class="btn-tool danger" title="Restablecer todos los ajustes" style="margin-left: 30px;">🔃</button>
-  </div>
-
   <canvas id="mainCanvas"></canvas>
-  <div id="info-bar">Cámara: 0, 0 | Zoom: 100% | Sin Servidor</div>
+  <div id="info-bar">Mundo: 0, 0 | Zoom: 100% | Rejilla: No</div>
   <div id="mode-badge">
     <span>MODO: EDICIÓN DE POLÍGONO</span>
     <button id="btn-exit-poly-mode">TERMINAR EDICIÓN</button>
   </div>
 </div>
 
+
 <div id="floating-map-panel">
     <button id="map-panel-toggle" title="Plegar/Desplegar Gestor">▶</button>
-    
-    <div id="map-panel-content" style="padding: 15px; display: flex; flex-direction: column; height: 100%;">
+    <div id="map-panel-content" style="padding: 15px; display: flex; flex-direction: column; height: 100%; overflow: hidden;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <span style="font-weight: 800; font-size: 11px; letter-spacing: 1px; color: #f90;">💾 GESTOR DE MAPAS</span>
-            <button id="btn-reset" class="btn-new-map" title="Nuevo Mapa">➕</button>
         </div>
 
-        <div class="row" style="margin-bottom: 15px;">
+        <div class="row" style="margin-bottom: 10px;">
             <input type="text" id="mapName" placeholder="Nombre del mapa..." style="flex:1; padding:10px; background:#1a1a24; border:1px solid #444; color:white; border-radius:6px; font-size: 12px; font-weight: bold;">
         </div>
         
-        <button id="btn-save-json" class="primary" style="width:100%; margin-bottom: 20px;">💾 GUARDAR MAPA ACTUAL</button>
+        <button id="btn-reset" class="primary" style="width:100%; margin-bottom: 20px;">➕ CREAR NUEVO MAPA</button>
         
         <div style="font-size: 10px; color: #5ad; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 800;">Tus Arenas:</div>
-        <div id="map-list"></div>
+        <div id="map-list" style="margin-bottom: 15px;"></div>
+
+        <button id="btn-save-json" class="primary" style="width:100%; margin-top: auto;">💾 GUARDAR MAPA ACTUAL</button>
     </div>
+
   </div>
 </div>
 
@@ -402,8 +503,8 @@ const DEFAULTS = {
         {"x": 525, "y": 1900}, {"x": 520, "y": 1261}, {"x": 737, "y": 1256}, {"x": 741, "y": 740}
     ],
     goals: {
-        top: { x: 744, y: 1590, w: 650, d: 200, img: '' },
-        bottom: { x: 3339, y: 1563, w: 621, d: 200, img: '' }
+        top: { x: 744, y: 1590, w: 650, d: 200, netX: 744, netY: 1590, netW: 650, netD: 200, img: '' },
+        bottom: { x: 3339, y: 1563, w: 621, d: 200, netX: 3339, netY: 1563, netW: 621, netD: 200, img: '' }
     },
     spawns: [
         { x: 1100, y: 1500, a: 1.57 }, { x: 1300, y: 1100, a: 1.8 },
@@ -417,7 +518,8 @@ const DEFAULTS = {
     ball: { x: 2039, y: 1497 },
     zoom: 0.12,
     mode: 'none',
-    selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1,
+    showGrid: false, gridSize: 25,
+    selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1, selectedGoal: null, selectedNet: null,
     isDragging: false, dragType: null,
     panX: 0, panY: 0, isPanning: false, lastMouse: { x: 0, y: 0 },
     isLoaded: false
@@ -429,7 +531,6 @@ let historyStack = [JSON.stringify(DEFAULTS)];
 let historyIndex = 0;
 
 function saveHistory() {
-    // Eliminar estados futuros si estamos en medio de la pila
     if (historyIndex < historyStack.length - 1) {
         historyStack = historyStack.slice(0, historyIndex + 1);
     }
@@ -503,6 +604,10 @@ function syncUI() {
         document.getElementById(prefix+'Y').value = data.y; document.getElementById(prefix+'YR').value = data.y;
         document.getElementById(prefix+'W').value = data.w; document.getElementById(prefix+'WR').value = data.w;
         document.getElementById(prefix+'D').value = data.d; document.getElementById(prefix+'DR').value = data.d;
+        document.getElementById(prefix+'NetX').value = data.netX || data.x; document.getElementById(prefix+'NetXR').value = data.netX || data.x;
+        document.getElementById(prefix+'NetY').value = data.netY || data.y; document.getElementById(prefix+'NetYR').value = data.netY || data.y;
+        document.getElementById(prefix+'NetW').value = data.netW || data.w; document.getElementById(prefix+'NetWR').value = data.netW || data.w;
+        document.getElementById(prefix+'NetD').value = data.netD || data.d; document.getElementById(prefix+'NetDR').value = data.netD || data.d;
     };
     syncGoal('goalT', S.goals.top); syncGoal('goalB', S.goals.bottom);
     document.getElementById('goalTImg').value = S.goals.top.img || '';
@@ -529,7 +634,6 @@ function render() {
     ctx.save();
     ctx.translate(S.panX, S.panY);
     
-    // Si no hay zoom definido o es muy pequeño, calculamos uno inicial para que encaje
     if (S.zoom <= 0.05) {
         S.zoom = Math.min(canvas.width / (S.worldW * 1.1), canvas.height / (S.worldH * 1.1));
         S.panX = 0; S.panY = 0;
@@ -538,7 +642,6 @@ function render() {
     const z = S.zoom, ox = (canvas.width - S.worldW * z) / 2, oy = (canvas.height - S.worldH * z) / 2;
     ctx.save(); ctx.translate(ox, oy); ctx.scale(z, z);
 
-    // 1. FONDO (Semi-opaco si no estamos en Mundo)
     ctx.save();
     if (activeTab !== 'world') ctx.globalAlpha = 0.4;
     if (bgImg.complete && bgImg.naturalWidth > 0 && S.bgUrl) {
@@ -547,7 +650,6 @@ function render() {
     }
     ctx.restore();
 
-    // 2. POLÍGONO (Resaltado en pestaña Field)
     if (S.poly.length > 1) {
         ctx.save();
         if (activeTab === 'field') {
@@ -574,20 +676,31 @@ function render() {
     // 3. PORTERÍAS (Resaltadas en pestaña Goals)
     ctx.save();
     if (activeTab !== 'goals') ctx.globalAlpha = 0.2;
-    const drawGoal = (g, color) => {
-        ctx.save(); ctx.translate(g.x, g.y); 
-        ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
+    const drawGoal = (g, isSelected) => {
         const isLeft = g.x < S.worldW / 2;
+        const color = isLeft ? '#5ad' : '#f90';
+        ctx.save(); ctx.translate(g.x, g.y);
+        ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
         const drawX = isLeft ? -g.d : 0;
-        ctx.fillRect(drawX, -g.w/2, g.d, g.w); 
+        ctx.fillRect(drawX, -g.w/2, g.d, g.w);
         ctx.strokeRect(drawX, -g.w/2, g.d, g.w);
+        // Línea de gol blanca
         ctx.beginPath(); ctx.moveTo(0, -g.w/2); ctx.lineTo(0, g.w/2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
+        
+        // Guía de agarre (Asa física) - CENTRADA EN EL OBJETO
+        if (activeTab === 'goals') {
+            ctx.globalAlpha = 1; ctx.fillStyle = isSelected ? '#fff' : color;
+            const handleX = isLeft ? -g.d/2 : g.d/2;
+            ctx.beginPath(); ctx.arc(handleX, 0, 15, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+        }
         ctx.restore();
     };
-    drawGoal(S.goals.top, '#f90'); drawGoal(S.goals.bottom, '#5ad');
+    drawGoal(S.goals.top, S.selectedGoal === 'top'); 
+    drawGoal(S.goals.bottom, S.selectedGoal === 'bottom');
     ctx.restore();
 
-    // 4. SPAWNS Y BOOSTS (Resaltados en pestaña Entities)
+
     ctx.save();
     if (activeTab !== 'entities') ctx.globalAlpha = 0.2;
     S.spawns.forEach((sp, i) => {
@@ -611,7 +724,6 @@ function render() {
     });
     ctx.restore();
 
-    // 5. BALÓN (Resaltado en pestaña Goals)
     ctx.save();
     if (activeTab !== 'goals') ctx.globalAlpha = 0.2;
     ctx.translate(S.ball.x, S.ball.y);
@@ -620,20 +732,40 @@ function render() {
     ctx.font = 'bold 18px monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText("BALON", 0, 75);
     ctx.restore();
 
-    // 6. REDES DE PORTERÍA (Efecto profundidad)
     ctx.save();
     if (activeTab !== 'goals') ctx.globalAlpha = 0.4;
-    const drawNet = (g, img) => {
+    const drawNet = (g, img, isSelected) => {
         if (!img.src || !img.complete) return;
-        ctx.save(); ctx.translate(g.x, g.y);
         const isLeft = g.x < S.worldW / 2;
-        const dx = isLeft ? -g.d : 0;
-        ctx.drawImage(img, dx, -g.w/2, g.d, g.w);
+        const nx = g.netX !== undefined ? g.netX : g.x;
+        const ny = g.netY !== undefined ? g.netY : g.y;
+        const nw = g.netW || g.w;
+        const nd = g.netD || g.d;
+        ctx.save(); ctx.translate(nx, ny);
+        const dx = isLeft ? -nd : 0;
+        ctx.drawImage(img, dx, -nw/2, nd, nw);
+        if (isSelected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 10; ctx.strokeRect(dx, -nw/2, nd, nw); }
+        
+        // Guía de agarre (Asa de red) - CENTRADA EN EL SPRITE
+        if (activeTab === 'goals') {
+            ctx.globalAlpha = 1; ctx.fillStyle = isSelected ? '#fff' : '#0f0';
+            const handleX = isLeft ? -nd/2 : nd/2;
+            ctx.beginPath(); ctx.arc(handleX, 0, 12, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        }
         ctx.restore();
     };
-    drawNet(S.goals.top, netImgT);
-    drawNet(S.goals.bottom, netImgB);
+    drawNet(S.goals.top, netImgT, S.selectedNet === 'top');
+    drawNet(S.goals.bottom, netImgB, S.selectedNet === 'bottom');
     ctx.restore();
+
+    if (S.showGrid) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1.5;
+        for (let x = 0; x <= S.worldW; x += S.gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, S.worldH); ctx.stroke(); }
+        for (let y = 0; y <= S.worldH; y += S.gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(S.worldW, y); ctx.stroke(); }
+        ctx.restore();
+    }
 
     ctx.restore(); ctx.restore();
 }
@@ -647,20 +779,19 @@ function canvasToWorld(cx, cy) {
 canvas.addEventListener('mousedown', e => {
     if (!S.isLoaded) return;
     const r = canvas.getBoundingClientRect(), wp = canvasToWorld(e.clientX - r.left, e.clientY - r.top);
+    const activeTab = document.querySelector('.tab.active')?.dataset.tab || 'world';
     
     if (e.button === 1 || e.button === 2) { S.isPanning = true; S.lastMouse = { x: e.clientX, y: e.clientY }; canvas.style.cursor = 'grabbing'; return; }
     if (e.button !== 0) return;
 
     let hit = false;
 
-    // 1. Prioridad: Polígono (Puntos)
-    if (S.mode === 'poly') {
+    if (S.mode === 'poly' && activeTab === 'field') {
         let foundPoint = -1;
         S.poly.forEach((p, i) => { if (Math.sqrt((p.x-wp.x)**2 + (p.y-wp.y)**2) < 30 / S.zoom) foundPoint = i; });
         if (foundPoint !== -1) {
             S.selectedPoint = foundPoint; S.isDragging = true; S.dragType = 'poly'; hit = true;
         } else {
-            // Si no tocamos punto pero estamos en modo poly, añadimos uno nuevo al lado del seleccionado
             if (S.selectedPoint !== -1 && S.selectedPoint < S.poly.length) {
                 S.poly.splice(S.selectedPoint + 1, 0, wp);
                 S.selectedPoint++;
@@ -672,8 +803,7 @@ canvas.addEventListener('mousedown', e => {
         }
     }
 
-    // 2. Spawns
-    if (!hit) {
+    if (!hit && activeTab === 'entities') {
         S.spawns.forEach((sp, i) => {
             if (Math.sqrt((sp.x-wp.x)**2 + (sp.y-wp.y)**2) < 60) {
                 S.mode = 'spawn'; S.selectedSpawn = i; S.isDragging = true; S.dragType = 'spawn'; hit = true;
@@ -682,8 +812,7 @@ canvas.addEventListener('mousedown', e => {
         });
     }
 
-    // 3. Boosts
-    if (!hit) {
+    if (!hit && activeTab === 'entities') {
         S.boosts.forEach((b, i) => {
             const radius = b.big ? 60 : 35;
             if (Math.sqrt((b.x-wp.x)**2 + (b.y-wp.y)**2) < radius) {
@@ -693,22 +822,45 @@ canvas.addEventListener('mousedown', e => {
         });
     }
 
-    // 4. Balón
-    if (!hit) {
+    if (!hit && activeTab === 'goals') {
         if (Math.sqrt((S.ball.x-wp.x)**2 + (S.ball.y-wp.y)**2) < 55) {
             S.mode = 'ball'; S.isDragging = true; S.dragType = 'ball'; hit = true;
             switchTab('goals');
         }
     }
 
-    // 5. Click en vacío: Deseleccionar
+    if (!hit && activeTab === 'goals') {
+        const checkG = (g, key) => {
+            // FORZAR INDEPENDENCIA: Si no hay valores visuales, los creamos basados en los actuales
+            if (g.netX === undefined) g.netX = g.x;
+            if (g.netY === undefined) g.netY = g.y;
+            if (g.netW === undefined) g.netW = g.w;
+            if (g.netD === undefined) g.netD = g.d;
+
+            const isLeft = g.x < S.worldW / 2;
+            const nx = g.netX, ny = g.netY, nw = g.netW, nd = g.netD;
+            const handleNetX = nx + (isLeft ? -nd/2 : nd/2);
+            const handleGoalX = g.x + (isLeft ? -g.d/2 : g.d/2);
+
+            // PRIORIDAD 1: LA RED (Sprite)
+            if (Math.sqrt((handleNetX-wp.x)**2 + (ny-wp.y)**2) < 60) {
+                S.selectedNet = key; S.isDragging = true; S.dragType = 'net'; hit = true; return true;
+            }
+            // PRIORIDAD 2: LA ZONA FÍSICA (Muro)
+            if (Math.sqrt((handleGoalX-wp.x)**2 + (g.y-wp.y)**2) < 60) {
+                S.selectedGoal = key; S.isDragging = true; S.dragType = 'goal'; hit = true; return true;
+            }
+
+            return false;
+        };
+        if (checkG(S.goals.top, 'top')) hit = true;
+        else if (checkG(S.goals.bottom, 'bottom')) hit = true;
+    }
+
     if (!hit) {
         S.mode = 'none';
-        S.selectedSpawn = -1;
-        S.selectedBoost = -1;
-        S.selectedPoint = -1;
-        S.isDragging = false;
-        S.dragType = null;
+        S.selectedSpawn = -1; S.selectedBoost = -1; S.selectedPoint = -1; S.selectedGoal = null; S.selectedNet = null;
+        S.isDragging = false; S.dragType = null;
         renderSpawnList(); renderBoostList();
     }
 
@@ -719,14 +871,30 @@ canvas.addEventListener('contextmenu', e => { e.preventDefault(); });
 canvas.addEventListener('mousemove', e => {
     if (!S.isLoaded) return;
     if (S.isPanning) { const dx = e.clientX - S.lastMouse.x, dy = e.clientY - S.lastMouse.y; S.panX += dx; S.panY += dy; S.lastMouse = { x: e.clientX, y: e.clientY }; render(); return; }
-    const r = canvas.getBoundingClientRect(), wp = canvasToWorld(e.clientX - r.left, e.clientY - r.top);
-    infoBar.textContent = `Mundo: ${wp.x}, ${wp.y} | Zoom: ${Math.round(S.zoom*100)}% | Modo: ${S.mode}`;
+    const r = canvas.getBoundingClientRect(), wpRaw = canvasToWorld(e.clientX - r.left, e.clientY - r.top);
+    let wp = { ...wpRaw };
+    if (S.showGrid) { wp.x = Math.round(wp.x / S.gridSize) * S.gridSize; wp.y = Math.round(wp.y / S.gridSize) * S.gridSize; }
+
+    infoBar.textContent = `Mundo: ${wp.x}, ${wp.y} | Zoom: ${Math.round(S.zoom*100)}% | Rejilla: ${S.showGrid ? 'SÍ' : 'NO'}`;
     
     if (S.isDragging) {
         if (S.dragType === 'poly' && S.selectedPoint !== -1) { S.poly[S.selectedPoint].x = wp.x; S.poly[S.selectedPoint].y = wp.y; }
         else if (S.dragType === 'spawn' && S.selectedSpawn !== -1) { S.spawns[S.selectedSpawn].x = wp.x; S.spawns[S.selectedSpawn].y = wp.y; }
         else if (S.dragType === 'boost' && S.selectedBoost !== -1) { S.boosts[S.selectedBoost].x = wp.x; S.boosts[S.selectedBoost].y = wp.y; }
         else if (S.dragType === 'ball') { S.ball.x = wp.x; S.ball.y = wp.y; }
+        else if (S.dragType === 'goal' && S.selectedGoal) { 
+            const g = S.goals[S.selectedGoal];
+            const isLeft = g.x < S.worldW / 2;
+            g.x = wp.x - (isLeft ? -g.d/2 : g.d/2);
+            g.y = wp.y;
+        }
+        else if (S.dragType === 'net' && S.selectedNet) { 
+            const g = S.goals[S.selectedNet];
+            const isLeft = g.x < S.worldW / 2;
+            g.netX = wp.x - (isLeft ? -g.netD/2 : g.netD/2);
+            g.netY = wp.y;
+        }
+        syncUI();
         render();
     }
 });
@@ -736,45 +904,47 @@ window.addEventListener('mouseup', () => {
 });
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (e.deltaY < 0) S.zoom *= 1.1; else S.zoom /= 1.1; S.zoom = Math.max(0.05, Math.min(S.zoom, 5)); render(); }, { passive: false });
 
-// Resizer de la Sidebar Izquierda
-const sidebar = document.getElementById('sidebar');
-const resizer = document.getElementById('resizer');
-resizer.addEventListener('mousedown', (e) => {
-    const startX = e.clientX;
-    const startWidth = sidebar.offsetWidth;
-    const onMouseMove = (e) => {
-        const newWidth = startWidth + (e.clientX - startX);
-        if (newWidth > 200 && newWidth < 800) {
-            sidebar.style.width = newWidth + 'px';
-            sidebar.style.minWidth = newWidth + 'px';
-            canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render();
-        }
-    };
-    const onMouseUp = () => {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-    };
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-});
+document.getElementById('toolbar-toggle').onclick = (e) => {
+    const bar = document.getElementById('top-toolbar');
+    const isCollapsed = bar.classList.toggle('collapsed');
+    e.target.textContent = isCollapsed ? '▼' : '▲';
+};
 
-function toggleSidebar(forceOpen = false) {
-    const sb = sidebar;
-    if (forceOpen) { sb.classList.remove('collapsed'); }
-}
-window.switchTab = (t) => {
-    document.querySelectorAll('.tab').forEach(x => {
-        const tabName = x.dataset.tab;
-        if (tabName === t) {
-            x.classList.add('active');
-            if (document.getElementById('tab-' + t)) document.getElementById('tab-' + t).style.display = 'block';
-        } else {
-            x.classList.remove('active');
-            if (document.getElementById('tab-' + tabName)) document.getElementById('tab-' + tabName).style.display = 'none';
-        }
-    });
+document.getElementById('btn-grid').onclick = (e) => {
+    S.showGrid = !S.showGrid;
+    e.target.classList.toggle('active', S.showGrid);
     render();
 };
+
+document.getElementById('map-panel-toggle').onclick = (e) => {
+    const panel = document.getElementById('floating-map-panel');
+    const isCollapsed = panel.classList.toggle('collapsed');
+    e.target.textContent = isCollapsed ? '◀' : '▶';
+};
+
+function setZoom(val) {
+    S.zoom = val;
+    document.querySelectorAll('.btn-zoom').forEach(b => {
+        b.classList.toggle('active', parseFloat(b.dataset.z) === val);
+    });
+    render();
+}
+window.setZoom = setZoom;
+
+function switchTab(tabId) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.style.display = 'none');
+    
+    const targetTab = Array.from(tabs).find(t => t.dataset.tab === tabId);
+    if (targetTab) targetTab.classList.add('active');
+    
+    const targetContent = document.getElementById('tab-' + tabId);
+    if (targetContent) targetContent.style.display = 'block';
+    render();
+}
+window.switchTab = switchTab;
 
 document.querySelectorAll('.tab').forEach(t => {
     t.onclick = () => window.switchTab(t.dataset.tab);
@@ -825,7 +995,10 @@ window.renderBoostList = () => {
 bindS('bgScale', 'bgScale'); bindS('bgOX', 'bgOX'); bindS('bgOY', 'bgOY'); bindS('worldW', 'worldW'); bindS('worldH', 'worldH');
 ['goalT','goalB'].forEach(p => { 
     const goalName = p==='goalT'?'top':'bottom'; 
-    ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), () => S.goals[goalName])); 
+    ['x','y','w','d','netX','netY','netW','netD'].forEach(k => {
+        const suffix = k.charAt(0).toUpperCase() + k.slice(1);
+        bindS(p + suffix, k, () => S.goals[goalName]);
+    });
 });
 
 document.getElementById('goalTFile').onchange = e => {

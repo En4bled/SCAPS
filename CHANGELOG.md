@@ -1,6 +1,15 @@
-# Historial de Versiones - SCAPS
+# Changelog - SCAPS
 
-Este archivo registra los cambios significativos y las versiones del proyecto SCAPS.
+## [0.6.0] - 2026-05-10 - *Actualización "Smart Editor"*
+### Añadido
+- **Organigrama de Escenas**: Documentación amigable (`ORGANIGRAMA_ESCENAS.md`) que explica el flujo completo del juego, desde la Intro hasta el Fin del Partido.
+- **Documentación Técnica Renovada**: El archivo `DOCUMENTACION_TECNICA.md` se ha reescrito usando jerga sencilla, clara y amigable para facilitar la incorporación de nuevos desarrolladores o curiosos.
+- **Independencia de Porterías y Redes**: Se ha dividido la lógica interna en el editor y el motor; ahora la zona real donde la pelota cuenta como gol es independiente de dónde y cómo se dibuja visualmente la red (`netW`, `netD`, `netX`, `netY`).
+
+### Corregido
+- **Física del Equipo Naranja**: Arreglado por completo el molesto rebote extraño que ocurría en el fondo de la portería derecha (Naranja). Ahora los goles entran limpios.
+- **Interfaz del Editor (Sidebar)**: Eliminadas las barras de desplazamiento (scrollbars) innecesarias en el gestor de mapas. Optimización de la altura y mejora visual de los colores (Azul a la izquierda, Naranja a la derecha).
+- **Editor Snapping (Rejilla)**: El sistema de imantación (grid) funciona ahora correctamente para arrastrar redes y porterías, facilitando enormemente la alineación de elementos simétricos.
 
 ## [0.5.0] - 2026-05-10
 ### Añadido
@@ -23,9 +32,6 @@ Este archivo registra los cambios significativos y las versiones del proyecto SC
 - Sonidos de interacción: clic (`Modern2.wav`) y hover (`Minimalist8.wav`).
 - Efecto de difuminado (Glassmorphism) en los botones del menú.
 - Tamaño de los botones del menú reducido para una interfaz más compacta.
-### Cambiado
-- Efecto de resplandor neón dinámico en el logo del menú principal.
-- Efecto hover neón global (degradado azul/naranja) aplicado a todos los botones.
 ### Cambiado
 - Ajustes de posición y altura en el logo, botones y botón de mute.
 - Logo del menú principal reducido y con efecto de resplandor tipo neón dinámico (Azul/Naranja).

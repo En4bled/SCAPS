@@ -339,7 +339,7 @@ canvas {
     display: inline-block;
     padding-left: 100%;
     animation: marquee 30s linear infinite, marquee-text-cycle 10s infinite alternate;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -559,3 +559,19 @@ canvas {
 .msetup-btn-play:hover { background: #66bb6a; }
 .msetup-btn-exit { background: #333; color: #888; border-color: #222; font-size: 16px; }
 .msetup-btn-exit:hover { background: #444; color: #fff; }
+/* ESTILOS PARA MODOS DE JUEGO (IMÁGENES) */
+.mode-option {
+    transition: all 0.3s ease;
+    border: 2px solid transparent !important;
+}
+
+.mode-option:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.2);
+}
+
+.mode-option.active {
+    border-color: #5ad !important;
+    box-shadow: 0 0 20px rgba(90, 173, 237, 0.6);
+    filter: brightness(1.2);
+}

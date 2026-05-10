@@ -17,3 +17,4 @@ node_modules/
 
 # Archivos de respaldo o versiones viejas si no quieres subirlos
 "PRIMERAS VERSIONES/"
+*.psd

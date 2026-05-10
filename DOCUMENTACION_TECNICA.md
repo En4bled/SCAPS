@@ -1,53 +1,51 @@
-# ⚽ SCAPS - Documentación Técnica Oficial
-**Versión:** 1.5 - "Cinematic & Physics Update"
-**Desarrollador:** En4bLeD_ (con asistencia de IA avanzada)
+# ⚽ SCAPS - Documentación Técnica (Edición Amigable)
+**Versión:** 1.6 - "Smart Editor & Physics Update"
 
-## 1. 📂 Glosario de Escenas y Flujo
-El juego se divide en las siguientes etapas secuenciales. Puedes referirte a estos nombres para solicitar cambios específicos:
+¡Hola! Esta guía técnica está escrita para que **cualquiera** pueda entender cómo está construido nuestro motor del juego. Vamos a explicar qué hace cada parte del código de forma sencilla y directa.
 
-- **`INTRO_BRANDING`**: Pantalla inicial en negro. Muestra el logo de `capsules.png` rotando y los créditos del desarrollador. Fundido de entrada y salida suave.
-- **`INTRO_LEGAL`**: Nota de desarrollo detallada sobre el estado del proyecto y disclaimer legal. Requiere interacción (ESPACIO).
-- **`MENU_PRINCIPAL`**: El centro de control del juego.
-    - **`MENU_NITIDO`**: Estado por defecto de la imagen de fondo.
-    - **`MENU_DESENFOCADO`**: Efecto de desenfoque dinámico al pasar el ratón por los botones (hover).
-- **`TRANSICION_PARTIDO`**: Fase de carga entre el menú y el juego. Incluye sonidos de pulsos de carga y fundido a negro.
-- **`PRE_PARTIDO`**: El estadio se revela pero el juego está en pausa durante 3 segundos para que los jugadores se orienten.
-- **`CUENTA_ATRAS`**: Secuencia "3, 2, 1, ¡YA!" que inicia las físicas del partido.
-- **`PARTIDO_JUGANDO`**: Escena de acción principal donde se procesan físicas, colisiones e IA.
-- **`MENU_PAUSA`**: Menú superpuesto (ESC) que permite reajustar sonidos, reiniciar o salir al menú.
-- **`GOL_CELEBRACION`**: Efectos de partículas, cámara lenta y vibración tras un gol.
-- **`FIN_PARTIDO`**: Pantalla de estadísticas finales tras agotarse el tiempo.
+---
 
-## 2. 🕹️ Funcionalidades del Motor
+## 🧠 1. El Corazón del Proyecto: `main.js`
+Piensa en `main.js` como el director de orquesta. Es el primer archivo que se carga y el que decide qué se muestra en la pantalla en cada momento.
 
-### Sistema de Físicas
-- **Vehículos**: Movimiento basado en vectores con aceleración, fricción de suelo, derrape (drift) y sistema de Boost (nitro).
-- **Balón**: Físicas de rebote elástico, fricción rodante y sistema de "Fireball" (efecto visual cuando se golpea a gran velocidad).
-- **Colisiones**: Sistema avanzado de círculos para coches y balones, con cálculo de ángulo de rebote y transferencia de energía.
+### Funciones Estrella de `main.js`:
+*   `loop()`: Es el latido del corazón del juego. Se ejecuta 60 veces por segundo. Le dice a la pantalla: "Dibuja el menú" o "Dibuja los coches", dependiendo de en qué escena estemos.
+*   `cambiarEscena(nuevaEscena)`: Es la máquina del tiempo. Borra todo lo que estás viendo y carga los elementos de la nueva fase (por ejemplo, pasar del Menú al Juego).
 
-### Inteligencia Artificial (Bots)
-- **Modos**: Los bots pueden actuar como Atacantes (persiguen el balón), Defensores (protegen la portería) o Apoyo.
-- **Variedad**: Selección aleatoria de 10 modelos de vehículos (`Car1.png` a `Car10.png`) al inicio de cada partida.
+---
 
-### Audio y Música
-- **Música Aleatoria**: Playlist de 4 canciones (`song1.mp3` a `song4.mp3`) cargadas aleatoriamente desde la carpeta `/music`.
-- **Audio Espacial**: El sonido de los motores de otros coches se atenúa y cambia de pitch según su distancia y velocidad respecto al jugador.
+## 🏟️ 2. El Terreno de Juego: `js/world/field.js`
+Este archivo es el arquitecto del estadio. Aquí se dibuja el césped, las líneas, y se calcula dónde están las porterías y las paredes invisibles para que el balón no se salga.
 
-### Editor de Mapas
-- Herramienta externa (`editor.html`) que permite crear muros, definir spawns y exportar configuraciones en formato JSON.
+### Lo que hace por dentro:
+*   **Gestión de las Redes Visuales (`netW`, `netD`, `netX`, `netY`)**: Antiguamente, la red del gol y la zona de colisión eran la misma cosa. ¡Ahora son independientes! Esto significa que el balón colisiona con una zona exacta, pero podemos dibujar una red del tamaño y en la posición visual que mejor encaje con nuestra imagen de fondo.
+*   `drawField()`: Pinta el césped (la imagen del campo) y dibuja las porterías para el equipo Azul y Naranja.
+*   `checkCollisions()`: Es el árbitro. Comprueba constantemente: "¿Ha tocado el balón la red de la portería? ¡Si es así, canta gol!".
 
-## 3. 🛠️ Próxima Funcionalidad: Editor de Físicas en Vivo
-Se implementará un panel de depuración (accesible con la tecla `º`) para modificar en tiempo real:
-- Potencia de los motores y frenos.
-- Coeficiente de restitución (rebote) del balón.
-- Escala de tiempo y gravedad simulada.
-- Radios de colisión (Hitboxes).
+---
 
-## 4. 📁 Estructura del Proyecto
-- `/js/core/`: Constantes y lógica base.
-- `/js/entities/`: Clases de Coche, Balón y Boost.
-- `/js/fx/`: Audio, Partículas y Efectos Visuales.
-- `/js/world/`: Motor de físicas y renderizado del campo.
-- `/js/ui/`: HUD, Scoreboard e interfaces.
-- `/res/`: Assets gráficos (Logos, Sprites, Estadios).
-- `/music/`: Archivos de música de fondo.
+## 🛠️ 3. El Editor de Mapas: `editor.html` y `editor_interactions.js`
+Hemos creado un "taller" profesional para diseñar nuevos campos sin tocar una sola línea de código complejo.
+
+### Funciones principales del Editor:
+*   **La Rejilla Mágica (Grid Snapping)**: Al mover elementos, estos "saltan" y se alinean perfectamente en cuadraditos imaginarios. ¡Adiós a las porterías torcidas!
+*   **Gestor de Mapas**: En la barra lateral izquierda (diseñada sin esas molestas barras de desplazamiento extra) tienes tarjetas pequeñas (miniaturas) de tus estadios. Puedes hacer clic en uno, cargarlo, cambiarle el nombre o borrarlo.
+*   **Herramienta de Arrastre**: Con tu ratón, puedes hacer clic y arrastrar el icono del balón (spawns) o las redes directamente sobre la imagen del campo. Lo que ves, es lo que juegas.
+
+---
+
+## 🚗 4. Los Protagonistas: `js/entities/`
+Aquí viven los actores de nuestra película.
+*   `Car.js` (El Coche): Controla qué tan rápido acelera, cómo frena y cuánto derrapa. Tiene variables como `speed` (velocidad), `rotation` (hacia dónde mira) y `boost` (el nitro).
+*   `Ball.js` (El Balón): Sabe cómo rebotar gracias a su "coeficiente de restitución" (una palabra técnica para decir qué tan saltarina es). También sabe cuándo dibujar un rastro de fuego si va muy rápida.
+
+---
+
+## 🎶 5. La Ambientación: `js/fx/`
+*   **Audio**: Gestiona cuándo reproducir la música de fondo o hacer sonar el "clic" cuando tocas un botón (`Modern2.wav` / `Minimalist8.wav`).
+*   **Partículas**: Los motores sueltan humo, y cuando metes un gol, salen chispas y explosiones. Todo ese espectáculo visual vive aquí.
+
+---
+
+## 🚀 Resumen para entenderlo TODO:
+Si el juego no dibuja bien el campo, vas a `field.js`. Si un coche corre muy poco, vas a `Car.js`. Si quieres construir un estadio nuevo para tus amigos, abres el `editor.html`. ¡Todo está en cajoncitos separados para no volvernos locos!

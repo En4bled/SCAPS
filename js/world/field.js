@@ -82,9 +82,9 @@ export function drawField(ctx) {
         ctx.stroke();
     };
 
-    // Azul a la Izquierda, Naranja a la Derecha
-    drawGoal(CONST.CONFIG.GOAL_TOP, '#5ad'); 
-    drawGoal(CONST.CONFIG.GOAL_BOTTOM, '#f90');
+    // Las zonas de portería ya no son visibles en el juego, solo las redes
+    // drawGoal(CONST.CONFIG.GOAL_TOP, '#f90'); 
+    // drawGoal(CONST.CONFIG.GOAL_BOTTOM, '#5ad');
 
     ctx.restore();
 }
@@ -93,10 +93,14 @@ export function drawGoalNets(ctx) {
     const drawNet = (g, img) => {
         if (!img.complete || !img.src) return;
         ctx.save();
-        ctx.translate(g.x, g.y);
+        const nx = g.netX !== undefined ? g.netX : g.x;
+        const ny = g.netY !== undefined ? g.netY : g.y;
+        ctx.translate(nx, ny);
         const isLeft = g.x < CONST.CONFIG.WORLD_W / 2;
-        const dx = isLeft ? -g.d : 0;
-        ctx.drawImage(img, dx, -g.w/2, g.d, g.w);
+        const nw = g.netW || g.w;
+        const nd = g.netD || g.d;
+        const dx = isLeft ? -nd : 0;
+        ctx.drawImage(img, dx, -nw/2, nd, nw);
         ctx.restore();
     };
     drawNet(CONST.CONFIG.GOAL_TOP, netImageTop);

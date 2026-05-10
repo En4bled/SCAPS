@@ -23,8 +23,8 @@ export const CONFIG = {
     ],
 
     // Porterías (Top = Izquierda, Bottom = Derecha en modo horizontal)
-    GOAL_TOP: { "x": 600, "y": 1500, "w": 800, "d": 200 },
-    GOAL_BOTTOM: { "x": 3400, "y": 1500, "w": 800, "d": 200 },
+    GOAL_TOP: { "x": 600, "y": 1500, "w": 800, "d": 200, "netX": 600, "netY": 1500, "netW": 800, "netD": 200 },
+    GOAL_BOTTOM: { "x": 3400, "y": 1500, "w": 800, "d": 200, "netX": 3400, "netY": 1500, "netW": 800, "netD": 200 },
 
     // Spawns (Posiciones de inicio)
     SPAWN_POINTS: [

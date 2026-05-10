@@ -97,30 +97,30 @@ export class Ball {
         if (this.x < -500 || this.x > CONST.WORLD_W + 500) this.vx *= -1;
         if (this.y < -500 || this.y > CONST.WORLD_H + 500) this.vy *= -1;
 
-        // 3. Porterías
-        const inGoalTop = (Math.abs(this.x - CONST.CONFIG.GOAL_TOP.x) < CONST.CONFIG.GOAL_TOP.w/2 && this.y < CONST.CONFIG.GOAL_TOP.y);
-        const inGoalBottom = (Math.abs(this.x - CONST.CONFIG.GOAL_BOTTOM.x) < CONST.CONFIG.GOAL_BOTTOM.w/2 && this.y > CONST.CONFIG.GOAL_BOTTOM.y);
+        // 3. Porterías (Detección para rebotes internos)
+        const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < CONST.CONFIG.GOAL_TOP.w/2 && this.x < CONST.CONFIG.GOAL_TOP.x);
+        const inGoalRight = (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < CONST.CONFIG.GOAL_BOTTOM.w/2 && this.x > CONST.CONFIG.GOAL_BOTTOM.x);
 
-        if (inGoalTop) {
-            const left = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.w/2;
-            const right = CONST.CONFIG.GOAL_TOP.x + CONST.CONFIG.GOAL_TOP.w/2;
-            const back = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.y - this.radius < back) { this.y = back + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
-        } else if (inGoalBottom) {
-            const left = CONST.CONFIG.GOAL_BOTTOM.x - CONST.CONFIG.GOAL_BOTTOM.w/2;
-            const right = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.w/2;
-            const back = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.y + this.radius > back) { this.y = back - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+        if (inGoalLeft) {
+            const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
+            const bottom = CONST.CONFIG.GOAL_TOP.y + CONST.CONFIG.GOAL_TOP.w/2;
+            const back = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.d;
+            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x - this.radius < back) { this.x = back + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+        } else if (inGoalRight) {
+            const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const back = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.d;
+            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x + this.radius > back) { this.x = back - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
         }
     }
 
     checkGoal() {
-        if (Math.abs(this.x - CONST.CONFIG.GOAL_TOP.x) < CONST.CONFIG.GOAL_TOP.w / 2 && this.y < CONST.CONFIG.GOAL_TOP.y) return 'orange';
-        if (Math.abs(this.x - CONST.CONFIG.GOAL_BOTTOM.x) < CONST.CONFIG.GOAL_BOTTOM.w / 2 && this.y > CONST.CONFIG.GOAL_BOTTOM.y) return 'blue';
+        if (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < CONST.CONFIG.GOAL_TOP.w / 2 && this.x < CONST.CONFIG.GOAL_TOP.x - 20) return 'orange';
+        if (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < CONST.CONFIG.GOAL_BOTTOM.w / 2 && this.x > CONST.CONFIG.GOAL_BOTTOM.x + 20) return 'blue';
         return null;
     }
 }

@@ -443,12 +443,12 @@ async function loadSetupMaps() {
             const container = document.createElement('div');
             container.style.cursor = 'pointer';
             container.style.position = 'relative';
-            container.style.transition = '0.3s';
             container.style.border = (selectedMap === m) ? '4px solid #ff4444' : '2px solid rgba(255,255,255,0.1)';
             container.style.borderRadius = '10px';
             container.style.overflow = 'hidden';
             container.style.background = '#000';
-            container.style.height = '140px';
+            container.style.width = '200px';
+            container.style.height = '235px';
             if (selectedMap === m) container.style.boxShadow = '0 0 20px rgba(255, 68, 68, 0.6)';
 
             // Usar miniatura map1.png hasta map10.png
@@ -456,7 +456,7 @@ async function loadSetupMaps() {
 
             container.innerHTML = `
                 <img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: ${selectedMap === m ? 'none' : 'grayscale(0.6) brightness(0.6)'};">
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); color: #fff; font-size: 11px; text-align: center; padding: 10px 4px; font-weight: bold; font-family: 'Rajdhani', sans-serif;">${m.toUpperCase()}</div>
+                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); color: #fff; font-size: 11px; text-align: center; padding: 10px 4px; font-weight: bold; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;">${m.toUpperCase()}</div>
             `;
 
             container.onclick = () => {

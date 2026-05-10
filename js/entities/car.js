@@ -127,11 +127,11 @@ export class Car {
     }
 
     checkWallCollision() {
-        checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);
-        
         // Colisiones con las porterías (Cajas de colisión dinámicas)
-        const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < CONST.CONFIG.GOAL_TOP.w/2 && this.x < CONST.CONFIG.GOAL_TOP.x);
-        const inGoalRight = (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < CONST.CONFIG.GOAL_BOTTOM.w/2 && this.x > CONST.CONFIG.GOAL_BOTTOM.x);
+        // Añadimos un pequeño margen (buffer) para facilitar la entrada y evitar rebotes en los bordes
+        const goalBuffer = 40; 
+        const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < (CONST.CONFIG.GOAL_TOP.w/2 + 10) && this.x < (CONST.CONFIG.GOAL_TOP.x + goalBuffer));
+        const inGoalRight = (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < (CONST.CONFIG.GOAL_BOTTOM.w/2 + 10) && this.x > (CONST.CONFIG.GOAL_BOTTOM.x - goalBuffer));
 
         if (inGoalLeft) {
             const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
@@ -143,10 +143,13 @@ export class Car {
         } else if (inGoalRight) {
             const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
             const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
-            const back = CONST.CONFIG.GOAL_BOTTOM.x - CONST.CONFIG.GOAL_BOTTOM.d;
+            const back = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.d;
             if (this.y - this.radius < top) { this.y = top + this.radius; this.vy = 0; }
             if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy = 0; }
             if (this.x + this.radius > back) { this.x = back - this.radius; this.vx = 0; }
+        } else {
+            // Solo si no estamos en zona de portería, aplicamos la colisión con los muros del campo
+            checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);
         }
     }
 
