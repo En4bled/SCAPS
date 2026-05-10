@@ -85,18 +85,17 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
-    z-index: 2000;
+    z-index: 1000; /* Reducido para no tapar elementos de la interfaz superior */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    pointer-events: all;
+    pointer-events: none; /* Por defecto no bloquea clics si no es necesario */
     backdrop-filter: blur(8px);
     transition: opacity 0.5s;
 }
-#editor-overlay h2 { color: #f90; font-size: 32px; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 20px rgba(255,153,0,0.5); }
-#editor-overlay .arrow { font-size: 80px; color: #5ad; position: absolute; top: 100px; right: 120px; transform: rotate(-35deg); animation: bounce 1s infinite alternate; }
-@keyframes bounce { from { transform: rotate(-35deg) translateY(0); } to { transform: rotate(-35deg) translateY(-30px); } }
+#editor-overlay.active { pointer-events: all; opacity: 1; }
+#editor-overlay:not(.active) { opacity: 0; pointer-events: none; visibility: hidden; }
 
 /* Gestor de Mapas como Sidebar Derecha Real */
 #floating-map-panel {
@@ -394,8 +393,11 @@ function syncUI() {
 function render() {
     if (!canvas.width) return;
     ctx.fillStyle = '#0f0f14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (!S.isLoaded) { overlay.style.display = 'flex'; return; }
-    overlay.style.display = 'none';
+    if (!S.isLoaded) { 
+        overlay.classList.add('active'); 
+        return; 
+    }
+    overlay.classList.remove('active');
 
     ctx.save();
     ctx.translate(S.panX, S.panY);
