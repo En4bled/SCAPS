@@ -6,12 +6,12 @@ export class Car {
     constructor(x, y, color, controls, name, imgPath = null) {
         this.x = x;
         this.y = y;
-        this.width = CONST.CAR_WIDTH;
-        this.height = CONST.CAR_HEIGHT;
+        this.width = CONST.CONFIG.CAR_WIDTH;
+        this.height = CONST.CONFIG.CAR_HEIGHT;
         this.color = color;
         this.controls = controls;
         this.name = name; 
-        this.radius = CONST.CAR_HITBOX_RADIUS; 
+        this.radius = CONST.CONFIG.CAR_HITBOX_RADIUS; 
         this.speed = 0;
         this.angle = (color === '#5ad') ? 0 : Math.PI; 
         this.vx = 0;
@@ -50,59 +50,57 @@ export class Car {
         ctx.restore();
     }
 
-    update(keysPressed, gameState, particles, skidMarks) {
+    update(keys, gameState, particles, skidMarks) {
         if (gameState === 'goalScored' || gameState === 'gameOver') {
-            this.speed *= CONST.CAR_FRICTION; 
-            this.vx *= CONST.CAR_FRICTION;
-            this.vy *= CONST.CAR_FRICTION;
+            this.speed *= CONST.CONFIG.CAR_FRICTION; 
+            this.vx *= CONST.CONFIG.CAR_FRICTION;
+            this.vy *= CONST.CONFIG.CAR_FRICTION;
             return; 
         }
 
-        const isPlayer1 = this.controls.up === 'KeyW';
         let isTurning = false; 
         let isAccelerating = false; 
 
-        if (isPlayer1) {
-            this.isBoosting = keysPressed[this.controls.boost] && this.boost > 0 && gameState === 'playing'; 
-            this.isDrifting = keysPressed[this.controls.drift] && !this.isBoosting && this.speed > CONST.CAR_MAX_SPEED * 0.3 && (keysPressed[this.controls.left] || keysPressed[this.controls.right]);
-            
-            let currentAccel = this.isBoosting ? CONST.CAR_BOOST_ACCEL : CONST.CAR_ACCEL;
-            let maxSpeed = this.isBoosting ? CONST.CAR_MAX_BOOST_SPEED : CONST.CAR_MAX_SPEED;
+        this.isBoosting = keys[this.controls.boost] && this.boost > 0 && gameState === 'playing'; 
+        this.isDrifting = keys[this.controls.drift] && !this.isBoosting && Math.abs(this.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.3 && (keys[this.controls.left] || keys[this.controls.right]);
+        
+        let currentAccel = this.isBoosting ? CONST.CONFIG.CAR_BOOST_ACCEL : CONST.CONFIG.CAR_ACCEL;
+        let maxSpeed = this.isBoosting ? CONST.CONFIG.CAR_MAX_BOOST_SPEED : CONST.CONFIG.CAR_MAX_SPEED;
 
-            if (gameState === 'countdown') {
-                this.speed = 0;
-                this.vx = 0;
-                this.vy = 0;
-                return;
-            }
+        if (gameState === 'countdown') {
+            if (keys[this.controls.up]) isAccelerating = true;
+            if (keys[this.controls.left]) { this.angle -= CONST.CONFIG.CAR_TURN_SPEED * 0.4; isTurning = true; }
+            if (keys[this.controls.right]) { this.angle += CONST.CONFIG.CAR_TURN_SPEED * 0.4; isTurning = true; }
+            this.speed = 0; this.vx = 0; this.vy = 0;
+            return;
+        }
 
-            if (keysPressed[this.controls.up]) { 
-                this.speed += currentAccel; isAccelerating = true;
-            } 
-            else if (keysPressed[this.controls.down]) { 
-                this.speed -= CONST.CAR_REVERSE_ACCEL * (gameState === 'countdown' ? 0.1 : 1); 
-            } 
-            
-            if (!isAccelerating && !keysPressed[this.controls.down]) {
-                this.speed *= CONST.CAR_FRICTION; 
-            } else {
-                if (isAccelerating && this.speed > maxSpeed) this.speed = maxSpeed; 
-            }
-            
-            if (this.speed < -maxSpeed / 2) this.speed = -maxSpeed / 2;
-            
-            if (this.speed !== 0) {
-                let turnDirection = 0;
-                if (keysPressed[this.controls.left]) { turnDirection = -1; isTurning = true; }
-                if (keysPressed[this.controls.right]) { turnDirection = 1; isTurning = true; }
-                let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
-                if (this.isDrifting) steerAngle *= CONST.CAR_DRIFT_TURN_MULTIPLIER;
-                this.angle += steerAngle * CONST.CAR_TURN_SPEED * (gameState === 'countdown' ? 0.3 : 1); 
-            }
+        if (keys[this.controls.up]) { 
+            this.speed += currentAccel; isAccelerating = true;
+        } 
+        else if (keys[this.controls.down]) { 
+            this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL; 
+        } 
+        
+        if (!isAccelerating && !keys[this.controls.down]) {
+            this.speed *= CONST.CONFIG.CAR_FRICTION; 
+        } else {
+            if (isAccelerating && this.speed > maxSpeed) this.speed = maxSpeed; 
+        }
+        
+        if (this.speed < -maxSpeed / 2) this.speed = -maxSpeed / 2;
+        
+        if (this.speed !== 0) {
+            let turnDirection = 0;
+            if (keys[this.controls.left]) { turnDirection = -1; isTurning = true; }
+            if (keys[this.controls.right]) { turnDirection = 1; isTurning = true; }
+            let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
+            if (this.isDrifting) steerAngle *= CONST.CONFIG.CAR_DRIFT_TURN_MULTIPLIER;
+            this.angle += steerAngle * CONST.CONFIG.CAR_TURN_SPEED; 
+        }
 
-            if (gameState === 'playing' && this.isBoosting) {
-                this.boost = Math.max(0, this.boost - CONST.CAR_BOOST_CONSUMPTION);
-            }
+        if (gameState === 'playing' && this.isBoosting) {
+            this.boost = Math.max(0, this.boost - CONST.CONFIG.CAR_BOOST_CONSUMPTION);
         }
 
         if (Math.abs(this.speed) < 0.01) this.speed = 0;
@@ -112,12 +110,14 @@ export class Car {
         if (gameState === 'playing' || gameState === 'countdown') { 
             this.move();
             if (this.skidMarkTimer > 0) this.skidMarkTimer--;
-            if ((isTurning && this.speed > CONST.CAR_MAX_SPEED * 0.4 && !this.isBoosting) || (isPlayer1 && this.isDrifting)) {
+            
+            // Efectos visuales (humo y huellas)
+            if (isTurning && Math.abs(this.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
                 if(this.skidMarkTimer <= 0) { this.spawnSkidMark(skidMarks); this.skidMarkTimer = 4; }
-                if(isPlayer1 && this.isDrifting) this.spawnDriftSmoke(particles);
+                if(this.isDrifting) this.spawnDriftSmoke(particles);
             }
             if (this.isBoosting) this.spawnParticles(5, 'boost', particles);
-            else if (Math.abs(this.speed) > 0.5 && !this.isDrifting && isAccelerating) this.spawnParticles(1, 'smoke', particles);
+            else if (Math.abs(this.speed) > 0.5 && isAccelerating) this.spawnParticles(1, 'smoke', particles);
         }
     }
 
@@ -127,24 +127,26 @@ export class Car {
     }
 
     checkWallCollision() {
-        checkPolygonCollision(this, CONST.FIELD_POLYGON);
-        // Fallback de seguridad extrema (no debe activarse si el polígono funciona)
-        if (this.x < -500) this.x = -500; if (this.x > CONST.WORLD_W + 500) this.x = CONST.WORLD_W + 500;
-        if (this.y < -500) this.y = -500; if (this.y > CONST.WORLD_H + 500) this.y = CONST.WORLD_H + 500;
+        checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);
+        
+        // Colisiones con las porterías (Cajas de colisión dinámicas)
+        const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < CONST.CONFIG.GOAL_TOP.w/2 && this.x < CONST.CONFIG.GOAL_TOP.x);
+        const inGoalRight = (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < CONST.CONFIG.GOAL_BOTTOM.w/2 && this.x > CONST.CONFIG.GOAL_BOTTOM.x);
 
-        const inGoalTop = (Math.abs(this.x - CONST.GOAL_TOP.x) < CONST.GOAL_TOP.w/2 && this.y < CONST.GOAL_TOP.y);
-        const inGoalBottom = (Math.abs(this.x - CONST.GOAL_BOTTOM.x) < CONST.GOAL_BOTTOM.w/2 && this.y > CONST.GOAL_BOTTOM.y);
-
-        if (inGoalTop) {
-            const left = CONST.GOAL_TOP.x - CONST.GOAL_TOP.w/2, right = CONST.GOAL_TOP.x + CONST.GOAL_TOP.w/2, back = CONST.GOAL_TOP.y - CONST.GOAL_TOP.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx = 0; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx = 0; }
-            if (this.y - this.radius < back) { this.y = back + this.radius; this.vy = 0; }
-        } else if (inGoalBottom) {
-            const left = CONST.GOAL_BOTTOM.x - CONST.GOAL_BOTTOM.w/2, right = CONST.GOAL_BOTTOM.x + CONST.GOAL_BOTTOM.w/2, back = CONST.GOAL_BOTTOM.y + CONST.GOAL_BOTTOM.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx = 0; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx = 0; }
-            if (this.y + this.radius > back) { this.y = back - this.radius; this.vy = 0; }
+        if (inGoalLeft) {
+            const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
+            const bottom = CONST.CONFIG.GOAL_TOP.y + CONST.CONFIG.GOAL_TOP.w/2;
+            const back = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.d;
+            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy = 0; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy = 0; }
+            if (this.x - this.radius < back) { this.x = back + this.radius; this.vx = 0; }
+        } else if (inGoalRight) {
+            const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const back = CONST.CONFIG.GOAL_BOTTOM.x - CONST.CONFIG.GOAL_BOTTOM.d;
+            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy = 0; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy = 0; }
+            if (this.x + this.radius > back) { this.x = back - this.radius; this.vx = 0; }
         }
     }
 

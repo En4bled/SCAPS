@@ -4,7 +4,7 @@ import { checkPolygonCollision } from '../world/physics.js';
 
 export class Ball {
     constructor(x, y, imgPath = null) {
-        this.x = x; this.y = y; this.radius = CONST.BALL_BASE_RADIUS; this.vx = 0; this.vy = 0;
+        this.x = x; this.y = y; this.radius = CONST.CONFIG.BALL_BASE_RADIUS; this.vx = 0; this.vy = 0;
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
         this.rotationAngle = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.img = null;
@@ -73,10 +73,10 @@ export class Ball {
         }
         if (gameState === 'countdown') return; 
 
-        this.x += this.vx; this.y += this.vy; this.vx *= CONST.BALL_FRICTION; this.vy *= CONST.BALL_FRICTION;
+        this.x += this.vx; this.y += this.vy; this.vx *= CONST.CONFIG.BALL_FRICTION; this.vy *= CONST.CONFIG.BALL_FRICTION;
         const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (currentSpeed > CONST.BALL_MAX_SPEED) { 
-            const factor = CONST.BALL_MAX_SPEED / currentSpeed; 
+        if (currentSpeed > CONST.CONFIG.BALL_MAX_SPEED) { 
+            const factor = CONST.CONFIG.BALL_MAX_SPEED / currentSpeed; 
             this.vx *= factor; this.vy *= factor; 
         }
         this.rotationAngle += this.vx * 0.05; 
@@ -91,36 +91,36 @@ export class Ball {
         // --- COLISIONES ---
         
         // 1. Polígono del Campo
-        checkPolygonCollision(this, CONST.FIELD_POLYGON);
+        checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);
 
         // Límites del mundo como seguridad extrema (no deben activarse si el polígono funciona)
         if (this.x < -500 || this.x > CONST.WORLD_W + 500) this.vx *= -1;
         if (this.y < -500 || this.y > CONST.WORLD_H + 500) this.vy *= -1;
 
         // 3. Porterías
-        const inGoalTop = (Math.abs(this.x - CONST.GOAL_TOP.x) < CONST.GOAL_TOP.w/2 && this.y < CONST.GOAL_TOP.y);
-        const inGoalBottom = (Math.abs(this.x - CONST.GOAL_BOTTOM.x) < CONST.GOAL_BOTTOM.w/2 && this.y > CONST.GOAL_BOTTOM.y);
+        const inGoalTop = (Math.abs(this.x - CONST.CONFIG.GOAL_TOP.x) < CONST.CONFIG.GOAL_TOP.w/2 && this.y < CONST.CONFIG.GOAL_TOP.y);
+        const inGoalBottom = (Math.abs(this.x - CONST.CONFIG.GOAL_BOTTOM.x) < CONST.CONFIG.GOAL_BOTTOM.w/2 && this.y > CONST.CONFIG.GOAL_BOTTOM.y);
 
         if (inGoalTop) {
-            const left = CONST.GOAL_TOP.x - CONST.GOAL_TOP.w/2;
-            const right = CONST.GOAL_TOP.x + CONST.GOAL_TOP.w/2;
-            const back = CONST.GOAL_TOP.y - CONST.GOAL_TOP.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.y - this.radius < back) { this.y = back + this.radius; this.vy *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
+            const left = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.w/2;
+            const right = CONST.CONFIG.GOAL_TOP.x + CONST.CONFIG.GOAL_TOP.w/2;
+            const back = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.d;
+            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y - this.radius < back) { this.y = back + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
         } else if (inGoalBottom) {
-            const left = CONST.GOAL_BOTTOM.x - CONST.GOAL_BOTTOM.w/2;
-            const right = CONST.GOAL_BOTTOM.x + CONST.GOAL_BOTTOM.w/2;
-            const back = CONST.GOAL_BOTTOM.y + CONST.GOAL_BOTTOM.d;
-            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (this.y + this.radius > back) { this.y = back - this.radius; this.vy *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
+            const left = CONST.CONFIG.GOAL_BOTTOM.x - CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const right = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.w/2;
+            const back = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.d;
+            if (this.x - this.radius < left) { this.x = left + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x + this.radius > right) { this.x = right - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y + this.radius > back) { this.y = back - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
         }
     }
 
     checkGoal() {
-        if (Math.abs(this.x - CONST.GOAL_TOP.x) < CONST.GOAL_TOP.w / 2 && this.y < CONST.GOAL_TOP.y) return 'orange';
-        if (Math.abs(this.x - CONST.GOAL_BOTTOM.x) < CONST.GOAL_BOTTOM.w / 2 && this.y > CONST.GOAL_BOTTOM.y) return 'blue';
+        if (Math.abs(this.x - CONST.CONFIG.GOAL_TOP.x) < CONST.CONFIG.GOAL_TOP.w / 2 && this.y < CONST.CONFIG.GOAL_TOP.y) return 'orange';
+        if (Math.abs(this.x - CONST.CONFIG.GOAL_BOTTOM.x) < CONST.CONFIG.GOAL_BOTTOM.w / 2 && this.y > CONST.CONFIG.GOAL_BOTTOM.y) return 'blue';
         return null;
     }
 }

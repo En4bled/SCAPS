@@ -97,7 +97,20 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 #canvas-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; background:#08080c; overflow:hidden; }
 #mainCanvas { cursor:crosshair; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
 #info-bar { position:absolute; bottom:15px; left:20px; background:rgba(18,18,24,0.9); padding:8px 16px; border-radius:8px; font-size:11px; color:#888; border:1px solid #333; }
-#mode-badge { position:absolute; top:20px; left:50%; transform:translateX(-50%); background:rgba(90,173,237,0.9); color:#000; padding:8px 24px; border-radius:30px; font-size:14px; font-weight:800; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display:none; }
+#mode-badge { 
+    position:absolute; top:20px; left:50%; transform:translateX(-50%); 
+    background:rgba(90,173,237,0.95); color:#000; padding:10px 25px; 
+    border-radius:50px; font-size:14px; font-weight:800; 
+    box-shadow: 0 4px 25px rgba(0,0,0,0.5); display:none; 
+    align-items: center; gap: 15px; z-index: 2000;
+    border: 2px solid #fff;
+}
+#mode-badge button {
+    background: #000; color: #fff; border: none; padding: 6px 15px; 
+    border-radius: 20px; cursor: pointer; font-size: 11px; 
+    font-weight: 800; transition: 0.2s; text-transform: uppercase;
+}
+#mode-badge button:hover { background: #333; transform: scale(1.05); }
 
 /* Overlay Inicial */
 #editor-overlay {
@@ -196,7 +209,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 .tab { flex:1; padding:6px; text-align:center; font-size:10px; font-weight:bold; cursor:pointer; border-radius:6px; color:#666; transition:0.2s; }
 .tab.active { background:#252530; color:#5ad; }
 
-.file-input-wrapper { position:relative; flex:1; }
+.file-input-wrapper { position:relative; flex:1; display:flex; gap:5px; align-items:center; }
 .file-input-wrapper input[type=file] { position:absolute; left:0; top:0; opacity:0; width:100%; height:100%; cursor:pointer; }
 </style>
 </head>
@@ -208,7 +221,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
   <div class="tabs">
     <div class="tab active" data-tab="world">MUNDO/FONDO</div>
     <div class="tab" data-tab="field">CAMPO/POLÍGONO</div>
-    <div class="tab" data-tab="goals">PORTERÍAS</div>
+    <div class="tab" data-tab="goals">BALÓN/PORTERÍAS</div>
     <div class="tab" data-tab="entities">SPAWNS/BOOSTS</div>
   </div>
 
@@ -216,23 +229,23 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     <div class="section">
         <h3>🖼 Imagen de Estadio</h3>
         <div class="row">
-            <label>Seleccionar</label>
+            <label>Imagen Estadio</label>
             <div class="file-input-wrapper">
-                <button style="width:100%">📁 Abrir Explorador</button>
-                <input type="file" id="bgFile" accept="image/*">
+                <input type="text" id="bgUrl" value="" placeholder="res/Estadio1.png" style="flex:1">
+                <input type="file" id="bgFile" accept="image/*" style="display:none">
+                <button onclick="document.getElementById('bgFile').click()" style="width:40px">📁</button>
             </div>
         </div>
-        <div class="row"><label>Ruta Actual</label><input type="text" id="bgUrl" value=""></div>
-        <div class="row"><label>Escala</label><input type="range" id="bgScaleR" min="0.5" max="3" step="0.001" value="1.0"><input type="number" id="bgScale" step="0.001" style="width:70px"></div>
+        <div class="row"><label>Escala</label><input type="range" id="bgScaleR" min="1.0" max="2.0" step="0.001" value="1.638"><input type="number" id="bgScale" step="0.001" style="width:70px"></div>
         <div class="row">
             <label>Offset X</label>
-            <input type="range" id="bgOXR" min="-1500" max="1500" step="1" value="0">
+            <input type="range" id="bgOXR" min="-500" max="500" step="1" value="0">
             <input type="number" id="bgOX" style="width:70px">
             <button class="btn-reset-small" onclick="resetVal('bgOX')">↺</button>
         </div>
         <div class="row">
             <label>Offset Y</label>
-            <input type="range" id="bgOYR" min="-1500" max="1500" step="1" value="0">
+            <input type="range" id="bgOYR" min="-500" max="500" step="1" value="0">
             <input type="number" id="bgOY" style="width:70px">
             <button class="btn-reset-small" onclick="resetVal('bgOY')">↺</button>
         </div>
@@ -241,13 +254,13 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
         <h3>🌍 Dimensiones del Mundo</h3>
         <div class="row">
             <label>Ancho (W)</label>
-            <input type="range" id="worldWR" min="1000" max="5000" step="10" value="2000">
-            <input type="number" id="worldW" value="2000" style="width:70px">
+            <input type="range" id="worldWR" min="2000" max="5000" step="10" value="4000">
+            <input type="number" id="worldW" value="4000" style="width:70px">
             <button class="btn-reset-small" onclick="resetVal('worldW')">↺</button>
         </div>
         <div class="row">
             <label>Alto (H)</label>
-            <input type="range" id="worldHR" min="1000" max="5000" step="10" value="3000">
+            <input type="range" id="worldHR" min="2000" max="5000" step="10" value="3000">
             <input type="number" id="worldH" value="3000" style="width:70px">
             <button class="btn-reset-small" onclick="resetVal('worldH')">↺</button>
         </div>
@@ -264,8 +277,8 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     </div>
     <div class="section">
         <h3>📏 Referencia Rectangular</h3>
-        <div class="row"><label>Ancho Ref.</label><input type="number" id="fieldW" value="1600"><input type="range" id="fieldWr" min="500" max="4000" step="10" value="1600"></div>
-        <div class="row"><label>Alto Ref.</label><input type="number" id="fieldH" value="2300"><input type="range" id="fieldHr" min="500" max="4000" step="10" value="2300"></div>
+        <div class="row"><label>Ancho Ref.</label><input type="number" id="fieldW" value="1600"><input type="range" id="fieldWr" min="800" max="3500" step="10" value="1600"></div>
+        <div class="row"><label>Alto Ref.</label><input type="number" id="fieldH" value="2300"><input type="range" id="fieldHr" min="800" max="3500" step="10" value="2300"></div>
         <button id="btn-poly-from-rect" style="width:100%; margin-top:5px;">Convertir Rect. a Polígono</button>
     </div>
   </div>
@@ -273,17 +286,37 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
   <div id="tab-goals" class="tab-content" style="display:none">
     <div class="section">
         <h3>🥅 Portería Izquierda (Azul)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('top','x')">↺</button></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('top','y')">↺</button></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('top','w')">↺</button></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="1000"><button class="btn-reset-small" onclick="resetGoalVal('top','d')">↺</button></div>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('top','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="500" max="2500"><button class="btn-reset-small" onclick="resetGoalVal('top','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="200" max="1200"><button class="btn-reset-small" onclick="resetGoalVal('top','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="500"><button class="btn-reset-small" onclick="resetGoalVal('top','d')">↺</button></div>
+        <div class="row">
+            <label>Imagen Red</label>
+            <div class="file-input-wrapper">
+                <input type="text" id="goalTImg" placeholder="Ruta..." style="flex:1">
+                <input type="file" id="goalTFile" accept="image/*" style="display:none">
+                <button onclick="document.getElementById('goalTFile').click()" style="width:40px">📁</button>
+            </div>
+        </div>
     </div>
     <div class="section">
         <h3>🥅 Portería Derecha (Naranja)</h3>
-        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','x')">↺</button></div>
-        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','y')">↺</button></div>
-        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="2000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','w')">↺</button></div>
-        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="1000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','d')">↺</button></div>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="2000" max="5000"><button class="btn-reset-small" onclick="resetGoalVal('bottom','x')">↺</button></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="500" max="2500"><button class="btn-reset-small" onclick="resetGoalVal('bottom','y')">↺</button></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="200" max="1200"><button class="btn-reset-small" onclick="resetGoalVal('bottom','w')">↺</button></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="500"><button class="btn-reset-small" onclick="resetGoalVal('bottom','d')">↺</button></div>
+        <div class="row">
+            <label>Imagen Red</label>
+            <div class="file-input-wrapper">
+                <input type="text" id="goalBImg" placeholder="Ruta..." style="flex:1">
+                <input type="file" id="goalBFile" accept="image/*" style="display:none">
+                <button onclick="document.getElementById('goalBFile').click()" style="width:40px">📁</button>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <h3>⚽ Pelota</h3>
+        <button id="btn-mode-ball" style="width:100%">📍 Posicionar Pelota</button>
     </div>
   </div>
 
@@ -309,10 +342,6 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
         <button id="btn-del-boost" class="danger" style="width:100%; margin-top:5px;">🗑 Eliminar Seleccionado</button>
         <button id="btn-mode-boost" style="width:100%; margin-top:5px;">📍 Mover Seleccionado</button>
     </div>
-    <div class="section">
-        <h3>⚽ Pelota</h3>
-        <button id="btn-mode-ball" style="width:100%">📍 Posicionar Pelota</button>
-    </div>
   </div>
 </div>
 <div id="resizer"></div>
@@ -333,7 +362,10 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
   <canvas id="mainCanvas"></canvas>
   <div id="info-bar">Cámara: 0, 0 | Zoom: 100% | Sin Servidor</div>
-  <div id="mode-badge">MODO: EDICIÓN DE POLÍGONO</div>
+  <div id="mode-badge">
+    <span>MODO: EDICIÓN DE POLÍGONO</span>
+    <button id="btn-exit-poly-mode">TERMINAR EDICIÓN</button>
+  </div>
 </div>
 
 <div id="floating-map-panel">
@@ -361,20 +393,29 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 import * as CONST from './js/core/constants.js';
 
 const DEFAULTS = {
-    bgUrl: '', bgScale: 1.0, bgOX: 0, bgOY: 0,
-    worldW: 2000, worldH: 3000,
-    poly: [],
+    bgUrl: 'res/Estadio1.png', bgScale: 1.638, bgOX: 0, bgOY: 0,
+    worldW: 4000, worldH: 3000,
+    poly: [
+        {"x": 899, "y": 586}, {"x": 3212, "y": 593}, {"x": 3363, "y": 740}, {"x": 3367, "y": 1242},
+        {"x": 3571, "y": 1242}, {"x": 3576, "y": 1876}, {"x": 3336, "y": 1892}, {"x": 3360, "y": 2346},
+        {"x": 3211, "y": 2509}, {"x": 895, "y": 2514}, {"x": 751, "y": 2351}, {"x": 748, "y": 1912},
+        {"x": 525, "y": 1900}, {"x": 520, "y": 1261}, {"x": 737, "y": 1256}, {"x": 741, "y": 740}
+    ],
     goals: {
-        top: { x: 1000, y: 300, w: 300, d: 100 },
-        bottom: { x: 1000, y: 2700, w: 300, d: 100 }
+        top: { x: 744, y: 1590, w: 650, d: 200, img: '' },
+        bottom: { x: 3339, y: 1563, w: 621, d: 200, img: '' }
     },
     spawns: [
-        { x: 1000, y: 2500, a: 0 }, { x: 500, y: 2500, a: 0 },
-        { x: 1000, y: 500, a: Math.PI }, { x: 1500, y: 500, a: Math.PI }
+        { x: 1100, y: 1500, a: 1.57 }, { x: 1300, y: 1100, a: 1.8 },
+        { x: 2900, y: 1500, a: -1.57 }, { x: 2700, y: 1900, a: -1.8 }
     ],
-    boosts: [],
-    ball: { x: 1000, y: 1500 },
-    zoom: 0.2,
+    boosts: [
+        { "x": 2000, "y": 750, "big": true }, { "x": 2000, "y": 2250, "big": true },
+        { "x": 800, "y": 800, "big": false }, { "x": 3200, "y": 800, "big": false },
+        { "x": 800, "y": 2200, "big": false }, { "x": 3200, "y": 2200, "big": false }
+    ],
+    ball: { x: 2039, y: 1497 },
+    zoom: 0.12,
     mode: 'none',
     selectedBoost: -1, selectedSpawn: -1, selectedPoint: -1,
     isDragging: false, dragType: null,
@@ -402,7 +443,7 @@ window.undo = () => {
     if (historyIndex > 0) {
         historyIndex--;
         S = JSON.parse(historyStack[historyIndex]);
-        syncUI(); render(); renderBoostList();
+        syncUI(); updateModeUI(); render(); renderBoostList();
     }
 };
 
@@ -410,7 +451,7 @@ window.redo = () => {
     if (historyIndex < historyStack.length - 1) {
         historyIndex++;
         S = JSON.parse(historyStack[historyIndex]);
-        syncUI(); render(); renderBoostList();
+        syncUI(); updateModeUI(); render(); renderBoostList();
     }
 };
 
@@ -421,6 +462,8 @@ const infoBar = document.getElementById('info-bar');
 const overlay = document.getElementById('editor-overlay');
 const bgImg = new Image();
 const ballImg = new Image(); ballImg.src = 'res/Ball1.png';
+const netImgT = new Image();
+const netImgB = new Image();
 
 window.resetVal = (key) => {
     if (DEFAULTS[key] !== undefined) {
@@ -462,6 +505,10 @@ function syncUI() {
         document.getElementById(prefix+'D').value = data.d; document.getElementById(prefix+'DR').value = data.d;
     };
     syncGoal('goalT', S.goals.top); syncGoal('goalB', S.goals.bottom);
+    document.getElementById('goalTImg').value = S.goals.top.img || '';
+    document.getElementById('goalBImg').value = S.goals.bottom.img || '';
+    if (S.goals.top.img) netImgT.src = S.goals.top.img;
+    if (S.goals.bottom.img) netImgB.src = S.goals.bottom.img;
     if (S.selectedSpawn >= 0 && S.spawns[S.selectedSpawn]) {
         document.getElementById('spawnA').value = S.spawns[S.selectedSpawn].a; 
         document.getElementById('spawnAR').value = S.spawns[S.selectedSpawn].a;
@@ -477,6 +524,8 @@ function render() {
     }
     overlay.classList.remove('active');
 
+    const activeTab = document.querySelector('.tab.active')?.dataset.tab || 'world';
+
     ctx.save();
     ctx.translate(S.panX, S.panY);
     
@@ -489,25 +538,42 @@ function render() {
     const z = S.zoom, ox = (canvas.width - S.worldW * z) / 2, oy = (canvas.height - S.worldH * z) / 2;
     ctx.save(); ctx.translate(ox, oy); ctx.scale(z, z);
 
+    // 1. FONDO (Semi-opaco si no estamos en Mundo)
+    ctx.save();
+    if (activeTab !== 'world') ctx.globalAlpha = 0.4;
     if (bgImg.complete && bgImg.naturalWidth > 0 && S.bgUrl) {
         const iw = S.worldW * S.bgScale, ih = S.worldH * S.bgScale;
         ctx.drawImage(bgImg, (S.worldW - iw)/2 + S.bgOX, (S.worldH - ih)/2 + S.bgOY, iw, ih);
     }
+    ctx.restore();
 
+    // 2. POLÍGONO (Resaltado en pestaña Field)
     if (S.poly.length > 1) {
+        ctx.save();
+        if (activeTab === 'field') {
+            ctx.strokeStyle = 'rgba(0, 255, 255, 1)'; ctx.lineWidth = 25;
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+        } else {
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)'; ctx.lineWidth = 10;
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
+        }
         ctx.beginPath(); ctx.moveTo(S.poly[0].x, S.poly[0].y);
         for(let i=1; i<S.poly.length; i++) ctx.lineTo(S.poly[i].x, S.poly[i].y);
-        ctx.closePath(); ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; ctx.lineWidth = 15; ctx.lineJoin = 'round'; ctx.stroke();
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.05)'; ctx.fill();
-        if (S.mode === 'poly') {
+        ctx.closePath(); ctx.lineJoin = 'round'; ctx.stroke(); ctx.fill();
+        
+        if (S.mode === 'poly' && activeTab === 'field') {
             S.poly.forEach((p, i) => {
                 ctx.beginPath(); ctx.arc(p.x, p.y, i === S.selectedPoint ? 25 : 15, 0, Math.PI*2);
                 ctx.fillStyle = i === S.selectedPoint ? '#fff' : '#5ad'; ctx.fill();
                 ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.stroke();
             });
         }
+        ctx.restore();
     }
 
+    // 3. PORTERÍAS (Resaltadas en pestaña Goals)
+    ctx.save();
+    if (activeTab !== 'goals') ctx.globalAlpha = 0.2;
     const drawGoal = (g, color) => {
         ctx.save(); ctx.translate(g.x, g.y); 
         ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
@@ -515,14 +581,15 @@ function render() {
         const drawX = isLeft ? -g.d : 0;
         ctx.fillRect(drawX, -g.w/2, g.d, g.w); 
         ctx.strokeRect(drawX, -g.w/2, g.d, g.w);
-        
-        ctx.beginPath(); 
-        ctx.moveTo(0, -g.w/2); ctx.lineTo(0, g.w/2); 
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -g.w/2); ctx.lineTo(0, g.w/2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
         ctx.restore();
     };
     drawGoal(S.goals.top, '#f90'); drawGoal(S.goals.bottom, '#5ad');
+    ctx.restore();
 
+    // 4. SPAWNS Y BOOSTS (Resaltados en pestaña Entities)
+    ctx.save();
+    if (activeTab !== 'entities') ctx.globalAlpha = 0.2;
     S.spawns.forEach((sp, i) => {
         ctx.save(); ctx.translate(sp.x, sp.y); ctx.rotate(sp.a);
         const sel = S.mode === 'spawn' && S.selectedSpawn === i, color = i < 2 ? '#5ad' : '#f90';
@@ -542,11 +609,30 @@ function render() {
         ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
         ctx.fillText(b.big ? "BOOST" : "CHAPA", b.x, b.y + r + 20);
     });
+    ctx.restore();
 
-    ctx.save(); ctx.translate(S.ball.x, S.ball.y);
+    // 5. BALÓN (Resaltado en pestaña Goals)
+    ctx.save();
+    if (activeTab !== 'goals') ctx.globalAlpha = 0.2;
+    ctx.translate(S.ball.x, S.ball.y);
     if (S.mode === 'ball') { ctx.beginPath(); ctx.arc(0, 0, 75, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.stroke(); }
     if (ballImg.complete) { ctx.drawImage(ballImg, -55, -55, 110, 110); }
     ctx.font = 'bold 18px monospace'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText("BALON", 0, 75);
+    ctx.restore();
+
+    // 6. REDES DE PORTERÍA (Efecto profundidad)
+    ctx.save();
+    if (activeTab !== 'goals') ctx.globalAlpha = 0.4;
+    const drawNet = (g, img) => {
+        if (!img.src || !img.complete) return;
+        ctx.save(); ctx.translate(g.x, g.y);
+        const isLeft = g.x < S.worldW / 2;
+        const dx = isLeft ? -g.d : 0;
+        ctx.drawImage(img, dx, -g.w/2, g.d, g.w);
+        ctx.restore();
+    };
+    drawNet(S.goals.top, netImgT);
+    drawNet(S.goals.bottom, netImgB);
     ctx.restore();
 
     ctx.restore(); ctx.restore();
@@ -574,8 +660,15 @@ canvas.addEventListener('mousedown', e => {
         if (foundPoint !== -1) {
             S.selectedPoint = foundPoint; S.isDragging = true; S.dragType = 'poly'; hit = true;
         } else {
-            // Si no tocamos punto pero estamos en modo poly, añadimos uno nuevo
-            S.poly.push(wp); S.selectedPoint = S.poly.length - 1; S.isDragging = true; S.dragType = 'poly'; hit = true;
+            // Si no tocamos punto pero estamos en modo poly, añadimos uno nuevo al lado del seleccionado
+            if (S.selectedPoint !== -1 && S.selectedPoint < S.poly.length) {
+                S.poly.splice(S.selectedPoint + 1, 0, wp);
+                S.selectedPoint++;
+            } else {
+                S.poly.push(wp);
+                S.selectedPoint = S.poly.length - 1;
+            }
+            S.isDragging = true; S.dragType = 'poly'; hit = true;
         }
     }
 
@@ -604,7 +697,7 @@ canvas.addEventListener('mousedown', e => {
     if (!hit) {
         if (Math.sqrt((S.ball.x-wp.x)**2 + (S.ball.y-wp.y)**2) < 55) {
             S.mode = 'ball'; S.isDragging = true; S.dragType = 'ball'; hit = true;
-            switchTab('entities');
+            switchTab('goals');
         }
     }
 
@@ -680,18 +773,20 @@ window.switchTab = (t) => {
             if (document.getElementById('tab-' + tabName)) document.getElementById('tab-' + tabName).style.display = 'none';
         }
     });
+    render();
 };
 
 document.querySelectorAll('.tab').forEach(t => {
     t.onclick = () => window.switchTab(t.dataset.tab);
 });
 
-const bindS = (id, key, target) => {
+const bindS = (id, key, getTarget) => {
     const elNum = document.getElementById(id), elRange = document.getElementById(id + 'R');
     const update = (val) => { 
         val = parseFloat(val); 
         if (isNaN(val)) return; 
-        if (target) target[key] = val; else S[key] = val; 
+        const target = getTarget ? getTarget() : S;
+        target[key] = val; 
         saveHistory();
         render(); 
     };
@@ -729,13 +824,42 @@ window.renderBoostList = () => {
 // Vinculación de entradas
 bindS('bgScale', 'bgScale'); bindS('bgOX', 'bgOX'); bindS('bgOY', 'bgOY'); bindS('worldW', 'worldW'); bindS('worldH', 'worldH');
 ['goalT','goalB'].forEach(p => { 
-    const target = p==='goalT'?S.goals.top:S.goals.bottom; 
-    ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), target)); 
+    const goalName = p==='goalT'?'top':'bottom'; 
+    ['X','Y','W','D'].forEach(k => bindS(p+k, k.toLowerCase(), () => S.goals[goalName])); 
 });
+
+document.getElementById('goalTFile').onchange = e => {
+    const file = e.target.files[0]; 
+    if (file) { 
+        const reader = new FileReader(); 
+        reader.onload = ev => { S.goals.top.img = ev.target.result; netImgT.src = S.goals.top.img; document.getElementById('goalTImg').value = "Imagen Cargada"; saveHistory(); render(); }; 
+        reader.readAsDataURL(file); 
+    }
+};
+document.getElementById('goalBFile').onchange = e => {
+    const file = e.target.files[0]; 
+    if (file) { 
+        const reader = new FileReader(); 
+        reader.onload = ev => { S.goals.bottom.img = ev.target.result; netImgB.src = S.goals.bottom.img; document.getElementById('goalBImg').value = "Imagen Cargada"; saveHistory(); render(); }; 
+        reader.readAsDataURL(file); 
+    }
+};
 
 document.getElementById('spawnA').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
 document.getElementById('spawnAR').oninput = e => { S.spawns[S.selectedSpawn].a = parseFloat(e.target.value); render(); };
-['poly','spawn','boost','ball'].forEach(m => document.getElementById('btn-mode-'+m).onclick = () => { S.mode = m; render(); });
+const updateModeUI = () => {
+    const badge = document.getElementById('mode-badge');
+    if (S.mode === 'poly') badge.style.display = 'flex';
+    else badge.style.display = 'none';
+    
+    ['poly','spawn','boost','ball'].forEach(m => {
+        const btn = document.getElementById('btn-mode-'+m);
+        if (btn) btn.classList.toggle('active', S.mode === m);
+    });
+};
+
+['poly','spawn','boost','ball'].forEach(m => document.getElementById('btn-mode-'+m).onclick = () => { S.mode = m; updateModeUI(); render(); });
+document.getElementById('btn-exit-poly-mode').onclick = () => { S.mode = 'none'; updateModeUI(); render(); };
 document.getElementById('btn-clear-poly').onclick = () => { S.poly = []; render(); };
 document.getElementById('btn-poly-from-rect').onclick = () => { const fw = +document.getElementById('fieldW').value, fh = +document.getElementById('fieldH').value, fx = (S.worldW-fw)/2, fy = (S.worldH-fh)/2; S.poly = [{x:fx, y:fy}, {x:fx+fw, y:fy}, {x:fx+fw, y:fy+fh}, {x:fx, y:fy+fh}]; render(); };
 document.getElementById('btn-add-boost-big').onclick = () => { S.boosts.push({x:S.worldW/2, y:S.worldH/2, big:true}); S.selectedBoost = S.boosts.length-1; renderBoostList(); render(); };
@@ -872,7 +996,7 @@ window.loadMap = async (m) => {
         S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), config);
         S.isLoaded = true; S.zoom = 0; 
         document.getElementById('mapName').value = m;
-        bgImg.src = S.bgUrl; syncUI(); renderBoostList(); render();
+        bgImg.src = S.bgUrl; syncUI(); renderBoostList(); updateModeUI(); render();
         hasChanges = false;
         historyStack = [JSON.stringify(S)]; historyIndex = 0;
         window.loadMapList();
@@ -914,6 +1038,7 @@ window.renameMap = async (m) => {
 // Export JS removido
 
 window.loadMapList();
+updateModeUI();
 window.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'z') { e.preventDefault(); window.undo(); }
     if (e.ctrlKey && e.key === 'y') { e.preventDefault(); window.redo(); }

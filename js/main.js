@@ -4,7 +4,7 @@ import { Ball } from './entities/ball.js';
 import { BoostPad } from './entities/boost.js';
 import { ExplosionParticle, ConfettiParticle } from './fx/particles.js';
 import { setupInput } from './core/input.js';
-import { drawField, createGrassDetails } from './world/field.js';
+import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
@@ -40,6 +40,16 @@ let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
 
 async function init() {
     console.log("SCAPS: Inicializando motor...");
+    // Cargar mapa PRINCIPAL por defecto al inicio
+    try {
+        const defaultMapResp = await fetch('maps/Principal.json?t=' + Date.now());
+        if (defaultMapResp.ok) {
+            const defaultMapData = await defaultMapResp.json();
+            applyMapConfig(defaultMapData);
+            console.log("Mapa PRINCIPAL cargado al inicio");
+        }
+    } catch(e) { console.warn("Error cargando mapa inicial:", e); }
+
     try {
         canvas = document.getElementById('gameCanvas');
         if (!canvas) return;
@@ -67,13 +77,20 @@ async function init() {
         // IMPORTANTE: Pasar callbacks correctos
         setupInput(keysPressed, toggleCamera, toggleScoreboard);
 
-        // Crear entidades con posiciones de spawn seguras
-        player1 = new Car(1400, 2500, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space' }, "JUGADOR 1", 'res/Car1.png');
-        player1_teammate = new Car(1200, 2200, '#5ad', {}, "BOT AZUL", 'res/Car2.png');
-        player2 = new Car(1400, 1100, '#f90', {}, "BOT NARANJA 1", 'res/Car3.png');
-        player2_teammate = new Car(1600, 1300, '#f90', {}, "BOT NARANJA 2", 'res/Car4.png');
+        // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
+        player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'res/Car1.png');
+        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT AZUL", 'res/Car2.png');
+        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 1", 'res/Car3.png');
+        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 2", 'res/Car4.png');
+        
+        // Inicializar objetos de teclas para los bots y asignar roles
+        player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
+        player2.aiState = { role: 'attacker', targetBoostPad: null };
+        player2_teammate.aiState = { role: 'support', targetBoostPad: null };
+        
+        [player1_teammate, player2, player2_teammate].forEach(bot => { bot.aiKeys = {}; });
         allCars = [player1, player1_teammate, player2, player2_teammate];
-        ball = new Ball(CONST.WORLD_W / 2, CONST.WORLD_H / 2);
+        ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'res/Ball1.png');
 
         grassDetails = createGrassDetails(1500);
         setupBoostPads();
@@ -213,10 +230,17 @@ function renderFrame() {
 
 function updateAll(dt) {
     if (gameState === 'playing' || gameState === 'countdown') {
-        updateCarAI(player1_teammate, ball, boostPads, gameState, keysPressed); 
-        updateCarAI(player2, ball, boostPads, gameState, keysPressed); 
-        updateCarAI(player2_teammate, ball, boostPads, gameState, keysPressed); 
-        allCars.forEach(car => car.update(keysPressed, gameState, particles, skidMarks));
+        // Actualizar IA de cada bot de forma independiente
+        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys); 
+        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys); 
+        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys); 
+        
+        // El jugador usa keysPressed (teclado), los bots usan sus aiKeys
+        player1.update(keysPressed, gameState, particles, skidMarks);
+        player1_teammate.update(player1_teammate.aiKeys, gameState, particles, skidMarks);
+        player2.update(player2.aiKeys, gameState, particles, skidMarks);
+        player2_teammate.update(player2_teammate.aiKeys, gameState, particles, skidMarks);
+
         ball.update(gameState, explosionParticles);
         boostPads.forEach(pad => pad.update());
         
@@ -292,8 +316,9 @@ function updateUI(dt) {
 function resetAfterGoal() { 
     applySpawns();
     allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = 33; });
-    ball.x = CONST.WORLD_W / 2; ball.y = CONST.WORLD_H / 2;
+    ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
     ball.vx = 0; ball.vy = 0; ball.onWallTimer = 0; 
+    ball.isFireball = false; ball.fireballTimer = 0; ball.visualRadius = ball.radius; ball.targetRadius = ball.radius;
     skidMarks = []; particles = []; confettiParticles = []; touchHistory = []; 
     countdownTimer = 3; gameState = 'countdown'; 
     if (countdownEl) countdownEl.style.display = 'block'; 
@@ -312,13 +337,16 @@ function drawAll() {
     allCars.forEach(car => car.draw(ctx));
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; explosionParticles.forEach(ep => ep.draw(ctx)); ctx.restore();
     ctx.save(); confettiParticles.forEach(cp => cp.draw(ctx)); ctx.restore(); 
+    
+    // Dibujar las redes por encima de todo para el efecto de profundidad
+    drawGoalNets(ctx);
 }
 
-function setupBoostPads() { boostPads = []; CONST.BOOST_POSITIONS.forEach(pos => { boostPads.push(new BoostPad(pos.x, pos.y, !pos.isBig)); }); }
+function setupBoostPads() { boostPads = []; CONST.CONFIG.BOOST_POSITIONS.forEach(pos => { boostPads.push(new BoostPad(pos.x, pos.y, !pos.isBig)); }); }
 function toggleCamera() { cameraMode = (cameraMode === 'rotating') ? 'fixed' : 'rotating'; }
 function toggleScoreboard(show) { if (show) showScoreboard(scoreboardEl, allCars, score); else hideScoreboard(scoreboardEl, gameState); }
 function togglePause() { isPaused = !isPaused; const pm = document.getElementById('pause-menu'); if (pm) pm.style.display = isPaused ? 'flex' : 'none'; }
-function applySpawns() { allCars.forEach((car, i) => { const sp = CONST.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 }; car.x = sp.x; car.y = sp.y; car.angle = sp.a; }); }
+function applySpawns() { allCars.forEach((car, i) => { const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 }; car.x = sp.x; car.y = sp.y; car.angle = sp.a; }); }
 
 function startIntro() {
     introPhase = 1;
@@ -467,25 +495,7 @@ async function finalizeStartGame() {
 
 function applyMapConfig(c) {
     if (!c) return;
-    // Las claves del JSON del editor: poly, spawns, boosts, goals, bgUrl, bgScale, bgOX, bgOY, worldW, worldH
-    if (c.goals) {
-        CONST.setConfig('GOAL_TOP', c.goals.top);
-        CONST.setConfig('GOAL_BOTTOM', c.goals.bottom);
-    }
-    if (c.spawns) CONST.setConfig('SPAWN_POINTS', c.spawns);
-    if (c.boosts) {
-        // El editor usa 'big', el motor usa 'isBig'
-        const normalizedBoosts = c.boosts.map(b => ({ x: b.x, y: b.y, isBig: b.big }));
-        CONST.setConfig('BOOST_POSITIONS', normalizedBoosts);
-    }
-    if (c.poly) CONST.setConfig('FIELD_POLYGON', c.poly);
-    if (c.worldW) CONST.setConfig('WORLD_W', c.worldW);
-    if (c.worldH) CONST.setConfig('WORLD_H', c.worldH);
-    if (c.bgUrl) CONST.setConfig('BG_IMG_PATH', c.bgUrl);
-    if (c.bgScale) CONST.setConfig('BG_SCALE', c.bgScale);
-    if (c.bgOX !== undefined) CONST.setConfig('BG_OFFSET_X', c.bgOX);
-    if (c.bgOY !== undefined) CONST.setConfig('BG_OFFSET_Y', c.bgOY);
-    
+    CONST.applyExternalConfig(c);
     setupBoostPads();
     console.log("Mapa aplicado:", { goals: c.goals, spawns: c.spawns?.length, boosts: c.boosts?.length });
 }
