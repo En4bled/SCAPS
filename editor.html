@@ -37,27 +37,16 @@ body { background:#0a0a0a; color:#eee; font-family:'Segoe UI', Tahoma, Geneva, V
     font-weight: 800;
 }
 
-#sidebar-toggle {
-    position: absolute;
-    top: 50%;
-    left: 420px;
-    transform: translateY(-50%);
-    z-index: 1001;
-    width: 24px;
-    height: 60px;
-    background: #121218;
-    border: 1px solid #444;
-    border-left: none;
-    border-radius: 0 8px 8px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #5ad;
-    font-weight: bold;
+#resizer {
+    width: 6px;
+    cursor: col-resize;
+    background: #1a1a24;
+    transition: background 0.2s;
+    z-index: 1002;
 }
-#sidebar.collapsed + #sidebar-toggle { left: 0; }
+#resizer:hover { background: #5ad; }
+
+/* Sidebar Toggle removido de la izquierda */
 
 .section { border-bottom:1px solid #222; padding:15px; }
 .section h3 { color:#f90; font-size:11px; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
@@ -112,48 +101,81 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 /* Panel Flotante */
 #floating-map-panel {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 0;
+    right: 0;
+    bottom: 0;
     width: 320px;
-    background: rgba(18, 18, 24, 0.95);
-    border: 1px solid #444;
-    border-radius: 12px;
+    background: #121218;
+    border-left: 1px solid #333;
     z-index: 2100;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-#floating-map-panel.collapsed { width: 45px; height: 45px; border-radius: 50%; }
-#map-panel-header {
-    padding: 12px 15px;
-    background: rgba(255, 153, 0, 0.15);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    border-bottom: 1px solid #333;
+    flex-direction: column;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-#floating-map-panel.collapsed #map-panel-content { display: none; }
-#floating-map-panel.collapsed #map-panel-header { background: #f90; padding: 0; justify-content: center; height: 45px; border-bottom: none; }
-#floating-map-panel.collapsed #map-panel-header span { display: none; }
+#floating-map-panel.collapsed { transform: translateX(320px); }
 
-#map-list { max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 10px; border: 1px solid #333; padding: 5px; }
+#map-panel-toggle {
+    position: absolute;
+    top: 50%;
+    left: -24px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 60px;
+    background: #121218;
+    border: 1px solid #444;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f90;
+    font-weight: bold;
+}
+
+#map-list { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; }
 .map-item { 
     padding: 12px; 
-    border-radius: 6px;
-    background: rgba(255,255,255,0.03);
-    margin-bottom: 5px;
+    border-radius: 8px;
+    background: #1a1a24;
+    margin-bottom: 10px;
     cursor: pointer; 
     display: flex; 
     flex-direction: column;
     gap: 8px;
-    font-size: 11px; 
-    transition: 0.2s; 
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid #333;
+    transition: 0.2s;
 }
-.map-item:hover { background: rgba(90, 173, 237, 0.1); border-color: #5ad; }
-.map-item.active { border-color: #f90; background: rgba(255, 153, 0, 0.08); }
+.map-item:hover { border-color: #5ad; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.map-item.active { border-color: #f90; border-width: 2px; }
+
+.map-preview {
+    width: 100%;
+    height: 120px;
+    background: #08080c;
+    border-radius: 4px;
+    border-top: 1px solid #222;
+    margin-top: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.map-preview canvas { width: 100%; height: 100%; object-fit: contain; }
+
+.btn-new-map {
+    width: 45px;
+    height: 45px;
+    background: #f90;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex; align-items: center; justify-content: center;
+}
+.btn-new-map:hover { transform: scale(1.1); filter: brightness(1.1); }
 
 .map-info { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #fff; letter-spacing: 1px; }
 .map-actions { display: flex; gap: 4px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
@@ -269,8 +291,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     </div>
   </div>
 </div>
-
-<button id="sidebar-toggle" title="Plegar/Desplegar Ajustes">◀</button>
+<div id="resizer"></div>
 
 <div id="canvas-wrap">
   <div id="editor-overlay">
@@ -284,19 +305,22 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
   <div id="mode-badge">MODO: EDICIÓN DE POLÍGONO</div>
 
   <div id="floating-map-panel">
-    <div id="map-panel-header" title="Click para plegar/desplegar">
-        <span style="font-weight: 800; font-size: 11px; letter-spacing: 1px;">💾 GESTOR DE MAPAS</span>
-        <span class="toggle-icon">📁</span>
-    </div>
-    <div id="map-panel-content" style="padding: 15px;">
-        <div class="row"><label>Nombre</label><input type="text" id="mapName" placeholder="Nuevo mapa..." style="flex:1; padding:8px; background:#222; border:1px solid #444; color:white; border-radius:4px; font-size: 11px;"></div>
-        <button id="btn-save-json" class="primary" style="width:100%; margin: 10px 0;">💾 GUARDAR MAPA ACTUAL</button>
-        <div style="font-size: 10px; color: #f90; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px;">Tus Mapas:</div>
-        <div id="map-list"></div>
-        <div class="btn-group" style="margin-top:10px; opacity: 0.6;">
-            <button id="btn-reset" class="danger" style="font-size:9px;">Nuevo / Vaciar</button>
-            <button id="btn-export-js" style="font-size:9px;">Descargar JS</button>
+    <button id="map-panel-toggle" title="Plegar/Desplegar Gestor">▶</button>
+    
+    <div id="map-panel-content" style="padding: 15px; display: flex; flex-direction: column; height: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <span style="font-weight: 800; font-size: 11px; letter-spacing: 1px; color: #f90;">💾 GESTOR DE MAPAS</span>
+            <button id="btn-reset" class="btn-new-map" title="Nuevo Mapa">➕</button>
         </div>
+
+        <div class="row" style="margin-bottom: 15px;">
+            <input type="text" id="mapName" placeholder="Nombre del mapa..." style="flex:1; padding:10px; background:#1a1a24; border:1px solid #444; color:white; border-radius:6px; font-size: 12px; font-weight: bold;">
+        </div>
+        
+        <button id="btn-save-json" class="primary" style="width:100%; margin-bottom: 20px;">💾 GUARDAR MAPA ACTUAL</button>
+        
+        <div style="font-size: 10px; color: #5ad; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 800;">Tus Arenas:</div>
+        <div id="map-list"></div>
     </div>
   </div>
 </div>
@@ -525,15 +549,41 @@ canvas.addEventListener('mousemove', e => {
 window.addEventListener('mouseup', () => { S.isPanning = false; S.isDragging = false; S.dragType = null; canvas.style.cursor = 'default'; });
 canvas.addEventListener('wheel', e => { e.preventDefault(); if (e.deltaY < 0) S.zoom *= 1.1; else S.zoom /= 1.1; S.zoom = Math.max(0.05, Math.min(S.zoom, 5)); render(); }, { passive: false });
 
+// Resizer de la Sidebar Izquierda
+const sidebar = document.getElementById('sidebar');
+const resizer = document.getElementById('resizer');
+resizer.addEventListener('mousedown', (e) => {
+    const startX = e.clientX;
+    const startWidth = sidebar.offsetWidth;
+    const onMouseMove = (e) => {
+        const newWidth = startWidth + (e.clientX - startX);
+        if (newWidth > 200 && newWidth < 800) {
+            sidebar.style.width = newWidth + 'px';
+            sidebar.style.minWidth = newWidth + 'px';
+            canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render();
+        }
+    };
+    const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+});
+
 function toggleSidebar(forceOpen = false) {
-    const sb = document.getElementById('sidebar'), btn = document.getElementById('sidebar-toggle');
-    if (forceOpen) { sb.classList.remove('collapsed'); btn.innerText = '◀'; } else { sb.classList.toggle('collapsed'); btn.innerText = sb.classList.contains('collapsed') ? '▶' : '◀'; }
+    const sb = sidebar;
+    if (forceOpen) { sb.classList.remove('collapsed'); }
 }
 function switchTab(t) { toggleSidebar(true); document.querySelectorAll('.tab').forEach(x => { if (x.dataset.tab === t) { x.classList.add('active'); document.getElementById('tab-' + t).style.display = 'block'; } else { x.classList.remove('active'); const other = x.dataset.tab; if(document.getElementById('tab-' + other)) document.getElementById('tab-' + other).style.display = 'none'; } }); }
 
-document.getElementById('sidebar-toggle').onclick = () => toggleSidebar();
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
-document.getElementById('map-panel-header').onclick = () => document.getElementById('floating-map-panel').classList.toggle('collapsed');
+document.getElementById('map-panel-toggle').onclick = () => {
+    const panel = document.getElementById('floating-map-panel');
+    const btn = document.getElementById('map-panel-toggle');
+    panel.classList.toggle('collapsed');
+    btn.innerText = panel.classList.contains('collapsed') ? '◀' : '▶';
+};
 
 document.getElementById('bgFile').onchange = e => {
     const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = ev => { S.bgUrl = ev.target.result; bgImg.src = S.bgUrl; document.getElementById('bgUrl').value = "Imagen Cargada"; render(); }; reader.readAsDataURL(file); }
@@ -602,12 +652,16 @@ const loadMapList = async () => {
     try {
         const maps = await (await fetch('get_maps.php')).json();
         list.innerHTML = '';
-        maps.forEach(m => {
+        for (const m of maps) {
+            const config = await (await fetch(`maps/${m}.json`)).json();
             const div = document.createElement('div'); 
             div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
             div.innerHTML = `
                 <div class="map-info">
                     <span>${m.toUpperCase()}</span>
+                </div>
+                <div class="map-preview">
+                    <canvas id="preview-${m}"></canvas>
                 </div>
                 <div class="map-actions">
                     <button class="btn-icon" title="Cargar / Editar" onclick="event.stopPropagation(); loadMap('${m}')">📂</button>
@@ -618,9 +672,33 @@ const loadMapList = async () => {
             `;
             div.onclick = () => loadMap(m);
             list.appendChild(div);
-        });
+            renderThumbnail(`preview-${m}`, config);
+        }
     } catch(e) {}
 };
+
+function renderThumbnail(canvasId, map) {
+    const cv = document.getElementById(canvasId);
+    if (!cv) return;
+    const ctxT = cv.getContext('2d');
+    cv.width = 300; cv.height = 200;
+    const scale = Math.min(cv.width / map.worldW, cv.height / map.worldH) * 0.8;
+    const ox = (cv.width - map.worldW * scale) / 2, oy = (cv.height - map.worldH * scale) / 2;
+    
+    ctxT.fillStyle = '#08080c'; ctxT.fillRect(0,0,cv.width,cv.height);
+    ctxT.save(); ctxT.translate(ox, oy); ctxT.scale(scale, scale);
+    
+    // Polígono
+    if (map.poly && map.poly.length > 1) {
+        ctxT.beginPath(); ctxT.moveTo(map.poly[0].x, map.poly[0].y);
+        map.poly.forEach(p => ctxT.lineTo(p.x, p.y));
+        ctxT.closePath(); ctxT.strokeStyle = '#5ad'; ctxT.lineWidth = 40; ctxT.stroke();
+    }
+    // Porterías
+    const drawG = (g, c) => { ctxT.fillStyle = c; ctxT.fillRect(g.x-g.d/2, g.y-g.w/2, g.d, g.w); };
+    if (map.goals) { drawG(map.goals.top, '#5ad'); drawG(map.goals.bottom, '#f90'); }
+    ctxT.restore();
+}
 
 window.loadMap = async (m) => {
     try {
@@ -666,11 +744,7 @@ window.renameMap = async (m) => {
     } else alert(res.message);
 };
 
-document.getElementById('btn-export-js').onclick = () => {
-    const boostArr = JSON.stringify(S.boosts.map(b=>({x:b.x, y:b.y, isBig:b.big})), null, 4);
-    const code = `export const WORLD_W = ${S.worldW}; export const WORLD_H = ${S.worldH}; export const FIELD_POLYGON = ${JSON.stringify(S.poly)}; export const GOAL_TOP = ${JSON.stringify(S.goals.top)}; export const GOAL_BOTTOM = ${JSON.stringify(S.goals.bottom)}; export const SPAWN_POINTS = ${JSON.stringify(S.spawns)}; export const BOOST_POSITIONS = ${boostArr};`;
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([code], {type:'text/javascript'})); a.download = 'constants.js'; a.click();
-};
+// Export JS removido
 
 loadMapList();
 window.addEventListener('resize', () => { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render(); });
