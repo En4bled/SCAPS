@@ -110,13 +110,12 @@ async function init() {
         const pContinue = getEl('btn-pause-continue'); if (pContinue) pContinue.onclick = () => togglePause();
         const pRestart = getEl('btn-pause-restart'); if (pRestart) pRestart.onclick = () => { score = { blue: 0, orange: 0 }; gameTime = 300; togglePause(); resetAfterGoal(); };
         const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if(pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; } };
-        const pMusic = getEl('btn-toggle-music-pause');
-        if (pMusic) {
-            pMusic.onclick = () => {
+        const floatBtn = getEl('mute-float-btn');
+        if (floatBtn) {
+            floatBtn.onclick = () => {
                 const muted = toggleMusic();
-                pMusic.innerText = muted ? '🎵 MÚSICA: OFF' : '🎵 MÚSICA: ON';
-                const floatBtn = getEl('mute-float-btn');
-                if (floatBtn) floatBtn.innerText = muted ? '🔇' : '🔊';
+                floatBtn.innerText = muted ? '🔇' : '🔊';
+                if (pMusic) pMusic.innerText = muted ? '🎵 MÚSICA: OFF' : '🎵 MÚSICA: ON';
             };
         }
 
