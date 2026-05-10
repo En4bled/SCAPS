@@ -95,6 +95,12 @@ export function playSound(type, intensity = 1.0) {
         clickSnd.play().catch(e => {});
         return;
     } 
+    if (type === 'menu_hover') {
+        const hoverSnd = new Audio('sound/Minimalist8.wav');
+        hoverSnd.volume = 0.3;
+        hoverSnd.play().catch(e => {});
+        return;
+    }
     else if (type === 'ball_hit') {
         osc.type = 'triangle';
         const baseFreq = 80 + (intensity * 120);

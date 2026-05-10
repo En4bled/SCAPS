@@ -126,6 +126,7 @@ async function init() {
         // Sonido global para botones
         document.querySelectorAll('.menu-btn').forEach(btn => {
             btn.addEventListener('click', () => playSound('menu_click'));
+            btn.addEventListener('mouseenter', () => playSound('menu_hover'));
         });
 
         // Iniciar el loop principal
