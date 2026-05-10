@@ -13,6 +13,8 @@ import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic } from '.
 let canvas, ctx;
 let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
+let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
+let selectedMap = 'Principal', selectedMode = 'online';
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro'; 
@@ -57,6 +59,10 @@ async function init() {
         menuCredits = getEl('menu-credits');
         menuCustom = getEl('menu-custom');
         menuSettings = getEl('menu-settings');
+        setupOverlay = getEl('match-setup-overlay');
+        btnStartGame = getEl('setup-btn-play');
+        btnExitSetup = getEl('setup-btn-exit');
+        mapListContainer = getEl('setup-map-list');
 
         // IMPORTANTE: Pasar callbacks correctos
         setupInput(keysPressed, toggleCamera, toggleScoreboard);
@@ -80,6 +86,22 @@ async function init() {
         
         ['btn-custom-back', 'btn-settings-back', 'btn-credits-back'].forEach(id => { 
             const el = getEl(id); if (el) el.onclick = () => showMenuScreen('initial'); 
+        });
+
+        // Listeners del selector
+        if (btnStartGame) btnStartGame.onclick = () => finalizeStartGame();
+        if (btnExitSetup) btnExitSetup.onclick = () => {
+            setupOverlay.style.display = 'none';
+            if (mainMenuEl) mainMenuEl.style.display = 'flex';
+        };
+
+        document.querySelectorAll('.mode-option').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMode = btn.dataset.mode;
+                playSound('menu_click');
+            };
         });
 
         if (introPhase === 3 && mainMenuEl) {
@@ -372,11 +394,61 @@ function showMenuScreen(screenId) {
 }
 
 async function startGame() {
-    const trans = document.getElementById('match-transition'); if (trans) trans.classList.add('active');
-    
-    // Cargar mapa PRINCIPAL por defecto
+    if (mainMenuEl) mainMenuEl.style.display = 'none';
+    if (setupOverlay) {
+        setupOverlay.style.display = 'flex';
+        loadSetupMaps();
+    }
+}
+
+async function loadSetupMaps() {
+    if (!mapListContainer) return;
     try {
-        const resp = await fetch(`maps/Principal.json?t=${Date.now()}`);
+        const resp = await fetch('get_maps.php');
+        const maps = await resp.json();
+        mapListContainer.innerHTML = '';
+        // Asegurar que mostramos 10 elementos (como pidió el usuario)
+        const displayCount = Math.max(maps.length, 10);
+        
+        for(let i = 0; i < displayCount; i++) {
+            const m = maps[i] || `MAPA ${i+1}`; // Nombre del mapa o placeholder
+            const container = document.createElement('div');
+            container.style.cursor = 'pointer';
+            container.style.position = 'relative';
+            container.style.transition = '0.3s';
+            container.style.border = (selectedMap === m) ? '4px solid #ff4444' : '2px solid rgba(255,255,255,0.1)';
+            container.style.borderRadius = '10px';
+            container.style.overflow = 'hidden';
+            container.style.background = '#000';
+            container.style.height = '140px';
+            if (selectedMap === m) container.style.boxShadow = '0 0 20px rgba(255, 68, 68, 0.6)';
+
+            // Usar miniatura map1.png hasta map10.png
+            const thumbUrl = `res/map${(i % 10) + 1}.png`;
+
+            container.innerHTML = `
+                <img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: ${selectedMap === m ? 'none' : 'grayscale(0.6) brightness(0.6)'};">
+                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); color: #fff; font-size: 11px; text-align: center; padding: 10px 4px; font-weight: bold; font-family: 'Rajdhani', sans-serif;">${m.toUpperCase()}</div>
+            `;
+
+            container.onclick = () => {
+                if (maps[i]) { // Solo seleccionar si el mapa existe de verdad
+                    selectedMap = m;
+                    loadSetupMaps();
+                    playSound('menu_click');
+                }
+            };
+            mapListContainer.appendChild(container);
+        }
+    } catch (e) { console.error("Error load setup maps:", e); }
+}
+
+async function finalizeStartGame() {
+    const trans = document.getElementById('match-transition'); if (trans) trans.classList.add('active');
+    if (setupOverlay) setupOverlay.style.display = 'none';
+
+    try {
+        const resp = await fetch(`maps/${selectedMap}.json?t=${Date.now()}`);
         if (resp.ok) {
             const mapData = await resp.json();
             applyMapConfig(mapData);

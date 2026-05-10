@@ -147,26 +147,29 @@ export function checkCarCarCollision(car1, car2) {
 export function checkGoalPhysics(ball) {
     const goals = [CONST.GOAL_TOP, CONST.GOAL_BOTTOM];
     goals.forEach(g => {
-        const left = g.x - g.w/2; const right = g.x + g.w/2;
-        const isTopGoal = (g.y < CONST.WORLD_H / 2);
-        const frontY = g.y; const backY = isTopGoal ? g.y - g.d : g.y + g.d;
+        const top = g.y - g.w/2; const bottom = g.y + g.w/2;
+        const isLeftGoal = (g.x < CONST.WORLD_W / 2);
+        const frontX = g.x; const backX = isLeftGoal ? g.x - g.d : g.x + g.d;
         
-        const inYRange = isTopGoal ? (ball.y < frontY && ball.y > backY) : (ball.y > frontY && ball.y < backY);
-        if (inYRange) {
-            if (Math.abs(ball.x - left) < ball.radius && ball.x < left) { ball.x = left - ball.radius; ball.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
-            if (Math.abs(ball.x - right) < ball.radius && ball.x > right) { ball.x = right + ball.radius; ball.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
+        const inXRange = isLeftGoal ? (ball.x < frontX && ball.x > backX) : (ball.x > frontX && ball.x < backX);
+        if (inXRange) {
+            // Colisión con los "largueros" laterales (arriba/abajo de la portería)
+            if (Math.abs(ball.y - top) < ball.radius && ball.y < top) { ball.y = top - ball.radius; ball.vy *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (Math.abs(ball.y - bottom) < ball.radius && ball.y > bottom) { ball.y = bottom + ball.radius; ball.vy *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
         }
-        if (ball.x > left && ball.x < right) {
-            const distBack = Math.abs(ball.y - backY);
-            if (distBack < ball.radius) { ball.y = isTopGoal ? backY + ball.radius : backY - ball.radius; ball.vy *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
+        if (ball.y > top && ball.y < bottom) {
+            // Colisión con el fondo de la red
+            const distBack = Math.abs(ball.x - backX);
+            if (distBack < ball.radius) { ball.x = isLeftGoal ? backX + ball.radius : backX - ball.radius; ball.vx *= -CONST.BALL_WALL_SLOWDOWN_FACTOR; }
         }
         // Postes frontales
-        [left, right].forEach(px => {
-            const dx = ball.x - px, dy = ball.y - frontY; const dist = Math.sqrt(dx*dx+dy*dy);
+        [top, bottom].forEach(py => {
+            const dx = ball.x - frontX, dy = ball.y - py; const dist = Math.sqrt(dx*dx+dy*dy);
             if (dist < ball.radius) {
                 const nx = dx/dist, ny = dy/dist;
-                if (isTopGoal ? ny > 0 : ny < 0) {
-                    ball.x = px + nx*ball.radius; ball.y = frontY + ny*ball.radius;
+                // Solo rebotar si viene de fuera de la portería
+                if (isLeftGoal ? nx > 0 : nx < 0) {
+                    ball.x = frontX + nx*ball.radius; ball.y = py + ny*ball.radius;
                     const dot = ball.vx*nx + ball.vy*ny; ball.vx -= 1.5*dot*nx; ball.vy -= 1.5*dot*ny;
                 }
             }
@@ -194,13 +197,13 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed) {
     let goToTarget = true; 
     let useBoost = false;
 
-    const ownGoalY = (ai.color === '#5ad') ? (CONST.WORLD_H - CONST.FIELD_MARGIN) : (CONST.FIELD_MARGIN);
-    const ownGoalX = CONST.WORLD_W / 2;
-    const opponentGoalY = (ai.color === '#5ad') ? (CONST.FIELD_MARGIN) : (CONST.WORLD_H - CONST.FIELD_MARGIN);
-    const opponentGoalX = CONST.WORLD_W / 2;
+    const ownGoalX = (ai.color === '#5ad') ? (CONST.FIELD_MARGIN) : (CONST.WORLD_W - CONST.FIELD_MARGIN);
+    const ownGoalY = CONST.WORLD_H / 2;
+    const opponentGoalX = (ai.color === '#5ad') ? (CONST.WORLD_W - CONST.FIELD_MARGIN) : (CONST.FIELD_MARGIN);
+    const opponentGoalY = CONST.WORLD_H / 2;
     
     const distToBall = Math.sqrt((ai.x - ball.x)**2 + (ai.y - ball.y)**2);
-    const ballInOwnHalf = (ai.color === '#5ad') ? (ball.y > CONST.WORLD_H / 2) : (ball.y < CONST.WORLD_H / 2);
+    const ballInOwnHalf = (ai.color === '#5ad') ? (ball.x < CONST.WORLD_W / 2) : (ball.x > CONST.WORLD_W / 2);
 
     // Lógica de Boost
     if (ai.boost < 30 && !ai.aiState.targetBoostPad) {
@@ -247,8 +250,8 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed) {
                     useBoost = (distToBall < 800);
                 }
             } else {
-                targetX = ball.x; 
-                targetY = CONST.WORLD_H / 2 + (ai.color === '#5ad' ? 200 : -200); 
+                targetX = CONST.WORLD_W / 2 + (ai.color === '#5ad' ? -200 : 200); 
+                targetY = ball.y; 
                 goToTarget = true; 
             }
         } 
@@ -263,8 +266,8 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed) {
                     useBoost = (distToBall < 900);
                 }
             } else {
-                targetX = ball.x; 
-                targetY = CONST.WORLD_H / 2 - (ai.color === '#5ad' ? 400 : -400); 
+                targetX = CONST.WORLD_W / 2 - (ai.color === '#5ad' ? -400 : 400); 
+                targetY = ball.y; 
                 goToTarget = true; 
             }
         }
