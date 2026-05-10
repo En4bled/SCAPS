@@ -292,7 +292,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 <div id="resizer"></div>
 
 <div id="canvas-wrap">
-  <div id="editor-overlay">
+  <div id="editor-overlay" class="active">
     <h2>Abre el mapa para editar</h2>
     <p style="color: #666; margin-top: 10px;">Selecciona un mapa en el gestor a la derecha o crea uno nuevo</p>
   </div>
@@ -678,24 +678,30 @@ window.loadMapList = async () => {
         const maps = await (await fetch('get_maps.php')).json();
         list.innerHTML = '';
         for (const m of maps) {
-            const div = document.createElement('div'); 
-            div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
-            div.innerHTML = `
-                <div class="map-info"><span>${m.toUpperCase()}</span></div>
-                <div class="map-preview"><canvas id="preview-${m}"></canvas></div>
-                <div class="map-actions">
-                    <button class="btn-icon" title="Cargar" onclick="event.stopPropagation(); window.loadMap('${m}')">📂</button>
-                    <button class="btn-icon" title="Clonar" onclick="event.stopPropagation(); window.duplicateMap('${m}')">📋</button>
-                    <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); window.renameMap('${m}')">✏️</button>
-                    <button class="btn-icon del" title="Borrar" onclick="event.stopPropagation(); window.deleteMap('${m}')">🗑️</button>
-                </div>
-            `;
-            div.onclick = () => window.loadMap(m);
-            list.appendChild(div);
-            const config = await (await fetch(`maps/${m}.json`)).json();
-            renderThumbnail(`preview-${m}`, config);
+            try {
+                const div = document.createElement('div'); 
+                div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
+                div.innerHTML = `
+                    <div class="map-info"><span>${m.toUpperCase()}</span></div>
+                    <div class="map-preview"><canvas id="preview-${m}"></canvas></div>
+                    <div class="map-actions">
+                        <button class="btn-icon" title="Cargar" onclick="event.stopPropagation(); window.loadMap('${m}')">📂</button>
+                        <button class="btn-icon" title="Clonar" onclick="event.stopPropagation(); window.duplicateMap('${m}')">📋</button>
+                        <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); window.renameMap('${m}')">✏️</button>
+                        <button class="btn-icon del" title="Borrar" onclick="event.stopPropagation(); window.deleteMap('${m}')">🗑️</button>
+                    </div>
+                `;
+                div.onclick = () => window.loadMap(m);
+                list.appendChild(div);
+                
+                const configResp = await fetch(`maps/${m}.json`);
+                if (configResp.ok) {
+                    const config = await configResp.json();
+                    renderThumbnail(`preview-${m}`, config);
+                }
+            } catch (err) { console.error("Error cargando miniatura para:", m, err); }
         }
-    } catch(e) {}
+    } catch(e) { console.error("Error cargando lista de mapas:", e); }
 };
 
 function renderThumbnail(canvasId, map) {
@@ -777,9 +783,11 @@ window.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'y') { e.preventDefault(); window.redo(); }
     if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveCurrentMap(); }
 });
+setTimeout(() => {
+    canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
+    render();
+}, 100);
 window.addEventListener('resize', () => { canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight; render(); });
-canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
-render();
 </script>
 </body>
 </html>
