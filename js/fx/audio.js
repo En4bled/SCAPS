@@ -3,6 +3,30 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let musicAudio = null;
 let motorAudios = [];
 let isMusicMuted = false;
+let musicVolume = 0.5;
+const TOTAL_SONGS = 8;
+const songMetadata = [
+    { title: "NEON VELOCITY", artist: "SYNTHWAVE PRO" },
+    { title: "CYBER DRIVE", artist: "DIGITAL GHOST" },
+    { title: "TURBO BLITZ", artist: "ELECTRO RUSH" },
+    { title: "QUANTUM PITCH", artist: "NEURAL LINK" },
+    { title: "SHADOW STRIKER", artist: "MIDNIGHT PULSE" },
+    { title: "GRAVITY SHIFT", artist: "ORBITAL SOUND" },
+    { title: "SONIC OVERDRIVE", artist: "VELOCITY X" },
+    { title: "FINAL LAP", artist: "MEGA DRIVE" }
+];
+let currentSongIdx = Math.floor(Math.random() * TOTAL_SONGS) + 1;
+let playlistOrder = [];
+let playlistPointer = 0;
+
+function shufflePlaylist() {
+    playlistOrder = Array.from({length: TOTAL_SONGS}, (_, i) => i + 1);
+    for (let i = playlistOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [playlistOrder[i], playlistOrder[j]] = [playlistOrder[j], playlistOrder[i]];
+    }
+}
+shufflePlaylist();
 let playerCarRef = null;
 let isInitialized = false;
 
@@ -12,6 +36,13 @@ export function toggleMusic() {
         musicAudio.muted = isMusicMuted;
     }
     return isMusicMuted;
+}
+
+export function setMusicVolume(vol) {
+    musicVolume = vol;
+    if (musicAudio) {
+        musicAudio.volume = musicVolume;
+    }
 }
 
 export function initAudio(playerCar, allCars) {
@@ -25,12 +56,8 @@ export function initAudio(playerCar, allCars) {
     playerCarRef = playerCar;
     isInitialized = true;
 
-    // 1. Música de fondo (Aleatoria entre song1 y song4)
-    const randomSongIdx = Math.floor(Math.random() * 4) + 1;
-    musicAudio = new Audio(`music/song${randomSongIdx}.mp3`);
-    musicAudio.loop = true;
-    musicAudio.volume = 0.2; 
-    musicAudio.play().catch(e => console.log("Música bloqueada por el navegador. Se activará al interactuar."));
+    // 1. Música de fondo (Playlist secuencial)
+    playPlaylist();
 
     // 2. Motores para todos los coches
     allCars.forEach(car => {
@@ -95,6 +122,12 @@ export function playSound(type, intensity = 1.0) {
         clickSnd.play().catch(e => {});
         return;
     } 
+    if (type === 'countdown') {
+        const cdSnd = new Audio('sound/Countdown.mp3');
+        cdSnd.volume = 0.6;
+        cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
+        return;
+    }
     if (type === 'menu_hover') {
         const hoverSnd = new Audio('sound/Minimalist8.wav');
         hoverSnd.volume = 0.3;
@@ -107,11 +140,24 @@ export function playSound(type, intensity = 1.0) {
         osc.frequency.setValueAtTime(baseFreq, now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
         
-        gainNode.gain.setValueAtTime(0.6 * intensity, now);
+        // Aumentamos el volumen del golpeo (antes era 0.6)
+        gainNode.gain.setValueAtTime(1.5 * intensity, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
         
         osc.start(now);
         osc.stop(now + 0.2);
+    }
+    else if (type === 'wall_hit') {
+        osc.type = 'sine';
+        const baseFreq = 60 + (intensity * 60);
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+        
+        gainNode.gain.setValueAtTime(0.4 * intensity, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        
+        osc.start(now);
+        osc.stop(now + 0.15);
     }
     else if (type === 'goal') {
         osc.type = 'square';
@@ -166,4 +212,54 @@ export function setBoostSound(active) {
             }
         }, 150);
     }
+}
+function playPlaylist() {
+    if (musicAudio) {
+        musicAudio.pause();
+        musicAudio.onended = null;
+    }
+
+    currentSongIdx = playlistOrder[playlistPointer];
+    musicAudio = new Audio(`music/song${currentSongIdx}.mp3`);
+    musicAudio.volume = musicVolume;
+    musicAudio.muted = isMusicMuted;
+    
+    musicAudio.play().then(() => {
+        showSongNotification();
+    }).catch(e => console.log("Música bloqueada:", e));
+
+    musicAudio.onended = () => {
+        playlistPointer++;
+        if (playlistPointer >= TOTAL_SONGS) {
+            playlistPointer = 0;
+            shufflePlaylist();
+        }
+        playPlaylist();
+    };
+}
+
+function showSongNotification() {
+    if (isMusicMuted) return;
+
+    const el = document.getElementById('song-notification');
+    const nameEl = document.getElementById('song-name');
+    const artistEl = document.getElementById('song-artist');
+    if (!el || !nameEl) return;
+
+    const info = songMetadata[currentSongIdx - 1];
+    nameEl.innerText = info.title;
+    if (artistEl) artistEl.innerText = info.artist;
+    
+    el.style.display = 'flex';
+    
+    // Forzar reflow para la animación
+    el.offsetHeight;
+    el.style.transform = 'translateX(0)';
+
+    setTimeout(() => {
+        el.style.transform = 'translateX(-150%)';
+        setTimeout(() => {
+            el.style.display = 'none';
+        }, 600);
+    }, 5000);
 }

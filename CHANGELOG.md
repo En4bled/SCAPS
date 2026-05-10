@@ -1,5 +1,17 @@
 # Changelog - SCAPS
 
+## [0.7.0] - 2026-05-10 - *UI & Audio Overhaul*
+### Añadido
+- **Sistema de Audio Dinámico**: Nueva playlist de 8 canciones con reproducción aleatoria (Shuffle), metadatos (título/artista) y notificaciones visuales en la parte superior.
+- **Paginación de Mapas**: Sustituido el scrollbar por un sistema de páginas (3 mapas por página) para una selección más limpia y profesional.
+- **Estética de Botones**: Añadido borde negro (silueta) a todo el texto del menú principal y submenús para máxima legibilidad.
+- **Controles de Audio**: Regulador de volumen y botón de mute integrados directamente en el menú de pausa (`ESC`).
+
+### Cambiado
+- **Interfaz "Ajustes de Partido"**: Renombrada la escena de selección, optimizado el tamaño de las miniaturas de mapas y botones de modo (ahora sin márgenes internos y con iconos a sangre).
+- **Interacción de Menú**: Los botones del menú principal mantienen el texto blanco al pasar el ratón, mejorando el contraste con el fondo neón.
+- **Feedback Visual**: Notificación de canción movida a la parte superior con un diseño más compacto y profesional.
+
 ## [0.6.0] - 2026-05-10 - *Actualización "Smart Editor"*
 ### Añadido
 - **Organigrama de Escenas**: Documentación amigable (`ORGANIGRAMA_ESCENAS.md`) que explica el flujo completo del juego, desde la Intro hasta el Fin del Partido.

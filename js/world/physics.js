@@ -1,4 +1,5 @@
 import * as CONST from '../core/constants.js';
+import { playSound } from '../fx/audio.js';
 
 /**
  * Física de colisión entre entidades y el polígono del campo.
@@ -47,7 +48,12 @@ export function checkPolygonCollision(entity, polygon) {
             const bounce = (entity.radius > 50) ? CONST.CONFIG.BALL_BOUNCINESS : 0.2; // Pelota vs Coche
             entity.vx -= (1 + bounce) * dot * closestNormal.x;
             entity.vy -= (1 + bounce) * dot * closestNormal.y;
-            if (entity.onWallTimer !== undefined) entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
+            if (entity.onWallTimer !== undefined) {
+                entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
+                // Si tiene onWallTimer es que es el balón, lanzamos sonido de pared
+                const hitIntensity = Math.min(Math.sqrt(entity.vx**2 + entity.vy**2) / 10, 1.0);
+                playSound('wall_hit', hitIntensity);
+            }
         }
     }
 }
@@ -86,6 +92,10 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime) {
             
             ball.vx *= CONST.CONFIG.BALL_BOUNCINESS;
             ball.vy *= CONST.CONFIG.BALL_BOUNCINESS;
+
+            // Sonido de golpeo al balón
+            const hitIntensity = Math.min(impulse / 15, 1.2);
+            playSound('ball_hit', hitIntensity);
         }
 
         const currentSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);

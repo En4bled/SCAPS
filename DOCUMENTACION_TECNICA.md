@@ -1,5 +1,5 @@
 # ⚽ SCAPS - Documentación Técnica (Edición Amigable)
-**Versión:** 1.6 - "Smart Editor & Physics Update"
+**Versión:** 1.7 - "Audio & UI Overhaul"
 
 ¡Hola! Esta guía técnica está escrita para que **cualquiera** pueda entender cómo está construido nuestro motor del juego. Vamos a explicar qué hace cada parte del código de forma sencilla y directa.
 
@@ -11,6 +11,7 @@ Piensa en `main.js` como el director de orquesta. Es el primer archivo que se ca
 ### Funciones Estrella de `main.js`:
 *   `loop()`: Es el latido del corazón del juego. Se ejecuta 60 veces por segundo. Le dice a la pantalla: "Dibuja el menú" o "Dibuja los coches", dependiendo de en qué escena estemos.
 *   `cambiarEscena(nuevaEscena)`: Es la máquina del tiempo. Borra todo lo que estás viendo y carga los elementos de la nueva fase (por ejemplo, pasar del Menú al Juego).
+*   **Paginación de Mapas**: Hemos implementado una lógica de navegación por páginas en el selector de estadios. En lugar de un scrollbar, el código filtra el array de mapas y solo dibuja 3 a la vez, gestionando flechas de "Anterior" y "Siguiente".
 
 ---
 
@@ -41,9 +42,10 @@ Aquí viven los actores de nuestra película.
 
 ---
 
-## 🎶 5. La Ambientación: `js/fx/`
-*   **Audio**: Gestiona cuándo reproducir la música de fondo o hacer sonar el "clic" cuando tocas un botón (`Modern2.wav` / `Minimalist8.wav`).
-*   **Partículas**: Los motores sueltan humo, y cuando metes un gol, salen chispas y explosiones. Todo ese espectáculo visual vive aquí.
+## 🎶 5. La Ambientación: `js/fx/audio.js`
+*   **Sistema de Música Inteligente**: Ahora el juego tiene una "Playlist" de 8 canciones. El código las mezcla de forma aleatoria (Shuffle) cada vez que empiezas a jugar.
+*   **Metadatos y Notificaciones**: Cuando empieza una canción, el sistema busca su nombre y artista en un objeto interno y muestra una etiqueta visual en la parte superior de la pantalla.
+*   **Efectos de Sonido**: Gestiona cuándo reproducir el "clic" de los botones o el sonido de la cuenta atrás (`Countdown.mp3`). Todo con silueta negra en el texto para que se lea perfecto.
 
 ---
 

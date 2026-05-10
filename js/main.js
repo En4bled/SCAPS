@@ -8,32 +8,34 @@ import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
-import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic } from './fx/audio.js';
+import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume } from './fx/audio.js';
 
 let canvas, ctx;
 let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
 let selectedMap = 'Principal', selectedMode = 'online';
+let currentMapPage = 1;
+const MAPS_PER_PAGE = 3;
 
 let score = { blue: 0, orange: 0 };
-let gameState = 'intro'; 
+let gameState = 'intro';
 let isPaused = false;
-let countdownTimer = 3; 
-let gameTime = 300; 
+let countdownTimer = 3;
+let gameTime = 300;
 let lastTime = 0;
 let keysPressed = {};
-let animationFrameCounter = 0; 
-let cameraMode = 'fixed'; 
-let touchHistory = []; 
+let animationFrameCounter = 0;
+let cameraMode = 'fixed';
+let touchHistory = [];
 let grassDetails = [];
-let particles = []; 
-let explosionParticles = []; 
+let particles = [];
+let explosionParticles = [];
 let confettiParticles = [];
 let boostPads = [];
 let skidMarks = [];
 let mouseX = 0, mouseY = 0;
-let currentCamX = 0, currentCamY = 0, currentRotation = 0; 
+let currentCamX = 0, currentCamY = 0, currentRotation = 0;
 
 let player1, player1_teammate, player2, player2_teammate, allCars, ball;
 let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
@@ -48,13 +50,13 @@ async function init() {
             applyMapConfig(defaultMapData);
             console.log("Mapa PRINCIPAL cargado al inicio");
         }
-    } catch(e) { console.warn("Error cargando mapa inicial:", e); }
+    } catch (e) { console.warn("Error cargando mapa inicial:", e); }
 
     try {
         canvas = document.getElementById('gameCanvas');
         if (!canvas) return;
         ctx = canvas.getContext('2d');
-        
+
         const getEl = (id) => document.getElementById(id);
         countdownEl = getEl('countdown-overlay');
         goalTextEl = getEl('goal-text-overlay');
@@ -82,12 +84,12 @@ async function init() {
         player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT AZUL", 'res/Car2.png');
         player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 1", 'res/Car3.png');
         player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT NARANJA 2", 'res/Car4.png');
-        
+
         // Inicializar objetos de teclas para los bots y asignar roles
         player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
         player2.aiState = { role: 'attacker', targetBoostPad: null };
         player2_teammate.aiState = { role: 'support', targetBoostPad: null };
-        
+
         [player1_teammate, player2, player2_teammate].forEach(bot => { bot.aiKeys = {}; });
         allCars = [player1, player1_teammate, player2, player2_teammate];
         ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'res/Ball1.png');
@@ -100,13 +102,21 @@ async function init() {
         if (btnCustom) btnCustom.onclick = () => { showMenuScreen('custom'); };
         if (btnSettings) btnSettings.onclick = () => showMenuScreen('settings');
         if (btnCredits) btnCredits.onclick = () => showMenuScreen('credits');
-        
-        ['btn-custom-back', 'btn-settings-back', 'btn-credits-back'].forEach(id => { 
-            const el = getEl(id); if (el) el.onclick = () => showMenuScreen('initial'); 
+
+        ['btn-custom-back', 'btn-settings-back', 'btn-credits-back'].forEach(id => {
+            const el = getEl(id); if (el) el.onclick = () => showMenuScreen('initial');
         });
 
         // Listeners del selector
         if (btnStartGame) btnStartGame.onclick = () => finalizeStartGame();
+        const btnMapConfirm = getEl('setup-map-confirm');
+        if (btnMapConfirm) btnMapConfirm.onclick = () => finalizeStartGame();
+
+        const btnMapPrev = getEl('btn-map-prev');
+        const btnMapNext = getEl('btn-map-next');
+        if (btnMapPrev) btnMapPrev.onclick = () => { if (currentMapPage > 1) { currentMapPage--; loadSetupMaps(); playSound('menu_click'); } };
+        if (btnMapNext) btnMapNext.onclick = () => { currentMapPage++; loadSetupMaps(); playSound('menu_click'); };
+
         if (btnExitSetup) btnExitSetup.onclick = () => {
             setupOverlay.style.display = 'none';
             if (mainMenuEl) mainMenuEl.style.display = 'flex';
@@ -136,7 +146,7 @@ async function init() {
                 return;
             }
 
-            if ((e.code === 'Backquote' || e.key === 'º')) { 
+            if ((e.code === 'Backquote' || e.key === 'º')) {
                 const p = getEl('physics-editor-panel');
                 if (p) p.classList.toggle('active');
             }
@@ -150,16 +160,25 @@ async function init() {
         // Listeners de Pausa
         const pContinue = getEl('btn-pause-continue'); if (pContinue) pContinue.onclick = () => togglePause();
         const pRestart = getEl('btn-pause-restart'); if (pRestart) pRestart.onclick = () => { score = { blue: 0, orange: 0 }; gameTime = 300; togglePause(); resetAfterGoal(); };
-        const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if(pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; } };
+        const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if (pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; } };
         const pMusic = getEl('btn-toggle-music-pause');
-        const floatBtn = getEl('mute-float-btn');
         const syncMuteUI = (muted) => {
-            if (floatBtn) floatBtn.innerText = muted ? '🔇' : '🔊';
-            if (pMusic) pMusic.innerText = muted ? '🎵 MÚSICA: OFF' : '🎵 MÚSICA: ON';
+            if (pMusic) pMusic.innerText = muted ? '🔇' : '🔊';
+            if (pMusic) pMusic.style.borderColor = muted ? '#555' : '#5ad';
         };
 
-        if (floatBtn) floatBtn.onclick = () => syncMuteUI(toggleMusic());
         if (pMusic) pMusic.onclick = () => syncMuteUI(toggleMusic());
+
+        // Selector de Volumen
+        const volSlider = getEl('slider-music-vol');
+        const volValue = getEl('music-vol-value');
+        if (volSlider) {
+            volSlider.oninput = (e) => {
+                const val = e.target.value;
+                if (volValue) volValue.innerText = val + '%';
+                setMusicVolume(val / 100);
+            };
+        }
 
         // Iniciar la secuencia de intro
         startIntro();
@@ -189,23 +208,23 @@ function gameLoop(timestamp) {
             updateAll(dt);
         }
     }
-    
+
     renderFrame();
     requestAnimationFrame(gameLoop);
 }
 
 function renderFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Si estamos en la intro o en el menú, no dibujamos nada en el canvas.
     // Esto asegura una transición limpia a través de negro.
     if (gameState === 'intro' || gameState === 'menu') return;
 
     let targetX = player1.x, targetY = player1.y, targetRot = 0, vOffset = 0;
-    if (gameState === 'menu') { 
-        targetX = player1.x + mouseX * 200; targetY = player1.y + mouseY * 200; targetRot = mouseX * 0.05; 
-    } else if (cameraMode === 'rotating') { 
-        targetRot = -player1.angle; vOffset = canvas.height * 0.3; 
+    if (gameState === 'menu') {
+        targetX = player1.x + mouseX * 200; targetY = player1.y + mouseY * 200; targetRot = mouseX * 0.05;
+    } else if (cameraMode === 'rotating') {
+        targetRot = -player1.angle; vOffset = canvas.height * 0.3;
     }
 
     currentCamX += (targetX - currentCamX) * 0.08;
@@ -216,25 +235,25 @@ function renderFrame() {
     ctx.translate(canvas.width / 2, canvas.height / 2 + vOffset);
     ctx.rotate(currentRotation);
     ctx.translate(-currentCamX, -currentCamY);
-    
+
     drawAll();
-    
+
     // Solo dibujar nombres y HUD si estamos en partida
     if (gameState !== 'menu' && gameState !== 'intro') {
         drawCarNames(ctx, allCars, player1, cameraMode, gameState);
         drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
     }
-    
+
     ctx.restore();
 }
 
 function updateAll(dt) {
     if (gameState === 'playing' || gameState === 'countdown') {
         // Actualizar IA de cada bot de forma independiente
-        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys); 
-        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys); 
-        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys); 
-        
+        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys);
+        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys);
+        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys);
+
         // El jugador usa keysPressed (teclado), los bots usan sus aiKeys
         player1.update(keysPressed, gameState, particles, skidMarks);
         player1_teammate.update(player1_teammate.aiKeys, gameState, particles, skidMarks);
@@ -243,7 +262,7 @@ function updateAll(dt) {
 
         ball.update(gameState, explosionParticles);
         boostPads.forEach(pad => pad.update());
-        
+
         checkCollisions();
     }
 
@@ -251,15 +270,15 @@ function updateAll(dt) {
         for (let i = arr.length - 1; i >= 0; i--) { arr[i].update(); if (arr[i].lifespan <= 0) arr.splice(i, 1); }
     });
 
-    animationFrameCounter++; 
+    animationFrameCounter++;
     updateAudio();
     if (player1) setBoostSound(player1.isBoosting);
     updateUI(dt);
 }
 
 function checkCollisions() {
-    if (gameState !== 'playing') return; 
-    
+    if (gameState !== 'playing') return;
+
     for (let i = 0; i < allCars.length; i++) {
         const car = allCars[i];
         checkCarBallCollision(car, ball, touchHistory, gameTime);
@@ -269,75 +288,76 @@ function checkCollisions() {
         boostPads.forEach(pad => {
             if (pad.active) {
                 const dx = car.x - pad.x, dy = car.y - pad.y;
-                if (dx*dx + dy*dy < (pad.radius + car.radius)**2) pad.collect(car);
+                if (dx * dx + dy * dy < (pad.radius + car.radius) ** 2) pad.collect(car);
             }
         });
     }
-    
+
     checkGoalPhysics(ball);
     allCars.forEach(car => car.move());
-    
-    const scorer = ball.checkGoal(); 
+
+    const scorer = ball.checkGoal();
     if (scorer) handleGoal(scorer);
 }
 
 function handleGoal(scorer) {
     if (scorer === 'blue') score.blue++; else score.orange++;
-    gameState = 'goalScored'; 
+    gameState = 'goalScored';
     playSound('goal');
     ball.isFireball = true; ball.fireballTimer = 180; ball.vx = 0; ball.vy = 0;
-    spawnGoalEffects(ball.x, ball.y); 
-    if (goalTextEl) goalTextEl.style.display = 'block'; 
-    setTimeout(() => { if (goalTextEl) goalTextEl.style.display = 'none'; }, 2500); 
-    setTimeout(resetAfterGoal, 5000); 
+    spawnGoalEffects(ball.x, ball.y);
+    if (goalTextEl) goalTextEl.style.display = 'block';
+    setTimeout(() => { if (goalTextEl) goalTextEl.style.display = 'none'; }, 2500);
+    setTimeout(resetAfterGoal, 5000);
 }
 
-function spawnGoalEffects(x, y) { 
-    for (let i = 0; i < 120; i++) explosionParticles.push(new ExplosionParticle(x, y, Math.random() * 50 - 25)); 
+function spawnGoalEffects(x, y) {
+    for (let i = 0; i < 120; i++) explosionParticles.push(new ExplosionParticle(x, y, Math.random() * 50 - 25));
     for (let i = 0; i < 150; i++) confettiParticles.push(new ConfettiParticle(x, y));
 }
 
-function updateUI(dt) { 
+function updateUI(dt) {
     if (gameState === 'playing') { gameTime -= dt; if (gameTime < 0) { gameTime = 0; gameState = 'gameOver'; } }
-    if (gameState === 'countdown') { 
-        countdownTimer -= dt; 
-        if (countdownTimer <= 0) { 
-            gameState = 'playing'; 
-            if (countdownEl) countdownEl.style.display = 'none'; 
-        } else { 
+    if (gameState === 'countdown') {
+        countdownTimer -= dt;
+        if (countdownTimer <= 0) {
+            gameState = 'playing';
+            if (countdownEl) countdownEl.style.display = 'none';
+        } else {
             if (countdownEl) {
                 countdownEl.style.display = 'block';
-                countdownEl.innerText = Math.ceil(countdownTimer); 
+                countdownEl.innerText = Math.ceil(countdownTimer);
             }
-        } 
+        }
     }
 }
 
-function resetAfterGoal() { 
+function resetAfterGoal() {
     applySpawns();
     allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = 33; });
     ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
-    ball.vx = 0; ball.vy = 0; ball.onWallTimer = 0; 
+    ball.vx = 0; ball.vy = 0; ball.onWallTimer = 0;
     ball.isFireball = false; ball.fireballTimer = 0; ball.visualRadius = ball.radius; ball.targetRadius = ball.radius;
-    skidMarks = []; particles = []; confettiParticles = []; touchHistory = []; 
-    countdownTimer = 3; gameState = 'countdown'; 
-    if (countdownEl) countdownEl.style.display = 'block'; 
+    skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
+    countdownTimer = 3; gameState = 'countdown';
+    if (countdownEl) countdownEl.style.display = 'block';
+    playSound('countdown');
 }
 
 function drawAll() {
-    drawField(ctx); 
-    
+    drawField(ctx);
+
     // Si estamos en el menú o intro, solo dibujamos el campo como fondo
     if (gameState === 'menu' || gameState === 'intro') return;
 
-    skidMarks.forEach(s => s.draw(ctx)); 
-    boostPads.forEach(pad => pad.draw(ctx)); 
-    particles.forEach(p => p.draw(ctx)); 
+    skidMarks.forEach(s => s.draw(ctx));
+    boostPads.forEach(pad => pad.draw(ctx));
+    particles.forEach(p => p.draw(ctx));
     ball.draw(ctx, animationFrameCounter);
     allCars.forEach(car => car.draw(ctx));
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; explosionParticles.forEach(ep => ep.draw(ctx)); ctx.restore();
-    ctx.save(); confettiParticles.forEach(cp => cp.draw(ctx)); ctx.restore(); 
-    
+    ctx.save(); confettiParticles.forEach(cp => cp.draw(ctx)); ctx.restore();
+
     // Dibujar las redes por encima de todo para el efecto de profundidad
     drawGoalNets(ctx);
 }
@@ -352,9 +372,9 @@ function startIntro() {
     introPhase = 1;
     const slide1 = document.getElementById('intro-slide-1');
     const introScreen = document.getElementById('intro-screen');
-    
+
     if (introScreen) introScreen.style.display = 'flex';
-    
+
     // Escena 1: Logo (Fade In automático por CSS al añadir active)
     setTimeout(() => {
         if (slide1) slide1.classList.add('active');
@@ -368,7 +388,7 @@ function startIntro() {
 
 async function transitionToPhase(newPhase) {
     if (newPhase <= introPhase) return; // Evitar transiciones repetidas
-    
+
     const slide1 = document.getElementById('intro-slide-1');
     const slide2 = document.getElementById('intro-slide-2');
     const introScreen = document.getElementById('intro-screen');
@@ -377,7 +397,7 @@ async function transitionToPhase(newPhase) {
         introPhase = 2;
         // Fade out de la escena 1
         if (slide1) slide1.classList.remove('active');
-        
+
         // Esperamos a que termine el fade out (1.5s en CSS) antes de mostrar la 2
         setTimeout(() => {
             if (introPhase === 2 && slide2) {
@@ -397,16 +417,14 @@ async function transitionToPhase(newPhase) {
 
         setTimeout(() => {
             if (introScreen) introScreen.style.display = 'none';
-            
+
             // CAMBIO DE ESTADO AQUÍ: Solo cuando ya no se ve la intro
             gameState = 'menu';
-            
+
             if (mainMenuEl) {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
-                // La música y el botón de mute comienzan AQUÍ
-                const muteBtn = document.getElementById('mute-float-btn');
-                if (muteBtn) muteBtn.style.display = 'block';
+                // La música comienza AQUÍ
                 initAudio(player1, allCars);
             }
             showMenuScreen('initial');
@@ -414,7 +432,7 @@ async function transitionToPhase(newPhase) {
     }
 }
 function showMenuScreen(screenId) {
-    [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if(m) m.style.display = 'none'; });
+    [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
     if (screenId === 'initial' && menuInitial) menuInitial.style.display = 'flex';
     else if (screenId === 'credits' && menuCredits) menuCredits.style.display = 'flex';
     else if (screenId === 'custom' && menuCustom) menuCustom.style.display = 'flex';
@@ -433,41 +451,73 @@ async function loadSetupMaps() {
     if (!mapListContainer) return;
     try {
         const resp = await fetch('get_maps.php');
-        const maps = await resp.json();
-        mapListContainer.innerHTML = '';
-        // Asegurar que mostramos 10 elementos (como pidió el usuario)
-        const displayCount = Math.max(maps.length, 10);
+        let maps = await resp.json();
         
-        for(let i = 0; i < displayCount; i++) {
-            const m = maps[i] || `MAPA ${i+1}`; // Nombre del mapa o placeholder
+        // Asegurar al menos 10 mapas para la demostración de paginación si faltan
+        while (maps.length < 10) maps.push(`MAPA ${maps.length + 1}`);
+
+        const totalPages = Math.ceil(maps.length / MAPS_PER_PAGE);
+        if (currentMapPage > totalPages) currentMapPage = totalPages;
+        if (currentMapPage < 1) currentMapPage = 1;
+
+        // Actualizar UI de paginación
+        const pageInfo = document.getElementById('map-page-info');
+        if (pageInfo) pageInfo.innerText = currentMapPage;
+        
+        const btnPrev = document.getElementById('btn-map-prev');
+        const btnNext = document.getElementById('btn-map-next');
+        if (btnPrev) { btnPrev.disabled = (currentMapPage === 1); btnPrev.style.opacity = (currentMapPage === 1) ? '0.3' : '1'; }
+        if (btnNext) { btnNext.disabled = (currentMapPage === totalPages); btnNext.style.opacity = (currentMapPage === totalPages) ? '0.3' : '1'; }
+
+        // Filtrar mapas por página
+        const startIdx = (currentMapPage - 1) * MAPS_PER_PAGE;
+        const pageMaps = maps.slice(startIdx, startIdx + MAPS_PER_PAGE);
+
+        mapListContainer.innerHTML = '';
+        
+        const mapLabels = {
+            'Principal': 'Estadio Urbano',
+            'Volcan': 'Cráter del Volcán',
+            'Espacio': 'Plataforma Espacial'
+        };
+
+        pageMaps.forEach((m, localIdx) => {
+            const globalIdx = startIdx + localIdx;
+            const displayName = mapLabels[m] || m.toUpperCase();
+            
             const container = document.createElement('div');
             container.style.cursor = 'pointer';
             container.style.position = 'relative';
-            container.style.border = (selectedMap === m) ? '4px solid #ff4444' : '2px solid rgba(255,255,255,0.1)';
-            container.style.borderRadius = '10px';
+            container.style.border = (selectedMap === m) ? '3px solid #5ad' : '2px solid rgba(255,255,255,0.1)';
+            container.style.borderRadius = '12px';
             container.style.overflow = 'hidden';
-            container.style.background = '#000';
-            container.style.width = '200px';
-            container.style.height = '235px';
-            if (selectedMap === m) container.style.boxShadow = '0 0 20px rgba(255, 68, 68, 0.6)';
+            container.style.background = '#1a1a2e';
+            container.style.width = '160px';
+            container.style.height = '210px';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.margin = '0 auto';
+            if (selectedMap === m) container.style.boxShadow = '0 0 20px rgba(90, 173, 237, 0.6)';
 
-            // Usar miniatura map1.png hasta map10.png
-            const thumbUrl = `res/map${(i % 10) + 1}.png`;
+            // Usar miniatura basada en el índice global
+            const thumbUrl = `res/map${(globalIdx % 10) + 1}.png`;
 
             container.innerHTML = `
-                <img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block; filter: ${selectedMap === m ? 'none' : 'grayscale(0.6) brightness(0.6)'};">
-                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); color: #fff; font-size: 11px; text-align: center; padding: 10px 4px; font-weight: bold; font-family: 'Rajdhani', sans-serif; text-transform: uppercase;">${m.toUpperCase()}</div>
+                <div style="flex: 1; overflow: hidden; border-bottom: 2px solid rgba(255,255,255,0.05); padding: 5px;">
+                    <img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; filter: ${selectedMap === m ? 'none' : 'grayscale(0.6) brightness(0.6)'};">
+                </div>
+                <div style="background: rgba(0,0,0,0.4); color: #fff; font-size: 12px; text-align: center; padding: 10px 5px; font-weight: bold; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">
+                    ${displayName}
+                </div>
             `;
 
             container.onclick = () => {
-                if (maps[i]) { // Solo seleccionar si el mapa existe de verdad
-                    selectedMap = m;
-                    loadSetupMaps();
-                    playSound('menu_click');
-                }
+                selectedMap = m;
+                loadSetupMaps();
+                playSound('menu_click');
             };
             mapListContainer.appendChild(container);
-        }
+        });
     } catch (e) { console.error("Error load setup maps:", e); }
 }
 
