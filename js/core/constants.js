@@ -2,40 +2,35 @@
 // SCAPS constants.js — VERSIÓN RECUPERACIÓN
 // =============================================
 
-export let WORLD_W = 2800;
-export let WORLD_H = 3600;
+export let WORLD_W = 4000;
+export let WORLD_H = 3000;
 
-export let BG_IMG_PATH = 'res/Estadio0.png';
-export let BG_SCALE = 2.2090;
-export let BG_OFFSET_X = 261;
-export let BG_OFFSET_Y = 43;
+export let BG_IMG_PATH = 'res/Estadio1.png';
+export let BG_SCALE = 1.0; 
+export let BG_OFFSET_X = 0;
+export let BG_OFFSET_Y = 0;
 
 export let FIELD_POLYGON = [
-    { "x": 492, "y": 224 }, { "x": 760, "y": 132 }, { "x": 1048, "y": 68 },
-    { "x": 1352, "y": 40 }, { "x": 1640, "y": 36 }, { "x": 1952, "y": 68 },
-    { "x": 2232, "y": 128 }, { "x": 2476, "y": 208 }, { "x": 2588, "y": 280 },
-    { "x": 2680, "y": 696 }, { "x": 2724, "y": 1136 }, { "x": 2736, "y": 1568 },
-    { "x": 2740, "y": 1960 }, { "x": 2720, "y": 2408 }, { "x": 2680, "y": 2848 },
-    { "x": 2572, "y": 3272 }, { "x": 2488, "y": 3340 }, { "x": 2240, "y": 3420 },
-    { "x": 1948, "y": 3492 }, { "x": 1636, "y": 3528 }, { "x": 1336, "y": 3524 },
-    { "x": 1056, "y": 3484 }, { "x": 744, "y": 3424 }, { "x": 476, "y": 3332 },
-    { "x": 380, "y": 3188 }, { "x": 320, "y": 2868 }, { "x": 288, "y": 2508 },
-    { "x": 272, "y": 2144 }, { "x": 256, "y": 1788 }, { "x": 268, "y": 1416 },
-    { "x": 292, "y": 1052 }, { "x": 320, "y": 684 }, { "x": 380, "y": 360 }
+    { "x": 1000, "y": 600 }, { "x": 3000, "y": 600 },
+    { "x": 3400, "y": 1000 }, { "x": 3400, "y": 2000 },
+    { "x": 3000, "y": 2400 }, { "x": 1000, "y": 2400 },
+    { "x": 600, "y": 2000 }, { "x": 600, "y": 1000 }
 ];
 
-export let GOAL_TOP = { "x": 1239, "y": 401, "w": 390, "d": 151 };
-export let GOAL_BOTTOM = { "x": 1239, "y": 3170, "w": 390, "d": 153 };
+export let GOAL_TOP = { "x": 600, "y": 1500, "w": 800, "d": 200 }; 
+export let GOAL_BOTTOM = { "x": 3400, "y": 1500, "w": 800, "d": 200 }; 
+
 export let SPAWN_POINTS = [
-    { "x": 1566, "y": 2408, "a": -0.45 },
-    { "x": 710, "y": 2118, "a": 0.99 },
-    { "x": 843, "y": 921, "a": 2.71 },
-    { "x": 1676, "y": 1051, "a": -2.38 }
+    { "x": 1100, "y": 1500, "a": 1.57 },
+    { "x": 1300, "y": 1100, "a": 1.8 },
+    { "x": 2900, "y": 1500, "a": -1.57 },
+    { "x": 2700, "y": 1900, "a": -1.8 }
 ];
+
 export let BOOST_POSITIONS = [
-    { "x": 1928, "y": 3084, "isBig": true }, { "x": 540, "y": 3088, "isBig": true },
-    { "x": 548, "y": 484, "isBig": true }, { "x": 1936, "y": 484, "isBig": true },
-    { "x": 540, "y": 1784, "isBig": true }, { "x": 1944, "y": 1780, "isBig": true }
+    { "x": 2000, "y": 750, "isBig": true }, { "x": 2000, "y": 2250, "isBig": true },
+    { "x": 800, "y": 800, "isBig": false }, { "x": 3200, "y": 800, "isBig": false },
+    { "x": 800, "y": 2200, "isBig": false }, { "x": 3200, "y": 2200, "isBig": false }
 ];
 
 // Físicas Base
