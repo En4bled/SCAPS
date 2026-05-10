@@ -138,10 +138,33 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 #floating-map-panel.collapsed #map-panel-header { background: #f90; padding: 0; justify-content: center; height: 45px; border-bottom: none; }
 #floating-map-panel.collapsed #map-panel-header span { display: none; }
 
-#map-list { max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 10px; border: 1px solid #333; }
-.map-item { padding: 10px 15px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; transition: 0.2s; }
-.map-item:hover { background: rgba(90, 173, 237, 0.15); color: #5ad; }
-.map-item.active { border-left: 4px solid #f90; background: rgba(255, 153, 0, 0.05); color: #f90; font-weight: bold; }
+#map-list { max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 10px; border: 1px solid #333; padding: 5px; }
+.map-item { 
+    padding: 12px; 
+    border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 5px;
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column;
+    gap: 8px;
+    font-size: 11px; 
+    transition: 0.2s; 
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.map-item:hover { background: rgba(90, 173, 237, 0.1); border-color: #5ad; }
+.map-item.active { border-color: #f90; background: rgba(255, 153, 0, 0.08); }
+
+.map-info { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: #fff; letter-spacing: 1px; }
+.map-actions { display: flex; gap: 4px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
+.btn-icon { 
+    width: 28px; height: 28px; 
+    display: flex; align-items: center; justify-content: center; 
+    background: rgba(0,0,0,0.3); border: 1px solid #444; border-radius: 4px;
+    font-size: 12px; cursor: pointer; transition: 0.2s;
+}
+.btn-icon:hover { background: #5ad; color: #000; border-color: #fff; transform: scale(1.1); }
+.btn-icon.del:hover { background: #f44; color: #fff; }
 
 .tabs { display:flex; background:#1a1a24; border-radius:8px; padding:3px; margin-bottom:15px; }
 .tab { flex:1; padding:6px; text-align:center; font-size:10px; font-weight:bold; cursor:pointer; border-radius:6px; color:#666; transition:0.2s; }
@@ -203,18 +226,18 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
   <div id="tab-goals" class="tab-content" style="display:none">
     <div class="section">
-        <h3>🥅 Portería Superior (Naranja)</h3>
-        <div class="row"><label>X</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"></div>
-        <div class="row"><label>Y (Linea)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"></div>
-        <div class="row"><label>Ancho</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="1000"></div>
-        <div class="row"><label>Fondo</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="500"></div>
+        <h3>🥅 Portería Izquierda (Azul)</h3>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalTX"><input type="range" id="goalTXR" min="0" max="5000"></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalTY"><input type="range" id="goalTYR" min="0" max="5000"></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalTW"><input type="range" id="goalTWR" min="100" max="2000"></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalTD"><input type="range" id="goalTDR" min="50" max="1000"></div>
     </div>
     <div class="section">
-        <h3>🥅 Portería Inferior (Azul)</h3>
-        <div class="row"><label>X</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"></div>
-        <div class="row"><label>Y (Linea)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"></div>
-        <div class="row"><label>Ancho</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="1000"></div>
-        <div class="row"><label>Fondo</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="500"></div>
+        <h3>🥅 Portería Derecha (Naranja)</h3>
+        <div class="row"><label>X (Linea)</label><input type="number" id="goalBX"><input type="range" id="goalBXR" min="0" max="5000"></div>
+        <div class="row"><label>Y (Centro)</label><input type="number" id="goalBY"><input type="range" id="goalBYR" min="0" max="5000"></div>
+        <div class="row"><label>Ancho (V)</label><input type="number" id="goalBW"><input type="range" id="goalBWR" min="100" max="2000"></div>
+        <div class="row"><label>Fondo (H)</label><input type="number" id="goalBD"><input type="range" id="goalBDR" min="50" max="1000"></div>
     </div>
   </div>
 
@@ -371,10 +394,16 @@ function render() {
     }
 
     const drawGoal = (g, color) => {
-        ctx.save(); ctx.translate(g.x, g.y); ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
-        const topY = g.y < S.worldH / 2 ? -g.d : 0;
-        ctx.fillRect(-g.w/2, topY, g.w, g.d); ctx.strokeRect(-g.w/2, topY, g.w, g.d);
-        ctx.beginPath(); ctx.moveTo(-g.w/2, 0); ctx.lineTo(g.w/2, 0); ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
+        ctx.save(); ctx.translate(g.x, g.y); 
+        ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 8;
+        const isLeft = g.x < S.worldW / 2;
+        const drawX = isLeft ? -g.d : 0;
+        ctx.fillRect(drawX, -g.w/2, g.d, g.w); 
+        ctx.strokeRect(drawX, -g.w/2, g.d, g.w);
+        
+        ctx.beginPath(); 
+        ctx.moveTo(0, -g.w/2); ctx.lineTo(0, g.w/2); 
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 12; ctx.stroke();
         ctx.restore();
     };
     drawGoal(S.goals.top, '#f90'); drawGoal(S.goals.bottom, '#5ad');
@@ -574,19 +603,67 @@ const loadMapList = async () => {
         const maps = await (await fetch('get_maps.php')).json();
         list.innerHTML = '';
         maps.forEach(m => {
-            const div = document.createElement('div'); div.className = 'map-item'; div.innerHTML = `<span>${m.toUpperCase()}</span> <span>📂</span>`;
-            div.onclick = async () => {
-                const config = await (await fetch(`maps/${m}.json`)).json();
-                // Merge con DEFAULTS para asegurar que no faltan propiedades de estado del editor
-                S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), config);
-                S.isLoaded = true; 
-                S.zoom = 0; // Forzamos recálculo de zoom en el siguiente render
-                document.getElementById('mapName').value = m;
-                bgImg.src = S.bgUrl; syncUI(); renderBoostList(); render();
-            };
+            const div = document.createElement('div'); 
+            div.className = 'map-item' + (document.getElementById('mapName').value === m ? ' active' : '');
+            div.innerHTML = `
+                <div class="map-info">
+                    <span>${m.toUpperCase()}</span>
+                </div>
+                <div class="map-actions">
+                    <button class="btn-icon" title="Cargar / Editar" onclick="event.stopPropagation(); loadMap('${m}')">📂</button>
+                    <button class="btn-icon" title="Duplicar" onclick="event.stopPropagation(); duplicateMap('${m}')">📋</button>
+                    <button class="btn-icon" title="Renombrar" onclick="event.stopPropagation(); renameMap('${m}')">✏️</button>
+                    <button class="btn-icon del" title="Eliminar" onclick="event.stopPropagation(); deleteMap('${m}')">🗑️</button>
+                </div>
+            `;
+            div.onclick = () => loadMap(m);
             list.appendChild(div);
         });
     } catch(e) {}
+};
+
+window.loadMap = async (m) => {
+    try {
+        const config = await (await fetch(`maps/${m}.json`)).json();
+        S = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), config);
+        S.isLoaded = true; 
+        S.zoom = 0; 
+        document.getElementById('mapName').value = m;
+        bgImg.src = S.bgUrl; syncUI(); renderBoostList(); render();
+        loadMapList();
+    } catch(e) { alert("Error cargando mapa"); }
+};
+
+window.deleteMap = async (m) => {
+    if (!confirm(`¿Estás seguro de eliminar el mapa "${m}"? Esta acción no se puede deshacer.`)) return;
+    const res = await (await fetch('delete_map.php', { method: 'POST', body: JSON.stringify({ name: m }) })).json();
+    if (res.status === 'success') loadMapList(); else alert(res.message);
+};
+
+window.duplicateMap = async (m) => {
+    const newName = prompt(`Nombre para el duplicado de "${m}":`, m + "_copy");
+    if (!newName) return;
+    const config = await (await fetch(`maps/${m}.json`)).json();
+    const res = await (await fetch('save_map.php', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ name: newName, config: config }) 
+    })).json();
+    if (res.status === 'success') loadMapList(); else alert(res.message);
+};
+
+window.renameMap = async (m) => {
+    const newName = prompt(`Nuevo nombre para "${m}":`, m);
+    if (!newName || newName === m) return;
+    const res = await (await fetch('rename_map.php', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ oldName: m, newName: newName }) 
+    })).json();
+    if (res.status === 'success') {
+        if (document.getElementById('mapName').value === m) document.getElementById('mapName').value = newName;
+        loadMapList();
+    } else alert(res.message);
 };
 
 document.getElementById('btn-export-js').onclick = () => {
