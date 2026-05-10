@@ -94,9 +94,30 @@ export class Car {
             let turnDirection = 0;
             if (keys[this.controls.left]) { turnDirection = -1; isTurning = true; }
             if (keys[this.controls.right]) { turnDirection = 1; isTurning = true; }
+            
             let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
-            if (this.isDrifting) steerAngle *= CONST.CONFIG.CAR_DRIFT_TURN_MULTIPLIER;
-            this.angle += steerAngle * CONST.CONFIG.CAR_TURN_SPEED; 
+            
+            // --- NUEVA LÓGICA DE GIRO DINÁMICO ---
+            let dynamicTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
+            
+            // 1. Reducir giro según la velocidad (a más velocidad, arco más amplio)
+            let speedFactor = Math.abs(this.speed) / CONST.CONFIG.CAR_MAX_SPEED;
+            if (speedFactor > 1) speedFactor = 1; // Cap al máximo
+            
+            // Reducimos hasta un 40% el giro a máxima velocidad normal
+            dynamicTurnSpeed *= (1 - (speedFactor * 0.4));
+            
+            // 2. Reducir giro extra si estamos usando BOOST
+            if (this.isBoosting) {
+                dynamicTurnSpeed *= 0.5; // Giro a la mitad en boost
+            }
+            
+            // 3. Aumentar giro si estamos DERRAPANDO (Drift)
+            if (this.isDrifting) {
+                steerAngle *= CONST.CONFIG.CAR_DRIFT_TURN_MULTIPLIER;
+            }
+            
+            this.angle += steerAngle * dynamicTurnSpeed; 
         }
 
         if (gameState === 'playing' && this.isBoosting) {

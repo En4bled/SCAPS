@@ -1,4 +1,29 @@
 # Changelog - SCAPS
+ 
+## [0.9.0] - 2026-05-10 - *Cinematic Experience & AI Overhaul*
+### Añadido
+- **Secuencia Cinemática de Inicio**: 
+    - Zoom majestuoso de 5 segundos desde el centro del estadio hasta el jugador.
+    - Transición fluida (panning) hacia el vehículo asignado antes del inicio.
+    - Cuenta atrás sincronizada: solo aparece cuando la cámara está enfocada.
+- **IA de Bots V2**:
+    - Sistema de evitación de colisiones (repulsión de proximidad) para evitar bloqueos entre bots.
+    - Intercepción predictiva: los bots calculan la trayectoria futura del balón para disparar a portería.
+    - Comportamiento de roles (Atacante/Defensor/Apoyo) refinado con posicionamiento táctico.
+- **Feedback Físico Mejorado**:
+    - Efecto de "Elevación" (Lift): el balón aumenta su radio visual al golpear paredes o ser impactado por un coche, simulando un salto tridimensional.
+    - Feedback de cámara: mensaje visual ("CÁMARA FIJA" / "ROTATIVA") y sonido al cambiar de vista con la tecla `V`.
+
+### Cambiado
+- **Escala de Juego**: Incrementado el tamaño de los coches un 50% y reducido el zoom por defecto (0.85) para una perspectiva más equilibrada y profesional.
+- **Barra de Carga Neon**: Implementada una barra de carga estética durante la transición al partido para ocultar la carga de texturas del estadio.
+
+### Corregido
+- **Bug de Tecla V**: Restaurada la funcionalidad de cambio de cámara (que estaba erróneamente en la C) y mejorada con notificaciones UI.
+- **Error de Consola (IA)**: Solucionado el `TypeError` al iniciar partido debido a argumentos faltantes en el bucle de la IA.
+- **Flashes de Color**: Eliminado el "destello verde" al cargar mapas por primera vez mediante pre-carga de assets y fondos negros.
+- **Editor de Mapas**: Optimizado el guardado de archivos JSON grandes (eliminado Pretty Print) y corregida la vinculación de la URL de imagen de fondo.
+
 
 ## [0.8.0] - 2026-05-10 - *Customization & UI Refinement*
 ### Añadido

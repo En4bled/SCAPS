@@ -50,7 +50,7 @@ export function drawField(ctx) {
 
         ctx.drawImage(bgImage, dx, dy, iw, ih);
     } else {
-        ctx.fillStyle = '#0a2a0a'; 
+        ctx.fillStyle = '#000'; 
         ctx.fillRect(0, 0, CONST.CONFIG.WORLD_W, CONST.CONFIG.WORLD_H);
     }
 

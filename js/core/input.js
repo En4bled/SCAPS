@@ -3,7 +3,7 @@ export function setupInput(keysPressed, onCameraToggle, onScoreboardToggle) {
         if(e.repeat) return; 
         keysPressed[e.code] = true;
         
-        if (e.code === 'KeyC') { 
+        if (e.code === 'KeyV') { 
             e.preventDefault();
             onCameraToggle();
         }

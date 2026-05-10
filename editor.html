@@ -993,6 +993,8 @@ window.renderBoostList = () => {
 
 // Vinculación de entradas
 bindS('bgScale', 'bgScale'); bindS('bgOX', 'bgOX'); bindS('bgOY', 'bgOY'); bindS('worldW', 'worldW'); bindS('worldH', 'worldH');
+const bgUrlEl = document.getElementById('bgUrl');
+if (bgUrlEl) bgUrlEl.oninput = e => { S.bgUrl = e.target.value; bgImg.src = S.bgUrl; saveHistory(); render(); };
 ['goalT','goalB'].forEach(p => { 
     const goalName = p==='goalT'?'top':'bottom'; 
     ['x','y','w','d','netX','netY','netW','netD'].forEach(k => {
@@ -1077,8 +1079,12 @@ async function saveCurrentMap() {
             setTimeout(() => { b.innerHTML = '💾 GUARDAR MAPA ACTUAL'; b.disabled = false; }, 2000); 
             return true;
         } 
-    } catch(e) {}
-    b.innerHTML = '❌ ERROR'; b.disabled = false; return false;
+    } catch(e) {
+        console.error("Save Error:", e);
+        b.innerHTML = '❌ ERROR'; 
+        alert("Error al guardar: " + e.message);
+    }
+    b.disabled = false; return false;
 }
 
 document.getElementById('btn-save-json').onclick = saveCurrentMap;

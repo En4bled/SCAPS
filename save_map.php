@@ -9,7 +9,7 @@ if (isset($data['name']) && isset($data['config'])) {
     
     $filePath = 'maps/' . $name . '.json';
     
-    if (file_put_contents($filePath, json_encode($data['config'], JSON_PRETTY_PRINT))) {
+    if (file_put_contents($filePath, json_encode($data['config']))) {
         echo json_encode(['status' => 'success', 'message' => "Mapa '$name' guardado correctamente"]);
     } else {
         http_response_code(500);

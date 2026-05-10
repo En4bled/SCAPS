@@ -50,6 +50,7 @@ export function checkPolygonCollision(entity, polygon) {
             entity.vy -= (1 + bounce) * dot * closestNormal.y;
             if (entity.onWallTimer !== undefined) {
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
+                entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
                 // Si tiene onWallTimer es que es el balón, lanzamos sonido de pared
                 const hitIntensity = Math.min(Math.sqrt(entity.vx**2 + entity.vy**2) / 10, 1.0);
                 playSound('wall_hit', hitIntensity);
@@ -92,6 +93,10 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime) {
             
             ball.vx *= CONST.CONFIG.BALL_BOUNCINESS;
             ball.vy *= CONST.CONFIG.BALL_BOUNCINESS;
+
+            // --- EFECTO DE ELEVACIÓN AL GOLPEAR CON COCHE ---
+            ball.onWallTimer = 15; 
+            ball.targetRadius = ball.radius * 1.35;
 
             // Sonido de golpeo al balón
             const hitIntensity = Math.min(impulse / 15, 1.2);
@@ -165,9 +170,9 @@ export function checkGoalPhysics(ball) {
 }
 
 /**
- * IA DE LOS BOTS
+ * IA DE LOS BOTS - MEJORADA V2
  */
-export function updateCarAI(ai, ball, boostPads, gameState, keysPressed) { 
+export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars) { 
     if (gameState !== 'playing' && gameState !== 'countdown') return;
 
     const controls = ai.controls;
@@ -175,54 +180,107 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed) {
     keysPressed[controls.left] = false; keysPressed[controls.right] = false;
     keysPressed[controls.boost] = false; keysPressed[controls.drift] = false;
 
-    let target = { x: ball.x, y: ball.y };
-    let goToTarget = true; 
-    let useBoost = false;
+    // --- DETECCIÓN DE ATASCO ---
+    if (!ai.stuckTimer) ai.stuckTimer = 0;
+    if (Math.abs(ai.speed) < 0.2 && gameState === 'playing') ai.stuckTimer++;
+    else ai.stuckTimer = Math.max(0, ai.stuckTimer - 2);
+
+    if (ai.stuckTimer > 60) {
+        keysPressed[controls.down] = true;
+        if (ai.stuckTimer % 60 < 30) keysPressed[controls.left] = true;
+        else keysPressed[controls.right] = true;
+        if (ai.stuckTimer > 120) ai.stuckTimer = 0;
+        return;
+    }
+
+    // --- EVITAR OTROS COCHES (EVITAR BLOQUEOS) ---
+    let avoidX = 0, avoidY = 0;
+    allCars.forEach(other => {
+        if (other === ai) return;
+        const dx = ai.x - other.x;
+        const dy = ai.y - other.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 150) { // Si están muy cerca, generar fuerza de repulsión para el target
+            avoidX += (dx / dist) * 200;
+            avoidY += (dy / dist) * 200;
+        }
+    });
 
     const ownGoalX = (ai.color === '#5ad') ? 600 : 3400;
     const enemyGoalX = (ai.color === '#5ad') ? 3400 : 600;
     const centerY = CONST.CONFIG.WORLD_H / 2;
     
+    // Predicción simple del balón
+    const predBallX = ball.x + ball.vx * 15;
+    const predBallY = ball.y + ball.vy * 15;
     const distToBall = Math.sqrt((ai.x - ball.x)**2 + (ai.y - ball.y)**2);
-    
-    // Lógica por Roles
-    if (ai.aiState.role === 'defender') {
-        const distToOwnGoal = Math.sqrt((ai.x - ownGoalX)**2 + (ai.y - centerY)**2);
-        if (distToBall > 1200) {
-            target = { x: ownGoalX + (ai.color === '#5ad' ? 200 : -200), y: centerY };
+
+    let target = { x: predBallX, y: predBallY };
+    let useBoost = false;
+
+    // --- LÓGICA DE ROLES ---
+    if (ai.aiState.role === 'attacker') {
+        const offset = 220;
+        const dirToGoalX = (enemyGoalX - predBallX);
+        const dirToGoalY = (centerY - predBallY);
+        const mag = Math.max(1, Math.sqrt(dirToGoalX**2 + dirToGoalY**2));
+        
+        const idealX = predBallX - (dirToGoalX / mag) * offset;
+        const idealY = predBallY - (dirToGoalY / mag) * offset;
+
+        const isBehind = (ai.color === '#5ad') ? (ai.x < ball.x - 40) : (ai.x > ball.x + 40);
+        target = isBehind ? { x: predBallX, y: predBallY } : { x: idealX, y: idealY };
+    } 
+    else if (ai.aiState.role === 'defender') {
+        if (distToBall > 1000) {
+            target = { x: ownGoalX + (ai.color === '#5ad' ? 350 : -350), y: centerY + (ball.y - centerY) * 0.6 };
         }
-    } else if (ai.aiState.role === 'support') {
-        if (distToBall > 1500) {
-            target = { x: CONST.CONFIG.WORLD_W / 2, y: ball.y };
+    } 
+    else if (ai.aiState.role === 'support') {
+        if (ai.boost < 40) {
+            let closestPad = null, minDist = Infinity;
+            boostPads.forEach(pad => {
+                if (pad.active) {
+                    const d = Math.sqrt((ai.x - pad.x)**2 + (ai.y - pad.y)**2);
+                    if (d < minDist) { minDist = d; closestPad = pad; }
+                }
+            });
+            if (closestPad) target = { x: closestPad.x, y: closestPad.y };
+        } else {
+            target = { x: (CONST.CONFIG.WORLD_W / 2 + ball.x) / 2, y: ball.y };
         }
     }
 
-    // Posicionarse detrás del balón para atacar
-    if (ai.aiState.role === 'attacker' || distToBall < 600) {
-        const behindX = ball.x + (ai.color === '#5ad' ? -150 : 150);
-        if ((ai.color === '#5ad' && ai.x > ball.x) || (ai.color === '#f90' && ai.x < ball.x)) {
-            target = { x: behindX, y: ball.y };
-        }
-    }
+    // Aplicar fuerza de evasión al target final
+    target.x += avoidX;
+    target.y += avoidY;
 
+    // --- CÁLCULO DE DIRECCIÓN ---
     const dx = target.x - ai.x;
     const dy = target.y - ai.y;
     let targetAngle = Math.atan2(dy, dx); 
-    let currentAngle = (ai.angle + Math.PI * 2) % (Math.PI * 2);
-    targetAngle = (targetAngle + Math.PI * 2) % (Math.PI * 2); 
-    let angleDiff = targetAngle - currentAngle;
+    let currentAngle = (ai.angle + Math.PI * 2 + Math.PI / 2) % (Math.PI * 2);
+    let desiredAngle = (targetAngle + Math.PI * 2 + Math.PI / 2) % (Math.PI * 2);
     
+    let angleDiff = desiredAngle - currentAngle;
     if (angleDiff > Math.PI) angleDiff -= Math.PI * 2; 
     if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-    const turnThreshold = 0.35;
+    const turnThreshold = 0.12;
     if (angleDiff > turnThreshold) keysPressed[controls.right] = true;
     else if (angleDiff < -turnThreshold) keysPressed[controls.left] = true;
 
-    if (Math.abs(angleDiff) < 1.0 && goToTarget) {
+    if (Math.abs(angleDiff) > 1.3 && ai.speed > 1.2) keysPressed[controls.drift] = true;
+
+    if (Math.abs(angleDiff) < 1.4) {
         keysPressed[controls.up] = true;
-        if (distToBall < 800 && Math.abs(angleDiff) < 0.3) useBoost = true;
+        if (Math.abs(angleDiff) < 0.25 && distToBall > 500) useBoost = true;
+    } else if (Math.abs(angleDiff) > 2.6 && distToBall < 400) {
+        keysPressed[controls.up] = false;
+        keysPressed[controls.down] = true;
+        keysPressed[controls.left] = !keysPressed[controls.left];
+        keysPressed[controls.right] = !keysPressed[controls.right];
     }
 
-    if (useBoost && ai.boost > 20) keysPressed[controls.boost] = true;
+    if (useBoost && ai.boost > 10) keysPressed[controls.boost] = true;
 }

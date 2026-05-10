@@ -18,6 +18,8 @@ let selectedMap = 'Principal', selectedMode = 'online';
 let selectedCarP1 = 'res/Car1.png', selectedCarP2 = 'res/Car2.png';
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1;
 const MAPS_PER_PAGE = 3, CARS_PER_PAGE = 8;
+let currentZoom = 1.0, targetZoom = 0.85;
+let currentVOffset = 0;
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
@@ -242,19 +244,30 @@ function renderFrame() {
     if (gameState === 'intro' || gameState === 'menu') return;
 
     let targetX = player1.x, targetY = player1.y, targetRot = 0, vOffset = 0;
-    if (gameState === 'menu') {
-        targetX = player1.x + mouseX * 200; targetY = player1.y + mouseY * 200; targetRot = mouseX * 0.05;
+    if (gameState === 'zooming') {
+        targetX = CONST.CONFIG.WORLD_W / 2;
+        targetY = CONST.CONFIG.WORLD_H / 2;
+        targetRot = 0;
+    } else if (gameState === 'panning' || gameState === 'menu') {
+        targetX = player1.x + (gameState === 'menu' ? mouseX * 200 : 0);
+        targetY = player1.y + (gameState === 'menu' ? mouseY * 200 : 0);
+        targetRot = (gameState === 'menu' ? mouseX * 0.05 : 0);
     } else if (cameraMode === 'rotating') {
         targetRot = -player1.angle; vOffset = canvas.height * 0.3;
     }
 
     currentCamX += (targetX - currentCamX) * 0.08;
     currentCamY += (targetY - currentCamY) * 0.08;
+    currentVOffset += (vOffset - currentVOffset) * 0.05;
     let rd = targetRot - currentRotation; rd = (rd + Math.PI) % (Math.PI * 2) - Math.PI; currentRotation += rd * 0.1;
 
     ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2 + vOffset);
+    ctx.translate(canvas.width / 2, canvas.height / 2 + currentVOffset);
     ctx.rotate(currentRotation);
+    
+    // Aplicar Zoom Dinámico (Cinemática de inicio)
+    ctx.scale(currentZoom, currentZoom);
+    
     ctx.translate(-currentCamX, -currentCamY);
 
     drawAll();
@@ -271,9 +284,9 @@ function renderFrame() {
 function updateAll(dt) {
     if (gameState === 'playing' || gameState === 'countdown') {
         // Actualizar IA de cada bot de forma independiente
-        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys);
-        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys);
-        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys);
+        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys, allCars);
+        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys, allCars);
+        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys, allCars);
 
         // El jugador usa keysPressed (teclado), los bots usan sus aiKeys
         player1.update(keysPressed, gameState, particles, skidMarks);
@@ -338,6 +351,23 @@ function spawnGoalEffects(x, y) {
 }
 
 function updateUI(dt) {
+    if (gameState === 'zooming') {
+        // Factor de 0.005 para una duración de unos 5 segundos
+        currentZoom += (targetZoom - currentZoom) * 0.005;
+        if (Math.abs(targetZoom - currentZoom) < 0.005) {
+            currentZoom = targetZoom;
+            gameState = 'panning';
+        }
+    }
+    if (gameState === 'panning') {
+        const dx = currentCamX - player1.x;
+        const dy = currentCamY - player1.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        // Cuando la cámara esté cerca del jugador, empezamos la cuenta atrás
+        if (dist < 50) {
+            resetAfterGoal(); // Esto pone gameState = 'countdown'
+        }
+    }
     if (gameState === 'playing') { gameTime -= dt; if (gameTime < 0) { gameTime = 0; gameState = 'gameOver'; } }
     if (gameState === 'countdown') {
         countdownTimer -= dt;
@@ -384,7 +414,16 @@ function drawAll() {
 }
 
 function setupBoostPads() { boostPads = []; CONST.CONFIG.BOOST_POSITIONS.forEach(pos => { boostPads.push(new BoostPad(pos.x, pos.y, !pos.isBig)); }); }
-function toggleCamera() { cameraMode = (cameraMode === 'rotating') ? 'fixed' : 'rotating'; }
+function toggleCamera() { 
+    cameraMode = (cameraMode === 'rotating') ? 'fixed' : 'rotating'; 
+    if (cameraModeEl) {
+        cameraModeEl.innerText = (cameraMode === 'rotating') ? 'CÁMARA ROTATIVA' : 'CÁMARA FIJA';
+        cameraModeEl.style.display = 'block';
+        cameraModeEl.style.opacity = '1';
+        setTimeout(() => { cameraModeEl.style.opacity = '0'; setTimeout(() => { cameraModeEl.style.display = 'none'; }, 500); }, 2000);
+    }
+    playSound('menu_click');
+}
 function toggleScoreboard(show) { if (show) showScoreboard(scoreboardEl, allCars, score); else hideScoreboard(scoreboardEl, gameState); }
 function togglePause() { isPaused = !isPaused; const pm = document.getElementById('pause-menu'); if (pm) pm.style.display = isPaused ? 'flex' : 'none'; }
 function applySpawns() { allCars.forEach((car, i) => { const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 }; car.x = sp.x; car.y = sp.y; car.angle = sp.a; }); }
@@ -630,8 +669,19 @@ async function loadSetupMaps() {
 }
 
 async function finalizeStartGame() {
-    const trans = document.getElementById('match-transition'); if (trans) trans.classList.add('active');
+    const trans = document.getElementById('match-transition'); 
+    const fill = document.getElementById('loading-bar-fill');
+    
+    if (trans) trans.classList.add('active');
     if (setupOverlay) setupOverlay.style.display = 'none';
+
+    // Simulación de barra de carga neón
+    if (fill) {
+        fill.style.width = '0%';
+        setTimeout(() => fill.style.width = '25%', 100);
+        setTimeout(() => fill.style.width = '65%', 500);
+        setTimeout(() => fill.style.width = '100%', 1200);
+    }
 
     // Aplicar personalización a los coches
     if (player1) player1.imgUrl = selectedCarP1;
@@ -644,17 +694,37 @@ async function finalizeStartGame() {
         if (resp.ok) {
             const mapData = await resp.json();
             applyMapConfig(mapData);
-            console.log("Mapa PRINCIPAL cargado correctamente");
         }
-    } catch (e) {
-        console.warn("No se pudo cargar el mapa PRINCIPAL, usando valores por defecto", e);
-    }
+    } catch (e) { console.warn("Usando valores por defecto"); }
 
-    setTimeout(() => {
+    setTimeout(async () => {
+        // --- PRE-CARGA DE TEXTURAS ANTES DE MOSTRAR ---
+        // Esto evita el frame verde/negro vacío al inicio
+        const preloadBG = new Image();
+        preloadBG.src = CONST.CONFIG.BG_IMG_PATH;
+        
+        const waitForLoad = () => new Promise(res => {
+            if (preloadBG.complete) res();
+            else { preloadBG.onload = res; setTimeout(res, 1000); } // Max 1s de espera
+        });
+
+        await waitForLoad();
+
         if (mainMenuEl) mainMenuEl.classList.add('hidden');
         if (trans) trans.classList.remove('active');
-        resetAfterGoal();
-    }, 1000);
+        
+        // Preparar cinemática de Zoom In
+        currentZoom = 0.25;
+        targetZoom = 0.85;
+        
+        // Forzar posición inicial de la cámara al centro del mundo
+        currentCamX = CONST.CONFIG.WORLD_W / 2;
+        currentCamY = CONST.CONFIG.WORLD_H / 2;
+        currentRotation = 0;
+
+        gameState = 'zooming';
+        applySpawns(); // Colocar coches en su sitio antes del zoom
+    }, 1800);
 }
 
 function applyMapConfig(c) {
