@@ -167,15 +167,7 @@ canvas {
     gap: 80px;
 }
 
-.intro-logo { width: 300px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); }
-.intro-logo.rotating {
-    animation: intro-rotate 10s linear infinite;
-}
-
-@keyframes intro-rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
+.intro-logo { width: 300px; }
 
 .dev-text {
     font-size: 24px;
