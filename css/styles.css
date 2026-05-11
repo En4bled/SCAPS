@@ -366,6 +366,84 @@ canvas {
     z-index: 1000;
 }
 
+/* ==========================================================================
+   PIXEL RANGE SLIDER (MP3 GADGET)
+   ========================================================================== */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+/* Track (Barra) */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 10px;
+    cursor: pointer;
+    background: #000;
+    border: 2px solid #5ad;
+    box-shadow: inset 0 0 5px rgba(90, 173, 237, 0.5);
+}
+
+/* Thumb (Tirador) */
+input[type="range"]::-webkit-slider-thumb {
+    height: 24px;
+    width: 14px;
+    background: #5ad;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -9px; /* Centrado respecto al track */
+    border: 2px solid #000;
+    box-shadow: 
+        0 -4px 0 -2px #5ad, 
+        0 4px 0 -2px #5ad,
+        0 0 10px #5ad;
+    transition: all 0.2s ease;
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+    background: #f90;
+    box-shadow: 
+        0 -4px 0 -2px #f90, 
+        0 4px 0 -2px #f90,
+        0 0 15px #f90;
+}
+
+/* Firefox Styles */
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 10px;
+    background: #000;
+    border: 2px solid #5ad;
+}
+input[type="range"]::-moz-range-thumb {
+    height: 24px;
+    width: 14px;
+    background: #5ad;
+    border: 2px solid #000;
+    border-radius: 0;
+}
+
+/* RESTAURACIÓN DE MARQUESINA */
+#marquee-container {
+    position: absolute;
+    bottom: 0;
+    right: -0.1%; 
+    width: 100.2%; 
+    background: rgba(0, 0, 0, 0.98); 
+    border-top: 2px solid #5ad;
+    overflow: hidden;
+    padding: 8px 0;
+    white-space: nowrap;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10%);
+    z-index: 1000;
+}
+
 .marquee-content {
     display: inline-block;
     padding-left: 100%;
@@ -489,4 +567,43 @@ canvas {
 @keyframes text-neon-cycle {
     0% { color: #5ad; text-shadow: 0 0 10px #5ad; }
     100% { color: #f90; text-shadow: 0 0 10px #f90; }
+}
+
+/* ==========================================================================
+   MATCH SETUP OPTIONS (MODES & MAPS)
+   ========================================================================== */
+.mode-option {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+}
+
+.mode-option:hover:not(.locked) {
+    transform: scale(1.05);
+}
+
+.mode-option.selected .pixel-border {
+    border-color: #f90 !important;
+    background: rgba(255, 153, 0, 0.2) !important;
+    box-shadow: 0 0 25px rgba(255, 153, 0, 0.4) !important;
+}
+
+.mode-option.locked {
+    filter: grayscale(1) brightness(0.5);
+    cursor: not-allowed;
+}
+
+/* Botón Jugar Desactivado */
+#setup-btn-play:disabled {
+    opacity: 0.3;
+    filter: grayscale(1);
+    cursor: not-allowed;
+    border-color: #333 !important;
+    box-shadow: none !important;
 }

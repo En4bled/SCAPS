@@ -38,11 +38,25 @@ export function toggleMusic() {
     return isMusicMuted;
 }
 
+export function togglePlayPause() {
+    if (!musicAudio) return false;
+    if (musicAudio.paused) {
+        musicAudio.play().catch(e => console.log("Playback error:", e));
+        return true;
+    } else {
+        musicAudio.pause();
+        return false;
+    }
+}
+
 export function setMusicVolume(vol) {
     musicVolume = vol;
     if (musicAudio) {
         musicAudio.volume = musicVolume;
     }
+    // Actualizar etiqueta de volumen en UI si existe
+    const volLabel = document.getElementById('settings-vol-label');
+    if (volLabel) volLabel.innerText = Math.round(vol * 100) + "%";
 }
 
 export function initAudio(playerCar, allCars) {
@@ -237,10 +251,18 @@ export function getCurrentSongInfo() {
     return songMetadata[currentSongIdx - 1];
 }
 
+function formatTime(seconds) {
+    if (isNaN(seconds)) return "00:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
 function playPlaylist() {
     if (musicAudio) {
         musicAudio.pause();
         musicAudio.onended = null;
+        musicAudio.ontimeupdate = null;
     }
 
     currentSongIdx = playlistOrder[playlistPointer];
@@ -250,9 +272,17 @@ function playPlaylist() {
     
     musicAudio.play().then(() => {
         showSongNotification();
-        // Actualizar UI de ajustes si existe
         updateSettingsSongUI();
     }).catch(e => console.log("Música bloqueada:", e));
+
+    musicAudio.ontimeupdate = () => {
+        const timerEl = document.getElementById('settings-song-timer');
+        if (timerEl) {
+            const current = formatTime(musicAudio.currentTime);
+            const total = formatTime(musicAudio.duration);
+            timerEl.innerText = `${current} / ${total}`;
+        }
+    };
 
     musicAudio.onended = () => {
         nextSong();
@@ -282,13 +312,13 @@ function showSongNotification() {
     if (artistEl) artistEl.innerText = info.artist;
     
     el.style.display = 'flex';
-    el.offsetHeight;
-    el.style.transform = 'translateX(0)';
+    el.offsetHeight; // Reflow
+    el.style.opacity = '1';
 
     setTimeout(() => {
-        el.style.transform = 'translateX(-150%)';
+        el.style.opacity = '0';
         setTimeout(() => {
             el.style.display = 'none';
-        }, 600);
+        }, 1000);
     }, 5000);
 }

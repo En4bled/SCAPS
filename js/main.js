@@ -8,7 +8,7 @@ import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
-import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, nextSong, prevSong, getCurrentSongInfo } from './fx/audio.js';
+import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 
 let canvas, ctx;
@@ -823,35 +823,30 @@ async function loadSetupMaps() {
 }
 
 function validateMatchSetup() {
+    // Solo permitimos los 3 mapas iniciales y el modo 2vs2
     const isValidMap = ['Principal', 'Estadio2', 'Mapa3'].includes(selectedMap);
-    const isValidMode = ['2vs2', '3vs3'].includes(selectedMode);
+    const isValidMode = (selectedMode === '2vs2');
     
     if (btnStartGame) {
         btnStartGame.disabled = !(isValidMap && isValidMode);
-        btnStartGame.style.opacity = btnStartGame.disabled ? '0.3' : '1';
-        btnStartGame.style.filter = btnStartGame.disabled ? 'grayscale(1)' : 'none';
-        btnStartGame.style.cursor = btnStartGame.disabled ? 'not-allowed' : 'pointer';
+        // El estilo visual ahora se maneja principalmente por CSS (:disabled)
     }
 }
 
-function showInGameNotification(text, color = "#f33", icon = "⚠️") {
-    const hud = document.getElementById('game-notification-hud');
-    const txtEl = document.getElementById('notif-text');
-    const iconEl = document.getElementById('notif-icon');
-    if (!hud || !txtEl) return;
+function showInGameNotification(text, color = "#f90", icon = "🔒") {
+    const hud = document.getElementById('notification-hud');
+    const box = document.getElementById('notification-box');
+    if (!hud || !box) return;
 
-    txtEl.innerText = text;
-    iconEl.innerText = icon;
-    hud.style.borderColor = color;
-    hud.style.boxShadow = `0 10px 40px rgba(0,0,0,0.5), 0 0 20px ${color}44`;
+    box.innerHTML = `<span style="margin-right:15px">${icon}</span> ${text}`;
+    box.style.borderColor = color + " !important";
+    box.style.display = 'block';
     
-    hud.style.opacity = '1';
-    hud.style.transform = 'translateX(-50%) translateY(20px)';
+    playSound('menu_error');
 
     setTimeout(() => {
-        hud.style.opacity = '0';
-        hud.style.transform = 'translateX(-50%) translateY(-100px)';
-    }, 3000);
+        box.style.display = 'none';
+    }, 2500);
 }
 
 async function finalizeStartGame() {
@@ -983,6 +978,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnNext) {
         btnNext.addEventListener('click', () => {
             nextSong();
+            playSound('menu_click');
+        });
+    }
+
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    if (btnPlayPause) {
+        btnPlayPause.addEventListener('click', () => {
+            const isPlaying = togglePlayPause();
+            btnPlayPause.style.borderColor = isPlaying ? '#5ad' : '#fff';
+            playSound('menu_click');
+        });
+    }
+
+    // Listeners para Modos de Juego
+    document.querySelectorAll('.mode-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.classList.contains('locked')) {
+                showInGameNotification("MODO BLOQUEADO: PRÓXIMAMENTE", "#f90", "🔒");
+                return;
+            }
+
+            // Seleccionar modo válido
+            document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedMode = btn.getAttribute('data-mode');
+            
+            playSound('menu_click');
+            validateMatchSetup();
+        });
+    });
+
+    const volIcon = document.getElementById('settings-vol-icon');
+    if (volIcon) {
+        volIcon.addEventListener('click', () => {
+            const muted = toggleMusic();
+            volIcon.innerText = muted ? '🔇' : '🔊';
             playSound('menu_click');
         });
     }
