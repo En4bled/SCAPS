@@ -8,14 +8,14 @@ import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
-import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume } from './fx/audio.js';
+import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, nextSong, prevSong, getCurrentSongInfo } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 
 let canvas, ctx;
 let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
-let selectedMap = 'Principal', selectedMode = 'online';
+let selectedMap = '', selectedMode = '';
 let gameOverOverlay, gameOverWinner, finalScoreBlue, finalScoreOrange;
 let selectedCarP1 = 'res/Car1.png', selectedCarP2 = 'res/Car2.png';
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1;
@@ -132,12 +132,16 @@ async function init() {
         });
 
         // Listeners del selector
-        if (btnStartGame) btnStartGame.onclick = () => {
-            playSound('menu_click');
-            score = { blue: 0, orange: 0 };
-            gameTime = 60;
-            finalizeStartGame();
-        };
+        if (btnStartGame) {
+            btnStartGame.onclick = () => {
+                if (btnStartGame.disabled) return;
+                playSound('menu_click');
+                score = { blue: 0, orange: 0 };
+                gameTime = 60;
+                finalizeStartGame();
+            };
+            validateMatchSetup();
+        }
         
         const btnCustomBack = getEl('btn-custom-back');
         if (btnCustomBack) btnCustomBack.onclick = () => {
@@ -203,10 +207,16 @@ async function init() {
 
         document.querySelectorAll('.mode-option').forEach(btn => {
             btn.onclick = () => {
+                if (btn.classList.contains('locked')) {
+                    showInGameNotification("ACCESO DENEGADO: MODO EN DESARROLLO", "#f33", "🚫");
+                    playSound('menu_error');
+                    return;
+                }
                 document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedMode = btn.dataset.mode;
                 playSound('menu_click');
+                validateMatchSetup();
             };
         });
 
@@ -769,11 +779,10 @@ async function loadSetupMaps() {
             const displayName = mapLabels[m] || m.toUpperCase();
             
             const container = document.createElement('div');
+            container.className = 'setup-map-item pixel-border';
             container.style.cursor = 'pointer';
             container.style.position = 'relative';
-            container.style.border = (selectedMap === m) ? '3px solid #5ad' : '2px solid rgba(255,255,255,0.1)';
-            container.style.borderRadius = '12px';
-            container.style.overflow = 'hidden';
+            container.style.border = (selectedMap === m) ? '4px solid #5ad' : '4px solid rgba(255,255,255,0.1)';
             container.style.background = '#1a1a2e';
             container.style.width = '160px';
             container.style.height = '210px';
@@ -795,13 +804,54 @@ async function loadSetupMaps() {
             `;
 
             container.onclick = () => {
+                // Mapas no disponibles (del 4 en adelante)
+                const globalIdx = startIdx + localIdx;
+                if (globalIdx >= 3) {
+                    showInGameNotification("MAPA BLOQUEADO: PRÓXIMAMENTE", "#f90", "🔒");
+                    playSound('menu_error');
+                    return;
+                }
+
                 selectedMap = m;
                 loadSetupMaps();
                 playSound('menu_click');
+                validateMatchSetup();
             };
             mapListContainer.appendChild(container);
         });
     } catch (e) { console.error("Error load setup maps:", e); }
+}
+
+function validateMatchSetup() {
+    const isValidMap = ['Principal', 'Estadio2', 'Mapa3'].includes(selectedMap);
+    const isValidMode = ['2vs2', '3vs3'].includes(selectedMode);
+    
+    if (btnStartGame) {
+        btnStartGame.disabled = !(isValidMap && isValidMode);
+        btnStartGame.style.opacity = btnStartGame.disabled ? '0.3' : '1';
+        btnStartGame.style.filter = btnStartGame.disabled ? 'grayscale(1)' : 'none';
+        btnStartGame.style.cursor = btnStartGame.disabled ? 'not-allowed' : 'pointer';
+    }
+}
+
+function showInGameNotification(text, color = "#f33", icon = "⚠️") {
+    const hud = document.getElementById('game-notification-hud');
+    const txtEl = document.getElementById('notif-text');
+    const iconEl = document.getElementById('notif-icon');
+    if (!hud || !txtEl) return;
+
+    txtEl.innerText = text;
+    iconEl.innerText = icon;
+    hud.style.borderColor = color;
+    hud.style.boxShadow = `0 10px 40px rgba(0,0,0,0.5), 0 0 20px ${color}44`;
+    
+    hud.style.opacity = '1';
+    hud.style.transform = 'translateX(-50%) translateY(20px)';
+
+    setTimeout(() => {
+        hud.style.opacity = '0';
+        hud.style.transform = 'translateX(-50%) translateY(-100px)';
+    }, 3000);
 }
 
 async function finalizeStartGame() {
@@ -899,5 +949,43 @@ function applyMapConfig(c) {
     setupBoostPads();
     console.log("Mapa aplicado:", { goals: c.goals, spawns: c.spawns?.length, boosts: c.boosts?.length });
 }
+
+// EVENTOS DE AUDIO Y REPRODUCTOR MP3
+document.addEventListener('DOMContentLoaded', () => {
+    const sliderVol = document.getElementById('slider-settings-vol');
+    const btnMute = document.getElementById('btn-settings-mute');
+    const btnPrev = document.getElementById('btn-prev-song');
+    const btnNext = document.getElementById('btn-next-song');
+
+    if (sliderVol) {
+        sliderVol.addEventListener('input', (e) => {
+            setMusicVolume(e.target.value / 100);
+        });
+        // Click opcional para feedback
+        sliderVol.addEventListener('change', () => playSound('menu_click'));
+    }
+
+    if (btnMute) {
+        btnMute.addEventListener('click', () => {
+            const muted = toggleMusic();
+            btnMute.innerText = muted ? '🔇' : '🔊';
+            playSound('menu_click');
+        });
+    }
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            prevSong();
+            playSound('menu_click');
+        });
+    }
+
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            nextSong();
+            playSound('menu_click');
+        });
+    }
+});
 
 init();

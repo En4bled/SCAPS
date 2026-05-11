@@ -213,6 +213,30 @@ export function setBoostSound(active) {
         }, 150);
     }
 }
+export function getMusicVolume() { return musicVolume; }
+export function isMuted() { return isMusicMuted; }
+
+export function nextSong() {
+    playlistPointer++;
+    if (playlistPointer >= TOTAL_SONGS) {
+        playlistPointer = 0;
+        shufflePlaylist();
+    }
+    playPlaylist();
+}
+
+export function prevSong() {
+    playlistPointer--;
+    if (playlistPointer < 0) {
+        playlistPointer = TOTAL_SONGS - 1;
+    }
+    playPlaylist();
+}
+
+export function getCurrentSongInfo() {
+    return songMetadata[currentSongIdx - 1];
+}
+
 function playPlaylist() {
     if (musicAudio) {
         musicAudio.pause();
@@ -226,16 +250,23 @@ function playPlaylist() {
     
     musicAudio.play().then(() => {
         showSongNotification();
+        // Actualizar UI de ajustes si existe
+        updateSettingsSongUI();
     }).catch(e => console.log("Música bloqueada:", e));
 
     musicAudio.onended = () => {
-        playlistPointer++;
-        if (playlistPointer >= TOTAL_SONGS) {
-            playlistPointer = 0;
-            shufflePlaylist();
-        }
-        playPlaylist();
+        nextSong();
     };
+}
+
+function updateSettingsSongUI() {
+    const nameEl = document.getElementById('settings-song-name');
+    const artistEl = document.getElementById('settings-song-artist');
+    if (nameEl && artistEl) {
+        const info = getCurrentSongInfo();
+        nameEl.innerText = info.title;
+        artistEl.innerText = info.artist;
+    }
 }
 
 function showSongNotification() {
@@ -246,13 +277,11 @@ function showSongNotification() {
     const artistEl = document.getElementById('song-artist');
     if (!el || !nameEl) return;
 
-    const info = songMetadata[currentSongIdx - 1];
+    const info = getCurrentSongInfo();
     nameEl.innerText = info.title;
     if (artistEl) artistEl.innerText = info.artist;
     
     el.style.display = 'flex';
-    
-    // Forzar reflow para la animación
     el.offsetHeight;
     el.style.transform = 'translateX(0)';
 
