@@ -1,6 +1,6 @@
-# Arquitectura y Diseño de IA SCAPS (V11 Experimental)
+# Arquitectura y Diseño de IA SCAPS (Core Production)
 
-Este documento detalla el funcionamiento interno del motor de Inteligencia Artificial V11 implementado en `physics_experimental.js`. Sirve como base de conocimiento para futuras iteraciones y mejoras del comportamiento de los bots mediante prompts.
+Este documento detalla el funcionamiento interno del motor de Inteligencia Artificial implementado en `physics.js`. Sirve como base de conocimiento para futuras iteraciones y mejoras del comportamiento de los bots mediante prompts.
 
 ## 1. El Problema Base (Resuelto en V11)
 Durante las versiones V1 a V10, los bots presentaban un comportamiento de "órbita infinita" alrededor del balón. Este fallo no era heurístico, sino estrictamente matemático:

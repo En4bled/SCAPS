@@ -7,7 +7,7 @@ import { setupInput } from './core/input.js';
 import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
-import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics_experimental.js';
+import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
 import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 
