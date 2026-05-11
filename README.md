@@ -15,14 +15,18 @@ SCAPS is a high-performance 2D physics engine and game framework inspired by veh
 - **Dynamic Maneuverability**: Advanced vehicle handling including traction loss (drifting), torque-based steering, and acceleration curves.
 - **Elastic Momentum**: Physically accurate momentum transfer between entities, preventing overlapping and ensuring consistent bounce vectors.
 
-### 2. Autonomous Intelligence (AI Striker V9)
-- **Heuristic Navigation**: High-frequency pathfinding focused on ball-interception and target alignment.
-- **Spatial Awareness**: Boundary-detection system using polygon-based repulsion to maintain arena positioning.
-- **Tactical Utility**: Adaptive use of Boost and Drift mechanics for competitive play and rapid repositioning.
+### 2. Autonomous Intelligence (AI Striker V11 Experimental)
+- **Deterministic Steering**: Math-corrected angular resolution to eliminate orbiting and ensure immediate ball-facing vectors.
+- **Throttle Gating**: Advanced speed management where bots actively brake on sharp turns (>17°) to prevent overshooting.
+- **Fail-Safe Recovery**: Aggressive anti-stuck logic based on low-velocity frame-counting to execute escape maneuvers.
 
-### 3. Integrated Map Editor (Level Design Suite)
+### 3. Real-Time Physics Editor
+- **Hot-Swapping**: Modify vehicle speed, traction, and ball collision properties instantly during gameplay.
+- **UI Overlay**: Dedicated pause-overlay toggled via the `º` key for testing balancing changes without reloading.
+
+### 4. Integrated Map Editor (Level Design Suite)
 - **Visual Mapping**: WYSIWYG interface for defining field boundaries, goal zones, and spawn points.
-- **Decoupled Architecture**: Separation of collision hitboxes from visual net representations for maximum design flexibility.
+- **Z-Axis Simulation (Ramps)**: Walls act as ramps, propelling the ball into the air (`onWallTimer`) and passing cleanly over vehicles.
 - **Asset Management**: Dynamic JSON loading for custom field textures and arena configurations.
 
 ## 🎮 Input Specification

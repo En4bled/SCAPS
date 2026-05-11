@@ -7,8 +7,9 @@ import { setupInput } from './core/input.js';
 import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
-import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
+import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics_experimental.js';
 import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume } from './fx/audio.js';
+import { initPhysicsEditor } from './ui/physics_editor.js';
 
 let canvas, ctx;
 let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
@@ -81,6 +82,21 @@ async function init() {
 
         // IMPORTANTE: Pasar callbacks correctos
         setupInput(keysPressed, toggleCamera, toggleScoreboard);
+
+        // Iniciar Editor de Físicas
+        initPhysicsEditor((isOpening) => {
+            if (isOpening) {
+                if (gameState === 'playing' || gameState === 'countdown') {
+                    isPaused = true;
+                    return true;
+                }
+                return false;
+            } else {
+                isPaused = false;
+                lastTime = performance.now();
+                return true;
+            }
+        });
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
         player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'res/Car1.png');

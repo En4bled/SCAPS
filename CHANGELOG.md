@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-05-11 - *Experimental Physics & AI Mastery*
+### Added
+- **AI Engine V11 (Fix Matemático Definitivo)**:
+    - Completely rewrote `updateCarAI` in `physics_experimental.js` to resolve the critical 90-degree offset bug in the coordinate system.
+    - Implemented Deterministic Angular Steering: bots now perfectly align to the target vector without orbiting.
+    - Implemented Throttle Gating (Speed Control): bots now brake when facing sharp angles (>17°) to prevent overshooting.
+    - Added an aggressive 30-frame fallback stuck timer to force reverse driving if jammed against walls.
+- **Real-Time Physics Editor**:
+    - Introduced a dynamic UI overlay (toggled via the `º` key) for modifying `CONST.CONFIG` parameters in real-time.
+    - Enables hot-swapping values for speed, acceleration, friction, turning radius, and ball impact physics without restarting.
+- **Ramp Mechanics & Flight (Z-Axis Simulation)**:
+    - Ball now acts as if launched from a ramp when colliding with walls or being struck heavily, increasing its visual scale to simulate "lift".
+    - Disabled Car-Ball collision while the ball is "flying" (`onWallTimer > 0`), simulating 3D lob passes over vehicles.
+
+### Changed
+- **Physics Balancing**:
+    - Reduced `CAR_MAX_SPEED` (2.2 -> 1.8) and `CAR_TURN_SPEED` (0.065 -> 0.05) for improved control weight and handling.
+    - Reduced `BALL_FRICTION` (0.993 -> 0.995) so the ball glides farther across the grass.
+    - Increased `BALL_HIT_FORCE` (4.8 -> 6.0) and `BALL_MAX_SPEED` (6.5 -> 8.5) to solve the "sticky ball" issue and promote long clears.
+
 ## [1.0.0] - 2026-05-10 - *Production Release: AI & Physics Overhaul*
 ### Added
 - **AI Engine (Relentless Pursuit V9)**: 

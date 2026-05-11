@@ -19,21 +19,25 @@ The `main.js` script serves as the entry point and primary game loop controller.
 - **Scene Management**: A state machine controls the transitions between `intro`, `menu`, `matchSetup`, `playing`, and `paused` states.
 - **Entity Orchestration**: Coordinates the lifecycle and rendering order of cars, ball, particles, and UI overlays.
 
-### 2.2. Physics Engine and Collision Solver (`js/world/physics.js`)
-The physics module handles spatial partitioning and collision resolution.
+### 2.2. Physics Engine (`js/world/physics_experimental.js`)
+The physics module handles spatial partitioning and collision resolution. Currently running on the **Experimental V11 Branch**.
 - **Collision Detection**: 
     - **Circle-Polygon**: Used for ball/car-to-wall interactions.
     - **Circle-Circle**: Used for car-to-car and car-to-ball interactions.
-- **Impulse Resolution**: Implements 1D elastic collision formulas to handle momentum transfer and restitution (bounciness).
-- **Position Correction**: Uses overlap resolution (Minkowski Sum principles) to prevent entity interpenetration.
+- **Impulse Resolution**: Implements 1D elastic collision formulas to handle momentum transfer and restitution.
+- **Z-Axis Simulation (Ramp Mechanics)**: The physics engine overrides 2D collision algorithms when the ball hits a wall, triggering an `onWallTimer`. During this state, the ball's sprite scales up (Zoom) and car-to-ball collision is temporarily suspended, simulating an aerial trajectory over the vehicles.
 
-### 2.3. Autonomous Intelligence: Relentless Pursuit V9
-The AI module (`updateCarAI`) implements a deterministic pursuit algorithm.
-- **Vector-based Steering**: Calculates the normalized direction vector toward the target (the ball).
-- **Angular Alignment**: Prioritizes rotational alignment; if the angular difference exceeds threshold, the bot utilizes deceleration and drifting to pivot.
-- **Spatial Constraints**: Integrates a boundary-aware repulsion system using coordinate clamping and field polygon checks to maintain arena presence and avoid goal-net trapping.
+### 2.3. Autonomous Intelligence: Experimental V11
+The AI module (`updateCarAI`) implements a hyper-optimized deterministic pursuit algorithm.
+- **Coordinate System Alignment**: Corrects a fundamental math divergence between standard trigonometric space (where `atan2(0)` is Right) and the vehicle space (where angle `0` is Up). This math alignment guarantees zero-orbiting interception vectors.
+- **Throttle Gating**: Active speed control based on angular difference (`absDiff`). Bots will release the throttle or brake hard if the target vector requires a turn sharper than ~17 degrees, optimizing the turning radius.
+- **Hardware-Level Anti-Stuck**: Evaluates absolute velocity per frame. If velocity drops below a threshold for 30 consecutive frames, an emergency reverse-and-steer sequence overrides all other inputs.
 
-### 2.4. Entity Definition (`js/entities/`)
+### 2.4. Real-Time Physics Editor (`js/ui/physics_editor.js`)
+- An interactive UI overlay that injects into the DOM and binds directly to `CONST.CONFIG` properties.
+- Suspends the main game loop (`isPaused`) and allows hot-swapping of physical parameters (Friction, Bounciness, Torques) with immediate effect upon resumption.
+
+### 2.5. Entity Definition (`js/entities/`)
 - **Vehicle Physics (`Car.js`)**: Implements traction, acceleration curves, and steering torque. Features dynamic `speedFactor` steering which adjusts maneuverability based on velocity.
 - **Ball Dynamics (`Ball.js`)**: Handles friction, terminal velocity, and visual Z-axis simulation (scaling) for "lift" effects.
 
