@@ -98,14 +98,14 @@ export class Car {
             let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
             
             // --- NUEVA LÓGICA DE GIRO DINÁMICO ---
-            let dynamicTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
+            let maxTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
             
             // 1. Reducir giro según la velocidad (a más velocidad, arco más amplio)
-            let speedFactor = Math.abs(this.speed) / CONST.CONFIG.CAR_MAX_SPEED;
-            if (speedFactor > 1) speedFactor = 1; // Cap al máximo
+            let speedFactor = Math.min(1.0, Math.abs(this.speed) / CONST.CONFIG.CAR_MAX_SPEED);
             
-            // Reducimos hasta un 40% el giro a máxima velocidad normal
-            dynamicTurnSpeed *= (1 - (speedFactor * 0.4));
+            // Los coches giran mejor a velocidades medias. 
+            // Baseline del 80% de giro para evitar que se sientan "bloqueados" a alta velocidad.
+            let dynamicTurnSpeed = maxTurnSpeed * (0.8 + 0.2 * (1 - Math.abs(speedFactor - 0.5) * 2));
             
             // 2. Reducir giro extra si estamos usando BOOST
             if (this.isBoosting) {

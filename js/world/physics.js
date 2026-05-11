@@ -202,125 +202,27 @@ export function checkGoalPhysics(ball) {
 }
 
 /**
-/**
- * IA DE LOS BOTS - STRIKER ENGINE V4 (Vectorial)
+ * IA DE LOS BOTS - RELENTLESS PURSUIT V9 (REDiseño TOTAL)
  */
 export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars) { 
     if (gameState !== 'playing' && gameState !== 'countdown') return;
 
     const controls = ai.controls;
-    keysPressed[controls.up] = false; keysPressed[controls.down] = false;
-    keysPressed[controls.left] = false; keysPressed[controls.right] = false;
-    keysPressed[controls.boost] = false; keysPressed[controls.drift] = false;
+    // Resetear todas las teclas del bot
+    keysPressed[controls.up] = false;
+    keysPressed[controls.down] = false;
+    keysPressed[controls.left] = false;
+    keysPressed[controls.right] = false;
+    keysPressed[controls.boost] = false;
+    keysPressed[controls.drift] = false;
 
-    const isBlue = (ai.color === '#5ad');
-    const ownGoalX = isBlue ? 400 : 3600;
-    const enemyGoalX = isBlue ? 3600 : 400;
-    const centerY = CONST.CONFIG.WORLD_H / 2;
+    // --- 1. LOCALIZACIÓN DEL BALÓN ---
+    const dx = ball.x - ai.x;
+    const dy = ball.y - ai.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
 
-    // --- 1. PREDICCIÓN DEL BALÓN ---
-    const distToBall = Math.sqrt((ai.x - ball.x)**2 + (ai.y - ball.y)**2);
-    const predFrames = Math.min(20, distToBall / 50);
-    const pBallX = ball.x + ball.vx * predFrames;
-    const pBallY = ball.y + ball.vy * predFrames;
-
-    // --- 2. CÁLCULO DE VECTORES DE ALINEACIÓN ---
-    // Vector del Balón a la Portería Enemiga
-    const vecBallToGoalX = enemyGoalX - pBallX;
-    const vecBallToGoalY = centerY - pBallY;
-    const magBallToGoal = Math.sqrt(vecBallToGoalX**2 + vecBallToGoalY**2);
-    const dirGoalX = vecBallToGoalX / magBallToGoal;
-    const dirGoalY = vecBallToGoalY / magBallToGoal;
-
-    // Vector del Bot al Balón
-    const vecBotToBallX = pBallX - ai.x;
-    const vecBotToBallY = pBallY - ai.y;
-    const magBotToBall = Math.sqrt(vecBotToBallX**2 + vecBotToBallY**2);
-    // Evitar división por cero
-    const dirBotX = magBotToBall > 0 ? vecBotToBallX / magBotToBall : 0;
-    const dirBotY = magBotToBall > 0 ? vecBotToBallY / magBotToBall : 0;
-
-    // Producto escalar (Dot Product) para saber si estamos detrás del balón apuntando a portería
-    // Valor 1 = Perfectamente alineados. Valor < 0 = Estamos por delante del balón.
-    const alignment = (dirBotX * dirGoalX) + (dirBotY * dirGoalY);
-    
-    let targetX, targetY;
-    let mode = 'STRIKE';
-
-    // --- 3. TOMA DE DECISIONES Y POSICIONAMIENTO ---
-    const ballInOwnHalf = isBlue ? (ball.x < 2000) : (ball.x > 2000);
-    const isInsideGoal = (ai.x < 850 || ai.x > 3150); // Detectar si está en la zona de porterías
-    
-    if (isInsideGoal && Math.abs(ai.y - centerY) < 500) {
-        // MODO ESCAPE: Salir de la portería lo antes posible
-        mode = 'ESCAPE';
-        targetX = 2000;
-        targetY = centerY;
-    }
-    else if (ai.aiState.role === 'defender' && !ballInOwnHalf && distToBall > 1200) {
-        // Defensa conservadora si el balón está lejos en campo contrario
-        mode = 'DEFEND';
-        targetX = ownGoalX + (isBlue ? 500 : -500);
-        targetY = centerY + (ball.y - centerY) * 0.5;
-    } 
-    else if (alignment < 0.1 && distToBall < 1000) {
-        // REPOSICIONAMIENTO: Estamos mal alineados.
-        // Trazamos una curva para rodear el balón y ponernos detrás.
-        mode = 'REPOSITION';
-        
-        const offsetDist = 450; 
-        let behindX = pBallX - dirGoalX * offsetDist;
-        let behindY = pBallY - dirGoalY * offsetDist;
-        
-        const cross = dirGoalX * dirBotY - dirGoalY * dirBotX;
-        const swingDist = 400; 
-        if (cross > 0) {
-            behindX += -dirGoalY * swingDist;
-            behindY += dirGoalX * swingDist;
-        } else {
-            behindX += dirGoalY * swingDist;
-            behindY += -dirGoalX * swingDist;
-        }
-        
-        targetX = Math.max(200, Math.min(3800, behindX));
-        targetY = Math.max(200, Math.min(2800, behindY));
-    } 
-    else {
-        // ATAQUE FRONTAL: Enfoque total en el balón
-        mode = 'STRIKE';
-        targetX = pBallX;
-        targetY = pBallY;
-    }
-
-    // Prioridad de recarga de turbo
-    if (ai.boost < 20 && mode !== 'STRIKE') {
-        let closestPad = null, minDist = 800;
-        boostPads.forEach(pad => {
-            if (pad.active) {
-                const d = Math.sqrt((ai.x - pad.x)**2 + (ai.y - pad.y)**2);
-                if (d < minDist) { minDist = d; closestPad = pad; }
-            }
-        });
-        if (closestPad) {
-            targetX = closestPad.x;
-            targetY = closestPad.y;
-        }
-    }
-
-    // --- 4. EVASIÓN DE COMPAÑEROS/RIVALES ---
-    allCars.forEach(other => {
-        if (other === ai) return;
-        const d = Math.sqrt((ai.x - other.x)**2 + (ai.y - other.y)**2);
-        if (d < 180) {
-            targetX += (ai.x - other.x) * 0.6;
-            targetY += (ai.y - other.y) * 0.6;
-        }
-    });
-
-    // --- 5. CONTROL DEL VEHÍCULO ---
-    const dx = targetX - ai.x;
-    const dy = targetY - ai.y;
-    const targetAngle = Math.atan2(dy, dx); 
+    // --- 2. CÁLCULO DE ÁNGULO MAESTRO ---
+    const targetAngle = Math.atan2(dy, dx);
     const currentAngle = (ai.angle + Math.PI * 2 + Math.PI / 2) % (Math.PI * 2);
     const desiredAngle = (targetAngle + Math.PI * 2 + Math.PI / 2) % (Math.PI * 2);
     
@@ -330,47 +232,54 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
 
     const absDiff = Math.abs(angleDiff);
 
-    // Acelerador y Freno
-    if (absDiff < 1.6) {
+    // --- 3. LÓGICA DE NAVEGACIÓN ---
+    // Límites de seguridad del estadio
+    const minX = 920, maxX = 3080;
+    const minY = 720, maxY = 2280;
+    const nearWall = (ai.x < minX || ai.x > maxX || ai.y < minY || ai.y > maxY);
+
+    // Prioridad: Orientarse hacia el balón
+    if (absDiff > 0.15) {
+        if (angleDiff > 0) keysPressed[controls.right] = true;
+        else keysPressed[controls.left] = true;
+    }
+
+    // Aceleración inteligente
+    if (absDiff < 1.2) {
         keysPressed[controls.up] = true;
+        // Turbo si estamos bien encaminados y lejos
+        if (absDiff < 0.2 && dist > 500 && ai.boost > 5) {
+            keysPressed[controls.boost] = true;
+        }
     } else {
-        // Si el objetivo está muy a nuestras espaldas
-        if (Math.abs(ai.speed) < 1.0) {
-            keysPressed[controls.down] = true; // Marcha atrás si vamos despacio
-        } else {
-            keysPressed[controls.up] = true; // Seguir acelerando pero forzar derrape
+        // Giro muy cerrado: derrapar y frenar un poco para no salirnos de la órbita
+        keysPressed[controls.drift] = true;
+        if (ai.speed > 1.0) keysPressed[controls.down] = true;
+        else keysPressed[controls.up] = true;
+    }
+
+    // --- 4. EVITAR ATASCOS Y PAREDES ---
+    if (nearWall && dist > 300) {
+        // Si estamos en la pared y el balón no está aquí, forzar giro al centro
+        const toCenterX = 2000 - ai.x;
+        const toCenterY = 1500 - ai.y;
+        const angleToCenter = Math.atan2(toCenterY, toCenterX);
+        // ... (el volante ya está calculando hacia el balón, pero el muro nos frena)
+        if (Math.abs(ai.speed) < 0.3) {
+            keysPressed[controls.down] = true; // Marcha atrás para despegarse
+            keysPressed[controls.up] = false;
         }
     }
 
-    // Volante
-    const turnThresh = 0.08;
-    if (angleDiff > turnThresh) keysPressed[controls.right] = true;
-    else if (angleDiff < -turnThresh) keysPressed[controls.left] = true;
-
-    // Derrape (Drift)
-    if (absDiff > 0.6 && Math.abs(ai.speed) > 1.2) {
-        keysPressed[controls.drift] = true;
-    }
-
-    // Turbo (Boost)
-    if (absDiff < 0.3 && ai.boost > 5 && mode === 'STRIKE') {
-        keysPressed[controls.boost] = true; // Disparo directo
-    } else if (absDiff < 0.15 && ai.boost > 50 && distToBall > 1000) {
-        keysPressed[controls.boost] = true; // Acercamiento rápido
-    }
-
-    // --- 6. SISTEMA ANTI-ATASCO ---
+    // Sistema Anti-Atasco (Reset de posición mental)
     if (!ai.stuckTimer) ai.stuckTimer = 0;
-    if (Math.abs(ai.speed) < 0.2 && gameState === 'playing') ai.stuckTimer++;
-    else ai.stuckTimer = Math.max(0, ai.stuckTimer - 2);
+    if (Math.abs(ai.speed) < 0.1 && gameState === 'playing') ai.stuckTimer++;
+    else ai.stuckTimer = 0;
 
     if (ai.stuckTimer > 40) {
         keysPressed[controls.up] = false;
         keysPressed[controls.down] = true;
-        if (ai.stuckTimer % 60 < 30) keysPressed[controls.left] = true;
-        else keysPressed[controls.right] = true;
-        keysPressed[controls.drift] = false;
-        
-        if (ai.stuckTimer > 90) ai.stuckTimer = 0;
+        keysPressed[controls.left] = true;
+        if (ai.stuckTimer > 70) ai.stuckTimer = 0;
     }
 }

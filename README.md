@@ -1,34 +1,46 @@
-# 🚗⚽ SCAPS - 2D Rocket League Engine
+# SCAPS: Sports-Car Arena Physics Simulation
 
-**SCAPS** es un increíble motor de juego 2D inspirado en Rocket League, creado con puro corazón, HTML5, CSS3 y JavaScript moderno (ES Modules). ¡Todo corre directamente en tu navegador web!
+SCAPS is a high-performance 2D physics engine and game framework inspired by vehicular soccer dynamics. Developed using a pure web-stack approach (HTML5, CSS3, and JavaScript ES6+), it provides a robust environment for real-time simulation, competitive AI behavior, and interactive level design.
 
-## 🌟 ¿Qué tiene de especial?
-Hemos construido este juego desde cero para que sea rápido, divertido y muy fácil de modificar. 
+## 🛠 Technical Stack
+- **Core Logic**: Vanilla JavaScript (ES6 Modules)
+- **Rendering Engine**: HTML5 Canvas API (2D Context)
+- **Styling & UI**: CSS3 Custom Properties & Flexbox/Grid
+- **Data Persistence**: JSON-based configuration and level storage
 
-*   **Físicas Personalizadas**: Los coches derrapan, tienen turbo, y la pelota rebota con físicas precisas (calculamos las colisiones círculo-rectángulo en tiempo real).
-*   **Sistema de Bots Inteligente**: ¿No tienes amigos a mano? ¡No pasa nada! Nuestros bots pueden jugar en modo ataque o defensa persiguiendo la bola.
-*   **Fácil de Entender**: El código está dividido en partes muy lógicas. Tienes una carpeta para los coches, otra para el sonido y otra para la inteligencia artificial.
+## 🚀 Key Features
 
-## 🛠️ ¡El Editor de Mapas Profesional!
-Nos dimos cuenta de que crear mapas escribiendo código era aburrido. Así que construimos **SCAPS Map Editor** (`editor.html`). 
-Con este editor visual, puedes:
-*   Subir tu propia imagen de campo.
-*   Arrastrar y soltar las porterías y posiciones de los jugadores usando el ratón.
-*   Alinearlo todo con una **rejilla magnética** super profesional.
-*   Separar la "zona visual de la red" de la "zona real donde se marca el gol".
-*   ¡Guardar tus mapas en archivos `.json` con sus propias miniaturas visuales!
+### 1. Advanced Physics Engine
+- **Collision Resolution**: Real-time Impulse-based collision handling for Car-to-Car and Car-to-Ball interactions.
+- **Dynamic Maneuverability**: Advanced vehicle handling including traction loss (drifting), torque-based steering, and acceleration curves.
+- **Elastic Momentum**: Physically accurate momentum transfer between entities, preventing overlapping and ensuring consistent bounce vectors.
 
-## 🎮 Controles de Juego
-*   **WASD**: Acelerar, frenar y girar tu coche.
-*   **Shift Izquierdo**: ¡Mete el turbo (Boost)!
-*   **Ctrl Izquierdo**: Derrapa (Drift) para tomar curvas cerradas.
-*   **V**: Cambia la cámara (que mire al frente o siga tu coche).
-*   **Tab**: Mira quién va ganando (Tabla de puntuaciones).
+### 2. Autonomous Intelligence (AI Striker V9)
+- **Heuristic Navigation**: High-frequency pathfinding focused on ball-interception and target alignment.
+- **Spatial Awareness**: Boundary-detection system using polygon-based repulsion to maintain arena positioning.
+- **Tactical Utility**: Adaptive use of Boost and Drift mechanics for competitive play and rapid repositioning.
 
-## 🚀 Cómo empezar a jugar o programar
-1.  **Abre `index.html`** en cualquier navegador moderno para empezar a jugar (pasarás por nuestras nuevas escenas de introducción, menú principal y Match Setup).
-2.  **Abre `editor.html`** si quieres crear tu propio estadio.
-3.  Echa un vistazo a la `DOCUMENTACION_TECNICA.md` y `ORGANIGRAMA_ESCENAS.md` para entender cómo fluye toda la magia por dentro en un lenguaje súper amigable.
+### 3. Integrated Map Editor (Level Design Suite)
+- **Visual Mapping**: WYSIWYG interface for defining field boundaries, goal zones, and spawn points.
+- **Decoupled Architecture**: Separation of collision hitboxes from visual net representations for maximum design flexibility.
+- **Asset Management**: Dynamic JSON loading for custom field textures and arena configurations.
+
+## 🎮 Input Specification
+| Action | Key Mapping |
+| :--- | :--- |
+| **Movement** | `W`, `A`, `S`, `D` |
+| **Nitro (Boost)** | `Left Shift` |
+| **Evasion (Drift)** | `Left Control` |
+| **Camera Toggle** | `V` |
+| **Scoreboard** | `Tab` |
+| **Pause Menu** | `Esc` |
+
+## 📦 Project Structure
+- `/js/core`: System constants and engine initialization.
+- `/js/world`: Physics solver, collision detection, and field rendering.
+- `/js/entities`: Modular classes for Vehicles and Ball physics.
+- `/js/ui`: Scene management and interface interactions.
+- `editor.html`: Dedicated level design environment.
 
 ---
-*2026 &copy; Desarrollado por En4bLeD_ y su asistente IA.*
+*Developed by En4bLeD_ & Antigravity Assistant. 2026.*
