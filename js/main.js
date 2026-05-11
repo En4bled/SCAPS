@@ -16,6 +16,7 @@ let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
 let selectedMap = 'Principal', selectedMode = 'online';
+let gameOverOverlay, gameOverWinner, finalScoreBlue, finalScoreOrange;
 let selectedCarP1 = 'res/Car1.png', selectedCarP2 = 'res/Car2.png';
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1;
 const MAPS_PER_PAGE = 3, CARS_PER_PAGE = 8;
@@ -26,7 +27,7 @@ let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
 let isPaused = false;
 let countdownTimer = 3;
-let gameTime = 300;
+let gameTime = 60;
 let lastTime = 0;
 let keysPressed = {};
 let animationFrameCounter = 0;
@@ -79,6 +80,10 @@ async function init() {
         btnStartGame = getEl('setup-btn-play');
         btnExitSetup = getEl('setup-btn-exit');
         mapListContainer = getEl('setup-map-list');
+        gameOverOverlay = getEl('game-over-overlay');
+        gameOverWinner = getEl('game-over-winner');
+        finalScoreBlue = getEl('final-score-blue');
+        finalScoreOrange = getEl('final-score-orange');
 
         // IMPORTANTE: Pasar callbacks correctos
         setupInput(keysPressed, toggleCamera, toggleScoreboard);
@@ -127,13 +132,48 @@ async function init() {
         });
 
         // Listeners del selector
-        if (btnStartGame) btnStartGame.onclick = () => finalizeStartGame();
+        if (btnStartGame) btnStartGame.onclick = () => {
+            playSound('menu_click');
+            score = { blue: 0, orange: 0 };
+            gameTime = 60;
+            finalizeStartGame();
+        };
         
         const btnCustomBack = getEl('btn-custom-back');
         if (btnCustomBack) btnCustomBack.onclick = () => {
             const inputName = getEl('input-player-name');
             if (inputName && player1) player1.name = inputName.value.toUpperCase();
             showMenuScreen('initial');
+            playSound('menu_click');
+        };
+
+        const btnRematch = getEl('btn-gameover-rematch');
+        const btnModeSelect = getEl('btn-gameover-mode');
+        const btnExitGameOver = getEl('btn-gameover-exit');
+
+        if (btnRematch) btnRematch.onclick = () => {
+            if (gameOverOverlay) gameOverOverlay.style.display = 'none';
+            score = { blue: 0, orange: 0 };
+            gameTime = 60;
+            finalizeStartGame();
+            playSound('menu_click');
+        };
+
+        if (btnModeSelect) btnModeSelect.onclick = () => {
+            if (gameOverOverlay) gameOverOverlay.style.display = 'none';
+            startGame();
+            playSound('menu_click');
+        };
+
+        if (btnExitGameOver) btnExitGameOver.onclick = () => {
+            if (gameOverOverlay) gameOverOverlay.style.display = 'none';
+            gameState = 'menu';
+            if (mainMenuEl) {
+                mainMenuEl.classList.remove('hidden');
+                mainMenuEl.style.display = 'flex';
+                const videoBg = document.getElementById('menu-video-bg');
+                if (videoBg) videoBg.style.opacity = '1';
+            }
             playSound('menu_click');
         };
 
@@ -198,8 +238,8 @@ async function init() {
 
         // Listeners de Pausa
         const pContinue = getEl('btn-pause-continue'); if (pContinue) pContinue.onclick = () => togglePause();
-        const pRestart = getEl('btn-pause-restart'); if (pRestart) pRestart.onclick = () => { score = { blue: 0, orange: 0 }; gameTime = 300; togglePause(); resetAfterGoal(); };
-        const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if (pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; } };
+        const pRestart = getEl('btn-pause-restart'); if (pRestart) pRestart.onclick = () => { score = { blue: 0, orange: 0 }; gameTime = 60; togglePause(); resetAfterGoal(); };
+        const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if (pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; const videoBg = document.getElementById('menu-video-bg'); if (videoBg) videoBg.style.opacity = '1'; } };
         const pMusic = getEl('btn-toggle-music-pause');
         const syncMuteUI = (muted) => {
             if (pMusic) pMusic.innerText = muted ? '🔇' : '🔊';
@@ -261,8 +301,18 @@ function renderFrame() {
 
     let targetX = player1.x, targetY = player1.y, targetRot = 0, vOffset = 0;
     if (gameState === 'zooming') {
-        targetX = CONST.CONFIG.WORLD_W / 2;
-        targetY = CONST.CONFIG.WORLD_H / 2;
+        // Progreso del zoom de 0.1 a 0.85
+        let progress = Math.min(1, Math.max(0, (currentZoom - 0.1) / (0.85 - 0.1)));
+        if (progress < 0.6) {
+            targetX = CONST.CONFIG.WORLD_W / 2;
+            targetY = CONST.CONFIG.WORLD_H / 2;
+        } else {
+            // Mezcla suave hacia el jugador en el último 40% del zoom
+            let mix = (progress - 0.6) / 0.4;
+            let smoothMix = mix * mix * (3 - 2 * mix); // Ease in-out
+            targetX = (CONST.CONFIG.WORLD_W / 2) * (1 - smoothMix) + player1.x * smoothMix;
+            targetY = (CONST.CONFIG.WORLD_H / 2) * (1 - smoothMix) + player1.y * smoothMix;
+        }
         targetRot = 0;
     } else if (gameState === 'panning' || gameState === 'menu') {
         targetX = player1.x + (gameState === 'menu' ? mouseX * 200 : 0);
@@ -272,8 +322,9 @@ function renderFrame() {
         targetRot = -player1.angle; vOffset = canvas.height * 0.3;
     }
 
-    currentCamX += (targetX - currentCamX) * 0.08;
-    currentCamY += (targetY - currentCamY) * 0.08;
+    let camLerp = (gameState === 'zooming' || gameState === 'panning') ? 0.04 : 0.08;
+    currentCamX += (targetX - currentCamX) * camLerp;
+    currentCamY += (targetY - currentCamY) * camLerp;
     currentVOffset += (vOffset - currentVOffset) * 0.05;
     let rd = targetRot - currentRotation; rd = (rd + Math.PI) % (Math.PI * 2) - Math.PI; currentRotation += rd * 0.1;
 
@@ -353,6 +404,33 @@ function checkCollisions() {
 function handleGoal(scorer) {
     if (scorer === 'blue') score.blue++; else score.orange++;
     gameState = 'goalScored';
+    
+    // Atribuir gol y asistencia
+    const teamColor = scorer === 'blue' ? '#5ad' : '#f90';
+    let scoringCar = null;
+    for (let i = touchHistory.length - 1; i >= 0; i--) {
+        if (touchHistory[i].car.color === teamColor) {
+            scoringCar = touchHistory[i].car;
+            break;
+        }
+    }
+    
+    if (scoringCar) {
+        scoringCar.goals++;
+        scoringCar.score += 100;
+        let assistCar = null;
+        for (let i = touchHistory.length - 1; i >= 0; i--) {
+            if (touchHistory[i].car.color === teamColor && touchHistory[i].car !== scoringCar) {
+                assistCar = touchHistory[i].car;
+                break;
+            }
+        }
+        if (assistCar) {
+            assistCar.assists++;
+            assistCar.score += 50;
+        }
+    }
+
     playSound('goal');
     ball.isFireball = true; ball.fireballTimer = 180; ball.vx = 0; ball.vy = 0;
     spawnGoalEffects(ball.x, ball.y);
@@ -368,9 +446,9 @@ function spawnGoalEffects(x, y) {
 
 function updateUI(dt) {
     if (gameState === 'zooming') {
-        // Factor de 0.012 para una duración de unos 3 segundos
-        currentZoom += (targetZoom - currentZoom) * 0.012;
-        if (Math.abs(targetZoom - currentZoom) < 0.005) {
+        // Factor de 0.006 para una duración algo más ágil pero fluida
+        currentZoom += (targetZoom - currentZoom) * 0.006;
+        if (Math.abs(targetZoom - currentZoom) < 0.001) {
             currentZoom = targetZoom;
             gameState = 'panning';
         }
@@ -379,12 +457,18 @@ function updateUI(dt) {
         const dx = currentCamX - player1.x;
         const dy = currentCamY - player1.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        // Cuando la cámara esté cerca del jugador, empezamos la cuenta atrás
-        if (dist < 50) {
+        // Umbral reducido para un encuadre perfecto antes de empezar
+        if (dist < 10) {
             resetAfterGoal(); // Esto pone gameState = 'countdown'
         }
     }
-    if (gameState === 'playing') { gameTime -= dt; if (gameTime < 0) { gameTime = 0; gameState = 'gameOver'; } }
+    if (gameState === 'playing') { 
+        gameTime -= dt; 
+        if (gameTime <= 0) { 
+            gameTime = 0; 
+            showGameOver(); 
+        } 
+    }
     if (gameState === 'countdown') {
         countdownTimer -= dt;
         if (countdownTimer <= 0) {
@@ -408,7 +492,37 @@ function resetAfterGoal() {
     skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
     countdownTimer = 3; gameState = 'countdown';
     if (countdownEl) countdownEl.style.display = 'block';
+    if (gameOverOverlay) gameOverOverlay.style.display = 'none';
     playSound('countdown');
+}
+
+function showGameOver() {
+    gameState = 'gameOver';
+    if (gameOverOverlay) {
+        gameOverOverlay.style.display = 'flex';
+        
+        if (finalScoreBlue) finalScoreBlue.innerText = score.blue;
+        if (finalScoreOrange) finalScoreOrange.innerText = score.orange;
+
+        let winnerText = "¡EMPATE!";
+        let winnerColor = "#fff";
+
+        if (score.blue > score.orange) {
+            winnerText = "GANADOR: EQUIPO AZUL";
+            winnerColor = "#5ad";
+        } else if (score.orange > score.blue) {
+            winnerText = "GANADOR: EQUIPO NARANJA";
+            winnerColor = "#f90";
+        }
+
+        if (gameOverWinner) {
+            gameOverWinner.innerText = winnerText;
+            gameOverWinner.style.color = winnerColor;
+            gameOverWinner.style.textShadow = `0 0 15px ${winnerColor}`;
+        }
+        
+        playSound('goal'); // Reutilizamos el sonido de gol para el final
+    }
 }
 
 function drawAll() {
@@ -502,6 +616,12 @@ async function transitionToPhase(newPhase) {
                 mainMenuEl.style.display = 'flex';
                 // La música comienza AQUÍ
                 initAudio(player1, allCars);
+
+                // CROSSFADE A VÍDEO ANIMADO
+                setTimeout(() => {
+                    const videoBg = document.getElementById('menu-video-bg');
+                    if (videoBg) videoBg.style.opacity = '1';
+                }, 2000);
             }
             showMenuScreen('initial');
         }, 1500);
@@ -691,56 +811,86 @@ async function finalizeStartGame() {
     if (trans) trans.classList.add('active');
     if (setupOverlay) setupOverlay.style.display = 'none';
 
-    // Simulación de barra de carga neón
-    if (fill) {
-        fill.style.width = '0%';
-        setTimeout(() => fill.style.width = '25%', 100);
-        setTimeout(() => fill.style.width = '65%', 500);
-        setTimeout(() => fill.style.width = '100%', 1200);
-    }
+    // Función para actualizar la barra visualmente
+    const updateBar = (p) => { if (fill) fill.style.width = p + '%'; };
+    updateBar(10);
 
-    // Aplicar personalización a los coches
+    // Aplicar personalización a los coches (referencias de textura)
     if (player1) player1.imgUrl = selectedCarP1;
     if (player1_teammate) player1_teammate.imgUrl = selectedCarP1;
     if (player2) player2.imgUrl = selectedCarP2;
     if (player2_teammate) player2_teammate.imgUrl = selectedCarP2;
 
     try {
+        // 1. Cargar el JSON del mapa seleccionado
         const resp = await fetch(`maps/${selectedMap}.json?t=${Date.now()}`);
         if (resp.ok) {
             const mapData = await resp.json();
             applyMapConfig(mapData);
         }
-    } catch (e) { console.warn("Usando valores por defecto"); }
+        updateBar(40);
 
-    setTimeout(async () => {
-        // --- PRE-CARGA DE TEXTURAS ANTES DE MOSTRAR ---
-        // Esto evita el frame verde/negro vacío al inicio
-        const preloadBG = new Image();
-        preloadBG.src = CONST.CONFIG.BG_IMG_PATH;
-        
-        const waitForLoad = () => new Promise(res => {
-            if (preloadBG.complete) res();
-            else { preloadBG.onload = res; setTimeout(res, 1000); } // Max 1s de espera
+        // 2. Pre-carga y DECODIFICACIÓN de texturas
+        // Esto es vital para evitar los microcortes. El navegador decodifica las imágenes base64
+        // antes de que el motor de renderizado las necesite por primera vez.
+        const assets = [
+            CONST.CONFIG.BG_IMG_PATH,
+            CONST.CONFIG.GOAL_TOP.img,
+            CONST.CONFIG.GOAL_BOTTOM.img
+        ].filter(src => src && src.length > 0);
+
+        const preloadTask = assets.map(src => {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = async () => {
+                    if (img.decode) {
+                        try { await img.decode(); } catch(e) { console.warn("Error decoding img", src); }
+                    }
+                    resolve();
+                };
+                img.onerror = () => { console.warn("Failed to load asset", src); resolve(); };
+                img.src = src;
+            });
         });
 
-        await waitForLoad();
+        await Promise.all(preloadTask);
+        updateBar(90);
 
-        if (mainMenuEl) mainMenuEl.classList.add('hidden');
+        // 3. WARM-UP: Dibujamos el escenario una vez (invisible bajo la transición)
+        // Esto fuerza a la GPU a subir las texturas a la VRAM antes de que empiece el zoom.
+        try {
+            ctx.save();
+            ctx.globalAlpha = 0.01; // Casi invisible por si acaso
+            drawField(ctx);
+            drawGoalNets(ctx);
+            ctx.restore();
+        } catch(e) { console.warn("Warm-up render failed", e); }
+
+        // 4. Pequeño margen para que el DOM respire y el fade-out sea suave
+        setTimeout(() => {
+            updateBar(100);
+            
+            setTimeout(() => {
+                if (mainMenuEl) mainMenuEl.classList.add('hidden');
+                if (trans) trans.classList.remove('active');
+                
+                // Configurar inicio de partida
+                currentZoom = 0.1;
+                targetZoom = 0.85;
+                currentCamX = CONST.CONFIG.WORLD_W / 2;
+                currentCamY = CONST.CONFIG.WORLD_H / 2;
+                currentRotation = 0;
+
+                gameState = 'zooming';
+                applySpawns();
+            }, 500);
+        }, 300);
+
+    } catch (err) {
+        console.error("SCAPS: Error crítico durante la carga:", err);
         if (trans) trans.classList.remove('active');
-        
-        // Preparar cinemática de Zoom In (desde más lejos para ver todo el estadio)
-        currentZoom = 0.1;
-        targetZoom = 0.85;
-        
-        // Forzar posición inicial de la cámara al centro del mundo
-        currentCamX = CONST.CONFIG.WORLD_W / 2;
-        currentCamY = CONST.CONFIG.WORLD_H / 2;
-        currentRotation = 0;
-
-        gameState = 'zooming';
-        applySpawns(); // Colocar coches en su sitio antes del zoom
-    }, 1800);
+        gameState = 'menu';
+    }
 }
 
 function applyMapConfig(c) {

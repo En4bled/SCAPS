@@ -25,6 +25,7 @@ The physics module handles spatial partitioning and collision resolution. Curren
     - **Circle-Polygon**: Used for ball/car-to-wall interactions.
     - **Circle-Circle**: Used for car-to-car and car-to-ball interactions.
 - **Impulse Resolution**: Implements 1D elastic collision formulas to handle momentum transfer and restitution.
+- **Detalles Matemáticos**: Ver [ESPECIFICACIONES_FISICAS.md](./ESPECIFICACIONES_FISICAS.md) para fórmulas de colisión y sistemas de coordenadas.
 - **Z-Axis Simulation (Ramp Mechanics)**: The physics engine overrides 2D collision algorithms when the ball hits a wall, triggering an `onWallTimer`. During this state, the ball's sprite scales up (Zoom) and car-to-ball collision is temporarily suspended, simulating an aerial trajectory over the vehicles.
 
 ### 2.3. Autonomous Intelligence: Experimental V11
@@ -41,6 +42,11 @@ The AI module (`updateCarAI`) implements a hyper-optimized deterministic pursuit
 - **Vehicle Physics (`Car.js`)**: Implements traction, acceleration curves, and steering torque. Features dynamic `speedFactor` steering which adjusts maneuverability based on velocity.
 - **Ball Dynamics (`Ball.js`)**: Handles friction, terminal velocity, and visual Z-axis simulation (scaling) for "lift" effects.
 
+### 2.6. Match Lifecycle & UI (`js/main.js` / `index.html`)
+- **Cinematic Intro**: Hybrid Lerp system that blends map centering with player tracking during a 3-second zoom-in phase.
+- **Asset Preloading**: Real-time asset decoding (`img.decode()`) during the "Loading Stadium" phase to eliminate frame-rate stutters.
+- **Game Over System**: Dynamic end-game screen with winner detection, rematch logic, and session state persistence.
+
 ---
 
 ## 3. Map Data and Rendering
@@ -53,4 +59,4 @@ Arenas are defined as JSON objects containing:
 The system includes a dedicated Map Editor (`editor.html`) that allows for visual manipulation of JSON arena data, including grid-snapping for coordinate precision and real-time visualization of goal triggers.
 
 ---
-*Documentation updated: May 2026.*
+*Documentation updated: May 2026 (Ref: V11 Physics & UI Update).*

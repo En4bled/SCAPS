@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-05-11 - *Ciclo de Vida y Optimización UI*
+### Added
+- **Sistema de Game Over Dinámico**: 
+    - Nueva interfaz premium con detección de ganador, marcador final y botones de Revancha/Selector de Modo/Salida.
+- **Documentación Técnica Extendida**:
+    - Creación de `ESPECIFICACIONES_FISICAS.md` con detalles matemáticos sobre SAT, impulsos y lógica pseudo-3D.
+
+### Changed
+- **Experiencia Cinemática de Inicio**:
+    - Refactorización del Zoom Inicial a un sistema híbrido con mezcla (mix) suave hacia el jugador.
+    - Ajuste de velocidad cinematográfica para una entrada más fluida y profesional.
+- **Optimización de Rendimiento (Anti-Stutter)**:
+    - Implementación de pre-carga real con `img.decode()` durante la pantalla de carga.
+    - "Warm-up Render" para forzar la subida de texturas a la GPU (VRAM) antes del inicio del partido.
+- **Tiempo de Juego**: Estandarizado a 60 segundos por sesión.
+
+### Fixed
+- **Atribución de Goles y Asistencias**: Corregida la lógica para asignar puntos a los coches basándose en el historial de toques.
+- **Estabilidad de Código**: Corregido error de sintaxis en `updateUI` y depuración de listeners redundantes.
+
 ## [1.1.0] - 2026-05-11 - *Experimental Physics & AI Mastery*
 ### Added
 - **AI Engine V11 (Fix Matemático Definitivo)**:
