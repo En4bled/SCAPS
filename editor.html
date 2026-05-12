@@ -273,7 +273,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
 <div id="sidebar">
   <h1 style="line-height: 1.0; margin-top: 2px; text-align: center; margin-bottom: 5px;">
-    <img src="res/LOGO.png" alt="SCAPS" style="height: 70px; width: auto; margin-bottom: 0;">
+    <img src="recursos/LOGO.png" alt="SCAPS" style="height: 70px; width: auto; margin-bottom: 0;">
     <br>
     <span style="font-size: 0.5em; color: #5ad; letter-spacing: 4px; -webkit-text-fill-color: #5ad; font-weight: 800; text-transform: uppercase;">EDITOR DE MAPAS</span>
   </h1>
@@ -292,7 +292,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
         <div class="row">
             <label>Imagen Estadio</label>
             <div class="file-input-wrapper">
-                <input type="text" id="bgUrl" value="" placeholder="res/Estadio1.png" style="flex:1">
+                <input type="text" id="bgUrl" value="" placeholder="recursos/Estadio1.png" style="flex:1">
                 <input type="file" id="bgFile" accept="image/*" style="display:none">
                 <button onclick="document.getElementById('bgFile').click()" style="width:40px">📁</button>
             </div>
@@ -494,7 +494,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 import * as CONST from './js/core/constants.js';
 
 const DEFAULTS = {
-    bgUrl: 'res/Estadio1.png', bgScale: 1.638, bgOX: 0, bgOY: 0,
+    bgUrl: 'recursos/Estadio1.png', bgScale: 1.638, bgOX: 0, bgOY: 0,
     worldW: 4000, worldH: 3000,
     poly: [
         {"x": 899, "y": 586}, {"x": 3212, "y": 593}, {"x": 3363, "y": 740}, {"x": 3367, "y": 1242},
@@ -562,7 +562,7 @@ const wrap = document.getElementById('canvas-wrap');
 const infoBar = document.getElementById('info-bar');
 const overlay = document.getElementById('editor-overlay');
 const bgImg = new Image();
-const ballImg = new Image(); ballImg.src = 'res/Ball1.png';
+const ballImg = new Image(); ballImg.src = 'recursos/Ball1.png';
 const netImgT = new Image();
 const netImgB = new Image();
 
@@ -1068,7 +1068,7 @@ async function saveCurrentMap() {
 
     b.innerHTML = '⏳...'; b.disabled = true;
     try { 
-        const res = await (await fetch('save_map.php', { 
+        const res = await (await fetch('php/save_map.php', { 
             method: 'POST', headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ name: n, config: configToSave }) 
         })).json(); 
@@ -1096,7 +1096,7 @@ document.getElementById('btn-reset-all').onclick = () => window.resetAll();
 window.loadMapList = async () => {
     const list = document.getElementById('map-list');
     try {
-        const maps = await (await fetch('get_maps.php')).json();
+        const maps = await (await fetch('php/get_maps.php')).json();
         list.innerHTML = '';
         for (const m of maps) {
             try {
@@ -1184,7 +1184,7 @@ window.loadMap = async (m) => {
 
 window.deleteMap = async (m) => {
     if (!confirm(`¿Estás seguro de eliminar el mapa "${m}"? Esta acción no se puede deshacer.`)) return;
-    const res = await (await fetch('delete_map.php', { method: 'POST', body: JSON.stringify({ name: m }) })).json();
+    const res = await (await fetch('php/delete_map.php', { method: 'POST', body: JSON.stringify({ name: m }) })).json();
     if (res.status === 'success') loadMapList(); else alert(res.message);
 };
 
@@ -1192,7 +1192,7 @@ window.duplicateMap = async (m) => {
     const newName = prompt(`Nombre para el duplicado de "${m}":`, m + "_copy");
     if (!newName) return;
     const config = await (await fetch(`maps/${m}.json`)).json();
-    const res = await (await fetch('save_map.php', { 
+    const res = await (await fetch('php/save_map.php', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ name: newName, config: config }) 
@@ -1203,7 +1203,7 @@ window.duplicateMap = async (m) => {
 window.renameMap = async (m) => {
     const newName = prompt(`Nuevo nombre para "${m}":`, m);
     if (!newName || newName === m) return;
-    const res = await (await fetch('rename_map.php', { 
+    const res = await (await fetch('php/rename_map.php', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ oldName: m, newName: newName }) 

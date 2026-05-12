@@ -10,9 +10,20 @@ export class Ball {
         this.rotationAngle = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.img = null;
         if (imgPath) {
+            this.setAppearance(imgPath);
+        }
+    }
+
+    setAppearance(imgPath) {
+        if (!this.img || (typeof imgPath === 'string' && !this.img.src.includes(imgPath))) {
             this.img = new Image();
             this.img.src = imgPath;
         }
+    }
+
+    // Alias para compatibilidad
+    set imgUrl(url) {
+        this.setAppearance(url);
     }
 
     spawnFireParticles(explosionParticles) {

@@ -8,18 +8,111 @@ import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
-import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
+import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
+
+// CONFIGURACIÓN DE USUARIO (USER.CONFIG)
+const USER_CONFIG = {
+    playerName: 'PILOTO_01',
+    playerAvatar: 'recursos/Car1.png',
+    playerCar: 'recursos/Car1.png',
+    playerCarHue: 0,
+    playerCarSaturate: 100,
+    playerBall: 'recursos/Ball1.png',
+    playerAvatarBg: '#222222',
+    playerBoost: 'classic',
+    playerExplosion: 'classic',
+    musicVolume: 50,
+    sfxVolume: 80,
+    bannerPos: { left: 220, bottom: 100 }
+};
+
+function loadUserConfig() {
+    const saved = localStorage.getItem('SCAPS_USER_CONFIG');
+    if (saved) {
+        try { Object.assign(USER_CONFIG, JSON.parse(saved)); } catch(e) {}
+    }
+    setMusicVolume(USER_CONFIG.musicVolume / 100);
+    setSFXVolume(USER_CONFIG.sfxVolume / 100);
+    applyBannerPosition();
+    
+    // Sincronizar UI inicial
+    const inputName = document.getElementById('input-player-name');
+    if (inputName) inputName.value = USER_CONFIG.playerName;
+    const inputAvatarBg = document.getElementById('input-avatar-bg');
+    if (inputAvatarBg) inputAvatarBg.value = USER_CONFIG.playerAvatarBg;
+    selectedCarP1 = USER_CONFIG.playerCar;
+    updatePlayerBanner();
+}
+
+function updatePlayerBanner() {
+    const banner = document.getElementById('player-banner');
+    if (!banner) return;
+    
+    const avatarImg = document.getElementById('player-banner-avatar');
+    const avatarFrame = document.getElementById('player-banner-avatar-frame');
+    const nameSpan = document.getElementById('player-banner-name');
+
+    if (avatarImg) avatarImg.src = USER_CONFIG.playerAvatar;
+    if (avatarFrame) avatarFrame.style.background = USER_CONFIG.playerAvatarBg;
+    if (nameSpan) nameSpan.innerText = USER_CONFIG.playerName;
+    
+    // Solo se muestra si estamos en el menú principal inicial
+    const isMainInitial = (menuInitial && menuInitial.style.display !== 'none');
+    banner.style.display = (gameState === 'menu' && isMainInitial) ? 'flex' : 'none';
+    banner.style.opacity = (gameState === 'menu' && isMainInitial) ? '1' : '0';
+}
+
+function saveUserConfig() {
+    localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
+}
+
+
+function applyBannerPosition() {
+    const banner = document.getElementById('song-notification');
+    if (banner) {
+        banner.style.left = USER_CONFIG.bannerPos.left + 'px';
+        banner.style.bottom = USER_CONFIG.bannerPos.bottom + 'px';
+    }
+}
+
+function setupDraggableBanner() {
+    const banner = document.getElementById('song-notification');
+    if (!banner) return;
+    let isDragging = false, startX, startY;
+    banner.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - banner.offsetLeft;
+        startY = e.clientY - (window.innerHeight - banner.offsetTop - banner.offsetHeight);
+        banner.style.transition = 'none';
+        e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        USER_CONFIG.bannerPos.left = e.clientX - startX;
+        USER_CONFIG.bannerPos.bottom = Math.max(0, window.innerHeight - e.clientY - 25);
+        applyBannerPosition();
+    });
+    window.addEventListener('mouseup', () => {
+        if (isDragging) { isDragging = false; banner.style.transition = 'opacity 1s ease-in-out, transform 0.2s'; saveUserConfig(); }
+    });
+}
 
 let canvas, ctx;
 let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
-let selectedMap = '', selectedMode = '';
 let gameOverOverlay, gameOverWinner, finalScoreBlue, finalScoreOrange;
-let selectedCarP1 = 'res/Car1.png', selectedCarP2 = 'res/Car2.png';
-let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1;
-const MAPS_PER_PAGE = 3, CARS_PER_PAGE = 8;
+let selectedMap = 'URBAN'; 
+let selectedMode = null; 
+let selectedCarP1 = 'recursos/car1.png';
+let selectedCarP2 = 'recursos/car2.png';
+let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1, currentBallPage = 1;
+let currentAvatarPage = 1;
+const CARS_PER_PAGE = 12;
+const AVATARS_PER_PAGE = 9;
+const MAPS_PER_PAGE = 1;
+const BALLS_PER_PAGE = 10;
 let currentZoom = 1.0, targetZoom = 0.85;
 let currentVOffset = 0;
 
@@ -49,7 +142,7 @@ async function init() {
     console.log("SCAPS: Inicializando motor...");
     // Cargar mapa PRINCIPAL por defecto al inicio
     try {
-        const defaultMapResp = await fetch('maps/Principal.json?t=' + Date.now());
+        const defaultMapResp = await fetch('maps/URBAN.json?t=' + Date.now());
         if (defaultMapResp.ok) {
             const defaultMapData = await defaultMapResp.json();
             applyMapConfig(defaultMapData);
@@ -74,6 +167,19 @@ async function init() {
         btnCustom = getEl('btn-custom');
         menuInitial = getEl('menu-initial');
         menuCredits = getEl('menu-credits');
+        
+        // Listener Modal Alerta
+        const btnModalOk = document.getElementById('btn-modal-alert-ok');
+        if (btnModalOk) {
+            btnModalOk.onclick = () => {
+                const overlay = document.getElementById('modal-alert-overlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    setTimeout(() => overlay.style.display = 'none', 300);
+                    playSound('menu_click');
+                }
+            };
+        }
         menuCustom = getEl('menu-custom');
         menuSettings = getEl('menu-settings');
         setupOverlay = getEl('match-setup-overlay');
@@ -104,10 +210,10 @@ async function init() {
         });
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
-        player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'res/Car1.png');
-        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'res/Car2.png');
-        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'res/Car3.png');
-        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'res/Car4.png');
+        player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'recursos/Car1.png');
+        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/Car2.png');
+        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/Car3.png');
+        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'recursos/Car4.png');
 
         // Inicializar objetos de teclas para los bots y asignar roles
         player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
@@ -116,20 +222,114 @@ async function init() {
 
         [player1_teammate, player2, player2_teammate].forEach(bot => { bot.aiKeys = {}; });
         allCars = [player1, player1_teammate, player2, player2_teammate];
-        ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'res/Ball1.png');
+        ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/Ball1.png');
 
         grassDetails = createGrassDetails(1500);
         setupBoostPads();
+
+        setupCustomizationMenu();
+        loadUserConfig();
+        setupDraggableBanner();
 
         // Listeners de botones con salvaguardas
         if (btnPlay) btnPlay.onclick = () => { initAudio(player1, allCars); startGame(); };
         if (btnCustom) btnCustom.onclick = () => { showMenuScreen('custom'); };
         if (btnSettings) btnSettings.onclick = () => showMenuScreen('settings');
         if (btnCredits) btnCredits.onclick = () => showMenuScreen('credits');
+        
+        const btnMapEditor = getEl('btn-map-editor');
+        const editorOverlay = getEl('editor-confirm-overlay');
+        const btnEditorConfirm = getEl('btn-editor-confirm');
+        const btnEditorCancel = getEl('btn-editor-cancel');
+
+        if (btnMapEditor && editorOverlay) {
+            btnMapEditor.onmouseover = () => playSound('menu_hover');
+            btnMapEditor.onclick = () => {
+                editorOverlay.style.display = 'flex';
+                playSound('menu_click');
+            };
+        }
+
+        if (btnEditorConfirm) {
+            btnEditorConfirm.onclick = () => {
+                window.open('editor.html', '_blank');
+                if (editorOverlay) editorOverlay.style.display = 'none';
+                playSound('menu_click');
+            };
+        }
+
+        if (btnEditorCancel) {
+            btnEditorCancel.onclick = () => {
+                if (editorOverlay) editorOverlay.style.display = 'none';
+                playSound('menu_click');
+            };
+        }
+
+        // Sliders de Volumen
+        const sliderMusic = getEl('slider-settings-vol');
+        if (sliderMusic) {
+            sliderMusic.value = USER_CONFIG.musicVolume;
+            sliderMusic.oninput = (e) => {
+                const vol = parseInt(e.target.value);
+                USER_CONFIG.musicVolume = vol;
+                setMusicVolume(vol / 100);
+                saveUserConfig();
+            };
+        }
+
+        const sliderSFX = getEl('slider-settings-sfx');
+        if (sliderSFX) {
+            sliderSFX.value = USER_CONFIG.sfxVolume;
+            sliderSFX.oninput = (e) => {
+                const vol = parseInt(e.target.value);
+                USER_CONFIG.sfxVolume = vol;
+                setSFXVolume(vol / 100);
+                saveUserConfig();
+            };
+        }
+
+
+        // Menú de Pausa
+        const btnPauseContinue = getEl('btn-pause-continue');
+        const btnPauseExit = getEl('btn-pause-exit');
+        if (btnPauseContinue) btnPauseContinue.onclick = () => togglePause();
+        if (btnPauseExit) btnPauseExit.onclick = () => {
+            isPaused = false;
+            const pm = getEl('pause-menu');
+            if (pm) pm.style.display = 'none';
+            gameState = 'menu';
+            showMenuScreen('initial');
+            if (mainMenuEl) {
+                mainMenuEl.classList.remove('hidden');
+                mainMenuEl.style.display = 'flex';
+            }
+            playSound('menu_click');
+        };
 
         ['btn-custom-back', 'btn-settings-back', 'btn-credits-back'].forEach(id => {
             const el = getEl(id); if (el) el.onclick = () => showMenuScreen('initial');
         });
+
+        // Lógica de Salir
+        const btnExit = getEl('btn-exit');
+        const exitOverlay = getEl('exit-confirm-overlay');
+        const btnExitConfirm = getEl('btn-exit-confirm');
+        const btnExitCancel = getEl('btn-exit-cancel');
+
+        if (btnExit) btnExit.onclick = () => {
+            if (exitOverlay) exitOverlay.style.display = 'flex';
+            playSound('menu_click');
+        };
+
+        if (btnExitCancel) btnExitCancel.onclick = () => {
+            if (exitOverlay) exitOverlay.style.display = 'none';
+            playSound('menu_click');
+        };
+
+        if (btnExitConfirm) btnExitConfirm.onclick = () => {
+            playSound('menu_click');
+            window.location.reload();
+        };
 
         // Listeners del selector
         if (btnStartGame) {
@@ -235,10 +435,6 @@ async function init() {
                 return;
             }
 
-            if ((e.code === 'Backquote' || e.key === 'º')) {
-                const p = getEl('physics-editor-panel');
-                if (p) p.classList.toggle('active');
-            }
             if (e.code === 'Escape' && gameState !== 'menu') { togglePause(); }
         });
 
@@ -637,99 +833,430 @@ async function transitionToPhase(newPhase) {
         }, 1500);
     }
 }
+function setupCustomizationMenu() {
+    // Manejo de Pestañas
+    const tabBtns = document.querySelectorAll('.custom-tab-btn');
+    tabBtns.forEach(btn => {
+        btn.onclick = () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const target = btn.dataset.tab;
+            document.querySelectorAll('.custom-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById('pane-' + target).classList.add('active');
+            playSound('menu_click');
+            
+            if (target === 'perfil') renderAvatars();
+            if (target === 'vehiculo') renderCarSelection();
+            if (target === 'balon') renderBallSelection();
+            if (target === 'boost') { renderBoostSelection(); startCustomPreview('boost'); }
+            if (target === 'explosion') { renderExplosionSelection(); startCustomPreview('explosion'); }
+        };
+    });
+
+    // Inputs de Perfil
+    const inputName = document.getElementById('input-player-name');
+    if (inputName) {
+        inputName.oninput = (e) => {
+            USER_CONFIG.playerName = e.target.value;
+            saveUserConfig();
+            updatePlayerBanner();
+        };
+    }
+
+    // Sliders de Tinte
+    const hueSlider = document.getElementById('slider-car-hue');
+    const satSlider = document.getElementById('slider-car-saturate');
+    const previewImg = document.getElementById('car-preview-img');
+
+    const updatePreview = () => {
+        USER_CONFIG.playerCarHue = hueSlider.value;
+        USER_CONFIG.playerCarSaturate = satSlider.value;
+        if (previewImg) {
+            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+        }
+    };
+
+    if (hueSlider) {
+        hueSlider.oninput = updatePreview;
+        hueSlider.onchange = saveUserConfig;
+    }
+    if (satSlider) {
+        satSlider.oninput = updatePreview;
+        satSlider.onchange = saveUserConfig;
+    }
+
+    const inputAvatarBg = document.getElementById('input-avatar-bg');
+    if (inputAvatarBg) {
+        inputAvatarBg.oninput = (e) => {
+            USER_CONFIG.playerAvatarBg = e.target.value;
+            renderAvatars();
+            updatePlayerBanner();
+        };
+        inputAvatarBg.onchange = saveUserConfig;
+    }
+
+    // Botones de navegación de coches
+    const btnPrev = document.getElementById('btn-car-prev');
+    const btnNext = document.getElementById('btn-car-next');
+    if (btnPrev) btnPrev.onclick = () => { if (currentCarPageP1 > 1) { currentCarPageP1--; renderCarSelection(); playSound('menu_click'); } };
+    if (btnNext) btnNext.onclick = () => { currentCarPageP1++; renderCarSelection(); playSound('menu_click'); };
+
+    // Botones de navegación de avatares
+    const btnAvPrev = document.getElementById('btn-avatar-prev');
+    const btnAvNext = document.getElementById('btn-avatar-next');
+    if (btnAvPrev) btnAvPrev.onclick = () => { if (currentAvatarPage > 1) { currentAvatarPage--; renderAvatars(); playSound('menu_click'); } };
+    if (btnAvNext) btnAvNext.onclick = () => { currentAvatarPage++; renderAvatars(); playSound('menu_click'); };
+
+    // Reset de Tinte
+    const btnResetHue = document.getElementById('reset-car-hue');
+    const btnResetSat = document.getElementById('reset-car-saturate');
+    if (btnResetHue) btnResetHue.onclick = () => { 
+        const hueSlider = document.getElementById('slider-car-hue');
+        if (hueSlider) { hueSlider.value = 0; USER_CONFIG.playerCarHue = 0; updatePreview(); saveUserConfig(); playSound('menu_click'); }
+    };
+    if (btnResetSat) btnResetSat.onclick = () => { 
+        const satSlider = document.getElementById('slider-car-saturate');
+        if (satSlider) { satSlider.value = 100; USER_CONFIG.playerCarSaturate = 100; updatePreview(); saveUserConfig(); playSound('menu_click'); }
+    };
+
+    // Botones de navegación de balones
+    const btnBallPrev = document.getElementById('btn-ball-prev');
+    const btnBallNext = document.getElementById('btn-ball-next');
+    if (btnBallPrev) btnBallPrev.onclick = () => { if (currentBallPage > 1) { currentBallPage--; renderBallSelection(); playSound('menu_click'); } };
+    if (btnBallNext) btnBallNext.onclick = () => { if (currentBallPage < 4) { currentBallPage++; renderBallSelection(); playSound('menu_click'); } };
+}
+
+function renderAvatars() {
+    const container = document.getElementById('avatar-list');
+    const pageInfo = document.getElementById('avatar-page-info');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    // Generar lista de 100 avatares
+    const totalAvatars = 100;
+    const avatars = [];
+    for(let i=1; i<=totalAvatars; i++) {
+        avatars.push(`recursos/avatar/avatar (${i}).png`);
+    }
+
+    const totalPages = Math.ceil(totalAvatars / AVATARS_PER_PAGE);
+    if (currentAvatarPage > totalPages) currentAvatarPage = totalPages;
+    if (currentAvatarPage < 1) currentAvatarPage = 1;
+
+    if (pageInfo) pageInfo.innerText = `${currentAvatarPage} / ${totalPages}`;
+
+    const startIdx = (currentAvatarPage - 1) * AVATARS_PER_PAGE;
+    const pageItems = avatars.slice(startIdx, startIdx + AVATARS_PER_PAGE);
+
+    pageItems.forEach(url => {
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerAvatar === url ? ' selected' : '');
+        // Aplicamos fondo personalizado
+        item.style.background = USER_CONFIG.playerAvatarBg;
+        item.style.borderRadius = '4px';
+        
+        item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
+        item.onclick = () => {
+            USER_CONFIG.playerAvatar = url;
+            saveUserConfig();
+            renderAvatars();
+            updatePlayerBanner();
+            playSound('menu_click');
+        };
+        container.appendChild(item);
+    });
+}
+
+function renderCarSelection() {
+    const list = document.getElementById('custom-car-list');
+    const previewImg = document.getElementById('car-preview-img');
+    if (!list) return;
+
+    const carImages = [];
+    for(let i=1; i<=10; i++) carImages.push(`recursos/Car${i}.png`);
+
+    list.innerHTML = '';
+    
+    // Renderizar los 10 coches reales
+    carImages.forEach(img => {
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerCar === img ? ' selected' : '');
+        item.innerHTML = `<img src="${img}">`;
+        item.onclick = () => {
+            USER_CONFIG.playerCar = img;
+            selectedCarP1 = img;
+            if (previewImg) previewImg.src = img;
+            saveUserConfig();
+            renderCarSelection();
+            playSound('menu_click');
+        };
+        list.appendChild(item);
+    });
+
+    // Añadir botón "PROXIMAMENTE" (Ocupando 2 huecos)
+    const nextItem = document.createElement('div');
+    nextItem.className = 'selectable-item';
+    nextItem.style.background = 'rgba(0,0,0,0.3)';
+    nextItem.style.borderStyle = 'dashed';
+    nextItem.style.opacity = '0.5';
+    nextItem.style.gridColumn = 'span 2'; // Ocupa 2 columnas
+    nextItem.innerHTML = `<span style="font-size: 11px; font-weight: bold; color: #5ad; text-align: center; padding: 5px; letter-spacing: 2px;">PROXIMAMENTE</span>`;
+    list.appendChild(nextItem);
+
+    // Sincronizar sliders
+    const hueSlider = document.getElementById('slider-car-hue');
+    const satSlider = document.getElementById('slider-car-saturate');
+    if (hueSlider) hueSlider.value = USER_CONFIG.playerCarHue;
+    if (satSlider) satSlider.value = USER_CONFIG.playerCarSaturate;
+    if (previewImg) {
+        previewImg.src = USER_CONFIG.playerCar;
+        previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+    }
+}
+
+function renderBallSelection() {
+    const container = document.getElementById('ball-list');
+    const pageInfo = document.getElementById('ball-page-info');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const totalBalls = 40;
+    const balls = [];
+    for(let i=1; i<=totalBalls; i++) {
+        balls.push(`recursos/balls/ball_${i}.png`);
+    }
+
+    const totalPages = Math.ceil(totalBalls / BALLS_PER_PAGE);
+    if (currentBallPage > totalPages) currentBallPage = totalPages;
+    if (currentBallPage < 1) currentBallPage = 1;
+
+    if (pageInfo) pageInfo.innerText = `${currentBallPage} / ${totalPages}`;
+
+    const startIdx = (currentBallPage - 1) * BALLS_PER_PAGE;
+    const pageItems = balls.slice(startIdx, startIdx + BALLS_PER_PAGE);
+
+    pageItems.forEach(url => {
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerBall === url ? ' selected' : '');
+        item.innerHTML = `<img src="${url}" style="width: 75%; height: 75%; object-fit: contain;">`;
+        item.onclick = () => {
+            USER_CONFIG.playerBall = url;
+            saveUserConfig();
+            renderBallSelection();
+            playSound('menu_click');
+        };
+        container.appendChild(item);
+    });
+}
+
+const BOOST_DEFS = {
+    'classic': { name: 'ESTÁNDAR', color: '#5ad', particles: ['#5ad', '#fff'] },
+    'fire': { name: 'FUEGO INFERNAL', color: '#f50', particles: ['#f50', '#f90', '#ff0'] },
+    'neon': { name: 'NEÓN VAPOR', color: '#f0f', particles: ['#f0f', '#0ff'] },
+    'plasma': { name: 'PLASMA CORE', color: '#a0f', particles: ['#a0f', '#fff'] }
+};
+
+const EXPLOSION_DEFS = {
+    'classic': { name: 'CLÁSICA', color: '#5ad' },
+    'nuclear': { name: 'NUCLEAR', color: '#fff' },
+    'confetti': { name: 'FIESTA', color: '#f90' }
+};
+
+function renderBoostSelection() {
+    const list = document.getElementById('custom-boost-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    Object.keys(BOOST_DEFS).forEach(key => {
+        const def = BOOST_DEFS[key];
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
+        item.style.flexDirection = 'column';
+        item.innerHTML = `
+            <div style="font-size: 24px; margin-bottom: 5px;">🔥</div>
+            <div style="font-size: 10px; color: ${def.color}; font-weight: bold;">${def.name}</div>
+        `;
+        item.onclick = () => {
+            USER_CONFIG.playerBoost = key;
+            const tag = document.getElementById('boost-name-tag');
+            if (tag) tag.innerText = def.name;
+            saveUserConfig();
+            renderBoostSelection();
+            playSound('menu_click');
+        };
+        list.appendChild(item);
+    });
+}
+
+function renderExplosionSelection() {
+    const list = document.getElementById('custom-explosion-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    Object.keys(EXPLOSION_DEFS).forEach(key => {
+        const def = EXPLOSION_DEFS[key];
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
+        item.style.flexDirection = 'column';
+        item.innerHTML = `
+            <div style="font-size: 24px; margin-bottom: 5px;">💥</div>
+            <div style="font-size: 10px; color: ${def.color}; font-weight: bold;">${def.name}</div>
+        `;
+        item.onclick = () => {
+            USER_CONFIG.playerExplosion = key;
+            const tag = document.getElementById('explosion-name-tag');
+            if (tag) tag.innerText = def.name;
+            saveUserConfig();
+            renderExplosionSelection();
+            playSound('menu_click');
+            // Forzar una explosión de prueba
+            if (currentPreviewMode === 'explosion') triggerPreviewExplosion();
+        };
+        list.appendChild(item);
+    });
+}
+
+let customPreviewActive = false;
+let currentPreviewMode = null; // 'boost' o 'explosion'
+let previewParticles = [];
+let previewTimer = 0;
+
+function startCustomPreview(mode) {
+    currentPreviewMode = mode;
+    previewParticles = [];
+    if (customPreviewActive) return;
+    
+    customPreviewActive = true;
+    requestAnimationFrame(updateCustomPreview);
+}
+
+function updateCustomPreview() {
+    if (!customPreviewActive || gameState !== 'menu') {
+        customPreviewActive = false;
+        return;
+    }
+
+    const canvas = document.getElementById(currentPreviewMode === 'boost' ? 'canvas-boost-preview' : 'canvas-explosion-preview');
+    if (!canvas) {
+        customPreviewActive = false;
+        return;
+    }
+
+    const pctx = canvas.getContext('2d');
+    pctx.fillStyle = '#000';
+    pctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (currentPreviewMode === 'boost') {
+        // Generar partículas de boost
+        const def = BOOST_DEFS[USER_CONFIG.playerBoost] || BOOST_DEFS.classic;
+        if (Math.random() > 0.3) {
+            previewParticles.push({
+                x: 50, y: 75,
+                vx: (Math.random() - 0.5) * 2 - 5,
+                vy: (Math.random() - 0.5) * 2,
+                life: 1.0,
+                color: def.particles[Math.floor(Math.random() * def.particles.length)],
+                size: Math.random() * 4 + 2
+            });
+        }
+    } else {
+        // Lógica de explosión: Disparar periódicamente
+        previewTimer++;
+        if (previewTimer > 100) {
+            triggerPreviewExplosion();
+            previewTimer = 0;
+        }
+    }
+
+    // Actualizar y dibujar partículas
+    for (let i = previewParticles.length - 1; i >= 0; i--) {
+        const p = previewParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+        
+        if (p.life <= 0) {
+            previewParticles.splice(i, 1);
+            continue;
+        }
+
+        pctx.globalAlpha = p.life;
+        pctx.fillStyle = p.color;
+        pctx.beginPath();
+        pctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        pctx.fill();
+    }
+    pctx.globalAlpha = 1.0;
+
+    requestAnimationFrame(updateCustomPreview);
+}
+
+function triggerPreviewExplosion() {
+    const canvas = document.getElementById('canvas-explosion-preview');
+    if (!canvas) return;
+    
+    const def = EXPLOSION_DEFS[USER_CONFIG.playerExplosion] || EXPLOSION_DEFS.classic;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    if (USER_CONFIG.playerExplosion === 'confetti') {
+        for(let i=0; i<30; i++) {
+            previewParticles.push({
+                x: centerX, y: centerY,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 1.0,
+                color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                size: Math.random() * 5 + 2
+            });
+        }
+    } else if (USER_CONFIG.playerExplosion === 'nuclear') {
+        for(let i=0; i<60; i++) {
+            previewParticles.push({
+                x: centerX, y: centerY,
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 0.5) * 15,
+                life: 1.5,
+                color: Math.random() > 0.5 ? '#fff' : '#ff0',
+                size: Math.random() * 8 + 4
+            });
+        }
+    } else {
+        // Clásica
+        for(let i=0; i<25; i++) {
+            previewParticles.push({
+                x: centerX, y: centerY,
+                vx: (Math.random() - 0.5) * 8,
+                vy: (Math.random() - 0.5) * 8,
+                life: 1.0,
+                color: def.color,
+                size: Math.random() * 4 + 2
+            });
+        }
+    }
+}
+
 function showMenuScreen(screenId) {
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
     
     const logo = document.getElementById('menu-logo');
     if (logo) logo.style.display = (screenId === 'initial') ? 'block' : 'none';
+    
+    const btnMapEditor = document.getElementById('btn-map-editor');
+    if (btnCredits) btnCredits.style.display = (screenId === 'initial') ? 'block' : 'none';
+    if (btnMapEditor) btnMapEditor.style.display = (screenId === 'initial') ? 'block' : 'none';
 
     if (screenId === 'initial' && menuInitial) menuInitial.style.display = 'flex';
     else if (screenId === 'credits' && menuCredits) menuCredits.style.display = 'flex';
     else if (screenId === 'custom' && menuCustom) {
         menuCustom.style.display = 'flex';
-        renderCarSelection();
+        // Reset a la primera pestaña
+        document.querySelector('.custom-tab-btn[data-tab="perfil"]').click();
     }
     else if (screenId === 'settings' && menuSettings) menuSettings.style.display = 'flex';
-}
 
-function renderCarSelection() {
-    const listP1 = document.getElementById('custom-car-p1-list');
-    const listP2 = document.getElementById('custom-car-p2-list');
-    if (!listP1 || !listP2) return;
-
-    const carImages = [
-        'res/Car1.png', 'res/Car2.png', 'res/Car3.png', 'res/Car4.png', 'res/Car5.png',
-        'res/Car6.png', 'res/Car7.png', 'res/Car8.png', 'res/Car9.png', 'res/Car10.png'
-    ];
-
-    const totalPages = Math.ceil(carImages.length / CARS_PER_PAGE);
-
-    // Actualizar Paginación P1
-    const infoP1 = document.getElementById('car-p1-page-info');
-    if (infoP1) infoP1.innerText = currentCarPageP1;
-    const btnP1Prev = document.getElementById('btn-car-p1-prev');
-    const btnP1Next = document.getElementById('btn-car-p1-next');
-    if (btnP1Prev) { btnP1Prev.disabled = (currentCarPageP1 === 1); btnP1Prev.style.opacity = (currentCarPageP1 === 1) ? '0.3' : '1'; }
-    if (btnP1Next) { btnP1Next.disabled = (currentCarPageP1 === totalPages); btnP1Next.style.opacity = (currentCarPageP1 === totalPages) ? '0.3' : '1'; }
-
-    // Actualizar Paginación P2
-    const infoP2 = document.getElementById('car-p2-page-info');
-    if (infoP2) infoP2.innerText = currentCarPageP2;
-    const btnP2Prev = document.getElementById('btn-car-p2-prev');
-    const btnP2Next = document.getElementById('btn-car-p2-next');
-    if (btnP2Prev) { btnP2Prev.disabled = (currentCarPageP2 === 1); btnP2Prev.style.opacity = (currentCarPageP2 === 1) ? '0.3' : '1'; }
-    if (btnP2Next) { btnP2Next.disabled = (currentCarPageP2 === totalPages); btnP2Next.style.opacity = (currentCarPageP2 === totalPages) ? '0.3' : '1'; }
-
-    // Renderizar Listas
-    listP1.innerHTML = '';
-    listP2.innerHTML = '';
-
-    const startIdxP1 = (currentCarPageP1 - 1) * CARS_PER_PAGE;
-    const pageCarsP1 = carImages.slice(startIdxP1, startIdxP1 + CARS_PER_PAGE);
-
-    const startIdxP2 = (currentCarPageP2 - 1) * CARS_PER_PAGE;
-    const pageCarsP2 = carImages.slice(startIdxP2, startIdxP2 + CARS_PER_PAGE);
-
-    pageCarsP1.forEach(img => {
-        const card = createCarCard(img, selectedCarP1 === img, '#5ad');
-        card.onclick = () => { selectedCarP1 = img; renderCarSelection(); playSound('menu_click'); };
-        listP1.appendChild(card);
-    });
-
-    pageCarsP2.forEach(img => {
-        const card = createCarCard(img, selectedCarP2 === img, '#f90');
-        card.onclick = () => { selectedCarP2 = img; renderCarSelection(); playSound('menu_click'); };
-        listP2.appendChild(card);
-    });
-}
-
-function createCarCard(imgUrl, isSelected, neonColor) {
-    const card = document.createElement('div');
-    card.style.cssText = `
-        background: rgba(255,255,255,0.05);
-        border: 2px solid ${isSelected ? neonColor : 'rgba(255,255,255,0.1)'};
-        border-radius: 8px;
-        padding: 4px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: ${isSelected ? '0 0 10px ' + neonColor : 'none'};
-        height: 60px;
-    `;
-    card.onmouseover = () => { if (!isSelected) card.style.borderColor = 'rgba(255,255,255,0.3)'; };
-    card.onmouseout = () => { if (!isSelected) card.style.borderColor = 'rgba(255,255,255,0.1)'; };
-    
-    const img = document.createElement('img');
-    img.src = imgUrl;
-    img.style.width = 'auto';
-    img.style.height = '100%';
-    img.style.maxHeight = '50px';
-    img.style.filter = isSelected ? 'none' : 'grayscale(0.5) brightness(0.7)';
-    
-    card.appendChild(img);
-    return card;
+    updatePlayerBanner();
 }
 
 async function startGame() {
@@ -743,110 +1270,127 @@ async function startGame() {
 async function loadSetupMaps() {
     if (!mapListContainer) return;
     try {
-        const resp = await fetch('get_maps.php');
+        const resp = await fetch('php/get_maps.php');
         let maps = await resp.json();
         
         // Asegurar al menos 10 mapas para la demostración de paginación si faltan
         while (maps.length < 10) maps.push(`MAPA ${maps.length + 1}`);
 
-        const totalPages = Math.ceil(maps.length / MAPS_PER_PAGE);
-        if (currentMapPage > totalPages) currentMapPage = totalPages;
+        const MAPS_LIST = ['URBAN', 'ATLANTIS', 'VOLCANO', 'WINTER'];
+        const totalMaps = MAPS_LIST.length;
+        
+        // El currentMapPage ahora actuará como el índice del mapa central (1 a totalMaps)
+        if (currentMapPage > totalMaps) currentMapPage = totalMaps;
         if (currentMapPage < 1) currentMapPage = 1;
 
-        // Actualizar UI de paginación
+        const centerIdx = currentMapPage - 1;
         const pageInfo = document.getElementById('map-page-info');
-        if (pageInfo) pageInfo.innerText = currentMapPage;
-        
+        if (pageInfo) pageInfo.innerText = `${currentMapPage} / ${totalMaps}`;
+
         const btnPrev = document.getElementById('btn-map-prev');
         const btnNext = document.getElementById('btn-map-next');
         if (btnPrev) { btnPrev.disabled = (currentMapPage === 1); btnPrev.style.opacity = (currentMapPage === 1) ? '0.3' : '1'; }
-        if (btnNext) { btnNext.disabled = (currentMapPage === totalPages); btnNext.style.opacity = (currentMapPage === totalPages) ? '0.3' : '1'; }
-
-        // Filtrar mapas por página
-        const startIdx = (currentMapPage - 1) * MAPS_PER_PAGE;
-        const pageMaps = maps.slice(startIdx, startIdx + MAPS_PER_PAGE);
+        if (btnNext) { btnNext.disabled = (currentMapPage === totalMaps); btnNext.style.opacity = (currentMapPage === totalMaps) ? '0.3' : '1'; }
 
         mapListContainer.innerHTML = '';
-        
-        const mapLabels = {
-            'Principal': 'Estadio Urbano',
-            'Volcan': 'Cráter del Volcán',
-            'Espacio': 'Plataforma Espacial'
-        };
+        mapListContainer.style.perspective = "1000px";
+        mapListContainer.style.display = "flex";
+        mapListContainer.style.alignItems = "center";
+        mapListContainer.style.justifyContent = "center";
+        mapListContainer.style.gap = "0px";
 
-        pageMaps.forEach((m, localIdx) => {
-            const globalIdx = startIdx + localIdx;
-            const displayName = mapLabels[m] || m.toUpperCase();
+        // Renderizamos 3 posiciones: Izquierda, Centro, Derecha (Carrusel Infinito)
+        [-1, 0, 1].forEach(offset => {
+            // Cálculo del índice circular
+            let idx = (centerIdx + offset) % totalMaps;
+            if (idx < 0) idx = totalMaps + idx;
+
+            const m = MAPS_LIST[idx];
+            const isCenter = (offset === 0);
+            const displayName = m.toUpperCase();
             
-            const container = document.createElement('div');
-            container.className = 'setup-map-item pixel-border';
-            container.style.cursor = 'pointer';
-            container.style.position = 'relative';
-            container.style.border = (selectedMap === m) ? '4px solid #5ad' : '4px solid rgba(255,255,255,0.1)';
-            container.style.background = '#1a1a2e';
-            container.style.width = '160px';
-            container.style.height = '210px';
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-            container.style.margin = '0 auto';
-            if (selectedMap === m) container.style.boxShadow = '0 0 20px rgba(90, 173, 237, 0.6)';
+            const card = document.createElement('div');
+            card.className = `setup-map-item coverflow-card ${isCenter ? 'center' : 'side'}`;
+            
+            // Estilos dinámicos para el efecto 3D
+            card.style.width = isCenter ? "280px" : "180px";
+            card.style.height = "340px";
+            card.style.zIndex = isCenter ? "10" : "5";
+            card.style.opacity = isCenter ? "1" : "0.6";
+            card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 35}px) rotateY(${offset * -20}deg)`;
+            card.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+            card.style.cursor = "pointer";
+            card.style.background = "#0a0a19";
+            card.style.borderRadius = "12px";
+            card.style.padding = "10px";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.boxSizing = "border-box";
+            card.style.margin = "0 -35px"; 
+            
+            if (isCenter) {
+                card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(90,173,237,0.3)";
+            }
 
-            // Usar miniatura basada en el índice global
-            const thumbUrl = `res/map${(globalIdx % 10) + 1}.png`;
-
-            container.innerHTML = `
-                <div style="flex: 1; overflow: hidden; border-bottom: 2px solid rgba(255,255,255,0.05); padding: 5px;">
-                    <img src="${thumbUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; filter: ${selectedMap === m ? 'none' : 'grayscale(0.6) brightness(0.6)'};">
+            card.innerHTML = `
+                <div class="pixel-border" style="width: 100%; height: 240px; overflow: hidden; background: #000; border: ${isCenter ? '4px solid #5ad' : '2px solid #333'} !important;">
+                    <img src="recursos/Map${idx + 1}.png" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
-                <div style="background: rgba(0,0,0,0.4); color: #fff; font-size: 12px; text-align: center; padding: 10px 5px; font-weight: bold; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;">
-                    ${displayName}
+                <div style="display: flex; flex-direction: column; align-items: center; margin-top: 15px; opacity: ${isCenter ? 1 : 0}; transition: opacity 0.3s; pointer-events: none;">
+                    <div style="background: #5ad; color: #000; font-size: 12px; padding: 5px 25px; font-weight: bold; font-family: 'Share Tech Mono', monospace; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: 2px;">
+                        ${displayName}
+                    </div>
                 </div>
             `;
 
-            container.onclick = () => {
-                // Mapas no disponibles (del 4 en adelante)
-                const globalIdx = startIdx + localIdx;
-                if (globalIdx >= 3) {
-                    showInGameNotification("MAPA BLOQUEADO: PRÓXIMAMENTE", "#f90", "🔒");
-                    playSound('menu_error');
-                    return;
+            card.onclick = () => {
+                if (!isCenter) {
+                    currentMapPage = idx + 1;
+                    loadSetupMaps();
                 }
-
                 selectedMap = m;
-                loadSetupMaps();
-                playSound('menu_click');
                 validateMatchSetup();
+                playSound('menu_click');
             };
-            mapListContainer.appendChild(container);
+            
+            mapListContainer.appendChild(card);
         });
     } catch (e) { console.error("Error load setup maps:", e); }
 }
 
 function validateMatchSetup() {
-    // Solo permitimos los 3 mapas iniciales y el modo 2vs2
-    const isValidMap = ['Principal', 'Estadio2', 'Mapa3'].includes(selectedMap);
-    const isValidMode = (selectedMode === '2vs2');
+    // Normalizamos nombres para evitar errores de comparación
+    const currentMap = String(selectedMap).toLowerCase();
+    const currentMode = String(selectedMode).toLowerCase();
+
+    const validMaps = ['urban', 'atlantis', 'volcano', 'winter'];
+    const isValidMap = validMaps.includes(currentMap);
+    const isValidMode = (currentMode === '2vs2');
     
-    if (btnStartGame) {
-        btnStartGame.disabled = !(isValidMap && isValidMode);
-        // El estilo visual ahora se maneja principalmente por CSS (:disabled)
+    console.log("Validando Setup:", { map: currentMap, mode: currentMode, isValid: (isValidMap && isValidMode) });
+
+    const btnPlay = document.getElementById('setup-btn-play');
+    if (btnPlay) {
+        btnPlay.disabled = !(isValidMap && isValidMode);
     }
 }
 
-function showInGameNotification(text, color = "#f90", icon = "🔒") {
-    const hud = document.getElementById('notification-hud');
-    const box = document.getElementById('notification-box');
-    if (!hud || !box) return;
-
-    box.innerHTML = `<span style="margin-right:15px">${icon}</span> ${text}`;
-    box.style.borderColor = color + " !important";
-    box.style.display = 'block';
+function showInGameNotification(text, color = "#5ad", icon = "🔒") {
+    const overlay = document.getElementById('modal-alert-overlay');
+    const msg = document.getElementById('modal-alert-message');
+    const ico = document.getElementById('modal-alert-icon');
+    const title = document.getElementById('modal-alert-title');
     
-    playSound('menu_error');
-
-    setTimeout(() => {
-        box.style.display = 'none';
-    }, 2500);
+    if (overlay && msg) {
+        msg.innerText = text;
+        if (ico) ico.innerText = icon;
+        if (title) title.style.color = color;
+        
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden');
+        
+        playSound('menu_error');
+    }
 }
 
 async function finalizeStartGame() {
@@ -860,11 +1404,23 @@ async function finalizeStartGame() {
     const updateBar = (p) => { if (fill) fill.style.width = p + '%'; };
     updateBar(10);
 
-    // Aplicar personalización a los coches (referencias de textura)
-    if (player1) player1.imgUrl = selectedCarP1;
-    if (player1_teammate) player1_teammate.imgUrl = selectedCarP1;
+    // Aplicar personalización a los coches
+    if (player1) {
+        player1.name = USER_CONFIG.playerName;
+        player1.imgUrl = USER_CONFIG.playerCar;
+        player1.hue = USER_CONFIG.playerCarHue;
+        player1.saturate = USER_CONFIG.playerCarSaturate;
+    }
+    if (player1_teammate) {
+        player1_teammate.imgUrl = USER_CONFIG.playerCar;
+        player1_teammate.hue = USER_CONFIG.playerCarHue;
+        player1_teammate.saturate = USER_CONFIG.playerCarSaturate;
+    }
+    // Para los oponentes, podemos dejar el car2 por defecto o añadir lógica similar
     if (player2) player2.imgUrl = selectedCarP2;
     if (player2_teammate) player2_teammate.imgUrl = selectedCarP2;
+
+    if (ball) ball.imgUrl = USER_CONFIG.playerBall;
 
     try {
         // 1. Cargar el JSON del mapa seleccionado
@@ -1019,4 +1575,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Ejecutar el inicio del juego
 init();

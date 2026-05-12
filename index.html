@@ -7,15 +7,16 @@
     <title>SCAPS - Rocket League 2D</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="res/LOGO.png">
+    <link rel="icon" type="image/png" href="recursos/LOGO.png">
 
     <!-- Fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
 
     <!-- Estilos (VERSIÓN FORZADA PARA CACHÉ) -->
-    <link rel="stylesheet" href="css/styles.css?v=115">
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
@@ -24,7 +25,7 @@
     <div id="intro-screen">
         <div id="intro-slide-1" class="intro-slide">
             <div class="logo-container">
-                <img src="res/SIMESIA-LOGO2.png" class="intro-logo" alt="SCAPS Logo">
+                <img src="recursos/SIMESIA-LOGO2.png" class="intro-logo" alt="SCAPS Logo">
                 <div class="dev-text">Desarrollado por <span style="color:#5ad">En4bLeD_</span></div>
             </div>
         </div>
@@ -50,232 +51,695 @@
 
         <!-- Menú Principal -->
         <div id="main-menu" class="hidden">
-            <img src="res/LOGO.png" id="menu-logo" alt="SCAPS LOGO">
+            <img src="recursos/LOGO.png" id="menu-logo" alt="SCAPS LOGO">
 
             <div id="menu-initial" class="menu-buttons">
                 <button id="btn-play" class="menu-btn primary">Jugar</button>
                 <button id="btn-custom" class="menu-btn">Personalizar</button>
                 <button id="btn-settings" class="menu-btn">Ajustes</button>
-                <button id="btn-credits" class="menu-btn">Créditos</button>
+                <button id="btn-exit" class="menu-btn" style="border-color: #f33; color: #f33;">SALIR</button>
                 <div class="menu-footer">2026 @ SYSTEM SIMESIA</div>
             </div>
+            
+            <!-- Banner de Perfil del Jugador (Estilo Rocket League) -->
+            <div id="player-banner" class="pixel-border">
+                <div id="player-banner-avatar-frame" class="pixel-border">
+                    <img id="player-banner-avatar" src="recursos/Car1.png" alt="Avatar">
+                </div>
+                <div class="player-banner-info">
+                    <span id="player-banner-name">PILOTO_01</span>
+                    <div class="player-banner-exp-bar">
+                        <div class="player-banner-exp-fill"></div>
+                    </div>
+                </div>
+                <div class="player-banner-level">
+                    <span>9</span>
+                </div>
+            </div>
 
-            <!-- Panel de Personalización -->
+            <!-- Botón Editor de Mapas (Encima de Notas de Desarrollo) -->
+            <button id="btn-map-editor" class="menu-btn"
+                style="position: absolute; bottom: 12vh; right: 2vw; width: 15vw; min-width: 200px; font-size: 0.8vw; padding: 1vh 0; border-color: #f90; color: #f90; text-align: center;">EDITOR
+                DE MAPAS</button>
+
+            <!-- Botón Notas de Desarrollo (Abajo derecha) -->
+            <button id="btn-credits" class="menu-btn"
+                style="position: absolute; bottom: 5vh; right: 2vw; font-size: 0.8vw; padding: 1vh 0; width: 15vw; min-width: 200px; z-index: 2000; border-color: #5ad; color: #5ad; display: block; text-align: center;">NOTAS
+                DE DESARROLLO</button>
+
+            <!-- Panel de Personalización (REDISEÑO PESTAÑAS) -->
             <div id="menu-custom" class="menu-buttons pixel-border"
-                style="display: none; width: 800px; gap: 15px; padding: 25px; flex-direction: column; align-items: center;">
-                <h2 class="neon-title pixel-title" style="margin: 0 0 10px; color: #5ad; text-shadow: 0 0 15px #5ad; font-size: 40px; text-align:center;">PERSONALIZAR</h2>
+                style="display: none; width: 55%; height: 50%; min-width: 800px; min-height: 440px; gap: 0; padding: 1.5% 3%; flex-direction: column; align-items: center; background: rgba(5, 5, 15, 0.95); border: 3px solid #5ad !important; position: relative;">
 
-                <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;">
-                    <label style="color: #fff; font-size: 20px; font-weight: bold; letter-spacing: 2px;">NOMBRE:</label>
-                    <input type="text" id="input-player-name" value="PILOTO_01" maxlength="12" 
-                        style="background: rgba(255,255,255,0.05); border: 2px solid #5ad; color: #fff; padding: 8px 15px; font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: bold; border-radius: 8px; width: 250px; text-align: center; outline: none; transition: all 0.3s;"
-                        onfocus="this.style.boxShadow='0 0 15px #5ad'" onblur="this.style.boxShadow='none'">
+                <!-- Botón de Cierre (Aspa) -->
+                <button onclick="document.getElementById('btn-custom-back').click()" 
+                    style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; background: rgba(255, 255, 255, 0.05); border: 2px solid #5ad; color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 100; transition: all 0.2s;"
+                    onmouseover="this.style.background='#f33'; this.style.color='#fff'; this.style.borderColor='#fff';"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#5ad'; this.style.borderColor='#5ad';">
+                    ✕
+                </button>
+
+                <h2 class="neon-title pixel-title"
+                    style="margin: 0 0 20px; color: #5ad; text-shadow: 0 0 15px #5ad; font-size: 32px; text-align:center; letter-spacing: 5px;">
+                    SISTEMA DE PERSONALIZACIÓN</h2>
+
+                <!-- Navegación de Pestañas -->
+                <div class="custom-tabs-container">
+                    <button class="custom-tab-btn active" data-tab="perfil">
+                        <i>👤</i>
+                        <span>Perfil</span>
+                    </button>
+                    <button class="custom-tab-btn" data-tab="vehiculo">
+                        <i>🏎️</i>
+                        <span>Vehículo</span>
+                    </button>
+                    <button class="custom-tab-btn" data-tab="balon">
+                        <i>⚽</i>
+                        <span>Balón</span>
+                    </button>
+                    <button class="custom-tab-btn" data-tab="boost">
+                        <i>🔥</i>
+                        <span>Boost</span>
+                    </button>
+                    <button class="custom-tab-btn" data-tab="explosion">
+                        <i>💥</i>
+                        <span>Explosión</span>
+                    </button>
                 </div>
 
-                <div style="display: flex; gap: 20px; width: 100%; align-items: stretch; overflow: hidden;">
-                    <div class="neon-container pixel-border" style="flex: 1; padding: 15px; display: flex; flex-direction: column; min-height: 200px;">
-                        <h3 class="pixel-title" style="color: #5ad; margin: 0 0 8px; text-align: center; font-size: 15px;">TU VEHÍCULO</h3>
-                        <div id="custom-car-p1-list" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1;"></div>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px;">
-                            <button id="btn-car-p1-prev" class="menu-btn" style="padding: 1px 8px; font-size: 13px;">&lt;</button>
-                            <span id="car-p1-page-info" style="color: #5ad; font-weight: bold; font-family: 'Rajdhani', sans-serif; font-size: 14px;">1</span>
-                            <button id="btn-car-p1-next" class="menu-btn" style="padding: 1px 8px; font-size: 13px;">&gt;</button>
+                <!-- Contenedor de Paneles (Altura fijada para consistencia) -->
+                <div class="custom-panes-container" style="height: 260px; min-height: 260px; width: 100%;">
+
+                    <!-- PESTAÑA PERFIL -->
+                    <div id="pane-perfil" class="custom-pane active">
+                        <div style="display: flex; gap: 20px; height: 100%;">
+
+                            <!-- [BLOQUE 1] Datos del Piloto: Nombre y Color -->
+                            <div id="box-profile-data" class="neon-container pixel-border custom-box-profile">
+                                <div class="custom-input-group">
+                                    <label class="custom-label">NOMBRE DEL PILOTO:</label>
+                                    <input type="text" id="input-player-name" value="PILOTO_01" maxlength="12"
+                                        class="custom-input">
+                                </div>
+
+                                <div class="custom-color-group">
+                                    <label class="custom-label-small">COLOR DE FONDO:</label>
+                                    <input type="color" id="input-avatar-bg" value="#222222"
+                                        class="custom-color-picker">
+                                </div>
+
+                                <!-- Botón de Guardado del Perfil -->
+                                <button onclick="document.getElementById('btn-custom-back').click()"
+                                    class="menu-btn primary btn-save-custom">GUARDAR PERFIL</button>
+                            </div>
+
+                            <!-- [BLOQUE 2] Selector de Avatares (Rejilla 3x3) -->
+                            <div id="box-profile-gallery" class="neon-container pixel-border custom-box-gallery">
+                                <h3 class="pixel-title gallery-title">GALERÍA DE AVATARES</h3>
+
+                                <div id="avatar-list" class="item-grid avatar-grid-3x3">
+                                    <!-- Los avatares se cargan dinámicamente desde main.js -->
+                                </div>
+
+                                <!-- Controles de Paginación (< 1/12 >) -->
+                                <div class="custom-pagination-compact">
+                                    <button id="btn-avatar-prev" class="menu-btn btn-nav-compact">&lt;</button>
+                                    <span id="avatar-page-info" class="page-info">1</span>
+                                    <button id="btn-avatar-next" class="menu-btn btn-nav-compact">&gt;</button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="neon-container pixel-border" style="flex: 1; padding: 15px; display: flex; flex-direction: column; min-height: 200px;">
-                        <h3 class="pixel-title" style="color: #f90; margin: 0 0 8px; text-align: center; font-size: 15px;">OPONENTES</h3>
-                        <div id="custom-car-p2-list" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1;"></div>
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px;">
-                            <button id="btn-car-p2-prev" class="menu-btn" style="padding: 1px 8px; font-size: 13px;">&lt;</button>
-                            <span id="car-p2-page-info" style="color: #f90; font-weight: bold; font-family: 'Rajdhani', sans-serif; font-size: 14px;">1</span>
-                            <button id="btn-car-p2-next" class="menu-btn" style="padding: 1px 8px; font-size: 13px;">&gt;</button>
+
+                    <!-- PESTAÑA VEHÍCULO -->
+                    <div id="pane-vehiculo" class="custom-pane">
+                        <div style="display: flex; gap: 20px; height: 100%;">
+
+                            <!-- [BLOQUE 1] Garaje de Vehículos (Iconos de coches) -->
+                            <div id="box-vehicle-garage" class="neon-container pixel-border custom-box-garage">
+                                <h3 class="pixel-title garage-title">GARAJE DE VEHÍCULOS</h3>
+                                <div id="custom-car-list" class="item-grid garage-grid">
+                                    <!-- Los coches se cargan dinámicamente desde main.js -->
+                                </div>
+                            </div>
+
+                            <!-- [BLOQUE 2] Personalización y Vista Previa -->
+                            <div id="box-vehicle-controls" class="neon-container pixel-border custom-box-controls">
+
+                                <!-- Controles de Tinte (Hue y Saturación) -->
+                                <div class="tint-control">
+                                    <div class="slider-group">
+                                        <label class="slider-label">TONALIDAD (HUE)</label>
+                                        <div class="slider-row">
+                                            <input type="range" id="slider-car-hue" min="0" max="360" value="0"
+                                                class="tint-slider">
+                                            <button id="reset-car-hue" title="Restablecer"
+                                                class="btn-reset-small">↺</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="slider-group">
+                                        <label class="slider-label">SATURACIÓN</label>
+                                        <div class="slider-row">
+                                            <input type="range" id="slider-car-saturate" min="0" max="200" value="100"
+                                                class="tint-slider"
+                                                style="background: linear-gradient(to right, #444, #fff) !important;">
+                                            <button id="reset-car-saturate" title="Restablecer"
+                                                class="btn-reset-small">↺</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contenedor de Vista Previa 360° -->
+                                <div id="car-preview-container" class="car-preview-frame">
+                                    <img id="car-preview-img" src="recursos/Car1.png" class="car-preview-img">
+                                    <div class="preview-tag">360° PREVIEW SYSTEM</div>
+                                </div>
+
+                                <!-- Botón de Acción Principal -->
+                                <button onclick="document.getElementById('btn-custom-back').click()"
+                                    class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
+                            </div>
+
                         </div>
                     </div>
+
+                    <!-- PESTAÑA BALÓN -->
+                    <div id="pane-balon" class="custom-pane">
+                        <div class="neon-container pixel-border"
+                            style="padding: 15px; display: flex; flex-direction: column; height: 100%;">
+                            <h3 class="pixel-title"
+                                style="color: #fff; font-size: 14px; margin-bottom: 10px; text-align: center;">MODELOS
+                                DE BALÓN</h3>
+                            <div id="ball-list" class="item-grid" style="grid-template-columns: repeat(5, 1fr); flex: 1;">
+                                <!-- Generado por JS -->
+                            </div>
+                            
+                            <!-- Navegación Balones -->
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <button id="btn-ball-prev" class="menu-btn" style="padding: 5px 15px; font-size: 14px; width: auto;">&lt;</button>
+                                <span id="ball-page-info" style="color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold; min-width: 60px; text-align: center;">1 / 4</span>
+                                <button id="btn-ball-next" class="menu-btn" style="padding: 5px 15px; font-size: 14px; width: auto;">&gt;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA BOOST -->
+                    <div id="pane-boost" class="custom-pane">
+                        <div style="display: flex; gap: 20px; height: 100%;">
+                            <!-- Lista de Boosts -->
+                            <div class="neon-container pixel-border" style="flex: 1; padding: 15px; display: flex; flex-direction: column;">
+                                <h3 class="pixel-title" style="color: #5ad; font-size: 12px; margin-bottom: 10px; text-align: center;">EFECTOS DE BOOST</h3>
+                                <div id="custom-boost-list" class="item-grid" style="grid-template-columns: repeat(3, 1fr); flex: 1;">
+                                    <!-- Generado por JS -->
+                                </div>
+                            </div>
+                            <!-- Previsualización -->
+                            <div class="neon-container pixel-border" style="width: 280px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);">
+                                <h3 class="pixel-title" style="color: #5ad; font-size: 11px; margin-bottom: 15px;">PREVIEW</h3>
+                                <div id="boost-preview-box" style="width: 100%; height: 150px; background: #000; border: 1px solid #333; position: relative; overflow: hidden; border-radius: 4px;">
+                                    <canvas id="canvas-boost-preview" width="250" height="150" style="width: 100%; height: 100%;"></canvas>
+                                </div>
+                                <div id="boost-name-tag" style="margin-top: 10px; color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold;">ESTÁNDAR</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA EXPLOSIÓN -->
+                    <div id="pane-explosion" class="custom-pane">
+                        <div style="display: flex; gap: 20px; height: 100%;">
+                            <!-- Lista de Explosiones -->
+                            <div class="neon-container pixel-border" style="flex: 1; padding: 15px; display: flex; flex-direction: column;">
+                                <h3 class="pixel-title" style="color: #f90; font-size: 12px; margin-bottom: 10px; text-align: center;">EXPLOSIONES DE GOL</h3>
+                                <div id="custom-explosion-list" class="item-grid" style="grid-template-columns: repeat(3, 1fr); flex: 1;">
+                                    <!-- Generado por JS -->
+                                </div>
+                            </div>
+                            <!-- Previsualización -->
+                            <div class="neon-container pixel-border" style="width: 280px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);">
+                                <h3 class="pixel-title" style="color: #f90; font-size: 11px; margin-bottom: 15px;">IMPACTO</h3>
+                                <div id="explosion-preview-box" style="width: 100%; height: 150px; background: #000; border: 1px solid #333; position: relative; overflow: hidden; border-radius: 4px;">
+                                    <canvas id="canvas-explosion-preview" width="250" height="150" style="width: 100%; height: 100%;"></canvas>
+                                </div>
+                                <div id="explosion-name-tag" style="margin-top: 10px; color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold;">CLÁSICA</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <button id="btn-custom-back" class="menu-btn" style="padding: 10px 40px; font-size:20px; margin-top:10px; border-color: #5ad;">GUARDAR Y VOLVER</button>
+                <div id="global-custom-footer"
+                    style="width: 100%; display: none; gap: 15px; margin-top: 10px; justify-content: center;">
+                    <button id="btn-custom-back" class="menu-btn primary"
+                        style="padding: 10px 40px; font-size:18px; border-color: #5ad; width: 280px;">ACEPTAR Y
+                        GUARDAR</button>
+                </div>
             </div>
 
             <!-- Panel de Ajustes (GADGET MP3 v2.0) -->
             <div id="menu-settings" class="menu-buttons pixel-border"
                 style="display: none; width: 500px; gap: 15px; padding: 25px;">
-                <h2 class="pixel-title" style="margin: 0; color: #f90; text-shadow: 0 0 10px #f90; font-size: 28px; text-align:center;">SISTEMA AJUSTES</h2>
+                <h2 class="pixel-title"
+                    style="margin: 0; color: #f90; text-shadow: 0 0 10px #f90; font-size: 28px; text-align:center;">
+                    SISTEMA AJUSTES</h2>
 
-                <div class="neon-container pixel-border" style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 20px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #5ad !important; box-sizing: border-box;">
-                    <span class="pixel-title" style="font-size: 14px; color: #5ad; text-align: center; letter-spacing: 3px;">REPRODUCTOR MP3 v2.0</span>
-                    
-                    <div style="background: #000; border: 1px solid #5ad; padding: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: inset 0 0 10px rgba(90, 173, 237, 0.3);">
-                        <div id="settings-song-artist" style="color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 11px; text-transform: uppercase;">ARTISTA</div>
-                        <div id="settings-song-name" style="color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">NOMBRE PISTA</div>
-                        <div id="settings-song-timer" style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 14px; text-align: right; margin-top: 5px;">00:00 / 00:00</div>
+                <div class="neon-container pixel-border"
+                    style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 20px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #5ad !important; box-sizing: border-box;">
+                    <span class="pixel-title"
+                        style="font-size: 14px; color: #5ad; text-align: center; letter-spacing: 3px;">REPRODUCTOR MP3
+                        v2.0</span>
+
+                    <div
+                        style="background: #000; border: 1px solid #5ad; padding: 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: inset 0 0 10px rgba(90, 173, 237, 0.3);">
+                        <div id="settings-song-artist"
+                            style="color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 11px; text-transform: uppercase;">
+                            ARTISTA</div>
+                        <div id="settings-song-name"
+                            style="color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            NOMBRE PISTA</div>
+                        <div id="settings-song-timer"
+                            style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 14px; text-align: right; margin-top: 5px;">
+                            00:00 / 00:00</div>
                     </div>
 
                     <div style="display: flex; gap: 10px; width: 100%;">
-                        <button id="btn-prev-song" class="menu-btn" style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏮</button>
-                        <button id="btn-play-pause" class="menu-btn" style="flex: 1.5; padding: 10px; margin: 0; font-size: 20px; border-color: #fff !important; color: #fff;">⏯</button>
-                        <button id="btn-next-song" class="menu-btn" style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏭</button>
+                        <button id="btn-prev-song" class="menu-btn"
+                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏮</button>
+                        <button id="btn-play-pause" class="menu-btn"
+                            style="flex: 1.5; padding: 10px; margin: 0; font-size: 20px; border-color: #fff !important; color: #fff;">⏯</button>
+                        <button id="btn-next-song" class="menu-btn"
+                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏭</button>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(90, 173, 237, 0.2);">
-                        <span id="settings-vol-icon" style="font-size: 18px; cursor: pointer;">🔊</span>
-                        <input type="range" id="slider-settings-vol" min="0" max="100" value="50" style="flex: 1; accent-color: #5ad; cursor: pointer;">
-                        <span id="settings-vol-label" style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #5ad; width: 40px;">50%</span>
+                    <div
+                        style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(90, 173, 237, 0.2);">
+                        <span
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #5ad; width: 80px;">MÚSICA</span>
+                        <input type="range" id="slider-settings-vol" min="0" max="100" value="50"
+                            style="flex: 1; accent-color: #5ad; cursor: pointer;">
+                        <span id="settings-vol-label"
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #5ad; width: 40px;">50%</span>
                     </div>
+
+                    <div
+                        style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(255, 153, 0, 0.2);">
+                        <span
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #f90; width: 80px;">EFECTOS</span>
+                        <input type="range" id="slider-settings-sfx" min="0" max="100" value="80"
+                            style="flex: 1; accent-color: #f90; cursor: pointer;">
+                        <span id="settings-sfx-label"
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #f90; width: 40px;">80%</span>
+                    </div>
+
                 </div>
 
-                <button class="menu-btn" onclick="window.open('editor.html','_blank')"
-                    style="font-size:14px; padding:10px; border-color:#f90; color:#f90; margin: 0; width: 100%;">MAP EDITOR</button>
 
                 <button id="btn-settings-back" class="menu-btn"
                     style="padding: 10px; font-size:18px; margin: 0; width: 100%;">← VOLVER</button>
             </div>
 
             <!-- Panel de Créditos -->
-            <div id="menu-credits" class="menu-buttons pixel-border" style="display: none; width: 600px; gap: 15px; padding: 25px;">
-                <h2 class="pixel-title" style="margin: 0; color: #5ad; text-shadow: 0 0 10px #5ad; font-size: 28px; text-align:center;">NOTAS DE DESARROLLO</h2>
-                
-                <div class="pixel-border" style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 300px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 10px;">VERSIÓN 1.0.5 - CYBER PIXEL UPDATE</p>
-                    <ul style="list-style: none; padding: 0; color: #eee;">
-                        <li>+ Unificación total de la interfaz con estética Pixel Stair.</li>
-                        <li>+ Implementación de Gadget MP3 v2.0 con cronómetro real y controles LCD.</li>
-                        <li>+ Nuevo sistema de notificaciones de audio por desvanecimiento (Fade In/Out).</li>
-                        <li>+ Optimización de bordes neón dinámicos y sombras 8-bit.</li>
-                        <li>+ Ajuste de física de colisión y equilibrio de campo.</li>
-                        <li>+ Limpieza de código legado y aceleración de carga del motor.</li>
+            <div id="menu-credits" class="menu-buttons pixel-border"
+                style="display: none; width: 600px; gap: 15px; padding: 25px;">
+                <h2 class="pixel-title"
+                    style="margin: 0; color: #5ad; text-shadow: 0 0 10px #5ad; font-size: 28px; text-align:center;">
+                    NOTAS DE DESARROLLO</h2>
+
+                <div class="pixel-border"
+                    style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 300px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.3.0 - PERSONALIZACIÓN & PRO
+                        TOOLS</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Persistencia USER.CONFIG en localStorage (Ajustes guardados).</li>
+                        <li>+ Editor de Físicas Avanzado: Reseteo individual e Import/Export JSON.</li>
+                        <li>+ HUD Interactivo: Banner de música arrastrable con memoria.</li>
+                        <li>+ Selector de Cursor Pixel/Sistema en Ajustes.</li>
                     </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.2.0 - CICLO DE VIDA</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Sistema de Game Over con estadísticas y revancha.</li>
+                        <li>+ Documentación Técnica de Físicas (SAT/Impulsos).</li>
+                        <li>+ Optimización de pre-carga de texturas GPU (Warm-up).</li>
+                    </ul>
+
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.1.0 - PHYSICS & AI</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ AI Engine V11: Corrección de 90° y control de aceleración.</li>
+                        <li>+ Editor de Físicas en tiempo real (Tecla º).</li>
+                        <li>+ Simulación de eje Z (vuelo del balón) en colisiones.</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.0.0 - PRODUCTION RELEASE
+                    </p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Motor de Colisiones Pro: Impulsos elásticos 1D.</li>
+                        <li>+ IA Relentless Pursuit V9: Algoritmos deterministas.</li>
+                        <li>+ Rebote en muros con conservación de momento.</li>
+                    </ul>
+
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.9.0 - CINEMATIC UPDATE</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Manager de Secuencias Cinemáticas (Zoom 0.1).</li>
+                        <li>+ Espacialización de Audio por magnitud de impacto.</li>
+                        <li>+ Escalado global de entidades (+50%).</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.8.0 - PERSONALIZACIÓN</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Suite de Personalización: Nombres y Skins.</li>
+                        <li>+ Paginación Asíncrona O(1) en galerías.</li>
+                    </ul>
+
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.6.0 - LEVEL EDITOR</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Lógica de Porterías Desacoplada (Trigger/Visual).</li>
+                        <li>+ Grid Snapping para diseño de precisión.</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.1.0 - PROTOTYPE</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Render Loop Base y Entidades cuadradas.</li>
+                        <li>+ Control WASD y física de conducción básica.</li>
+                    </ul>
+
                     <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
-                    <p style="color: #5ad; text-align: center;">Desarrollado por <span style="font-weight:bold; color:#fff;">En4bLeD__</span> & <span style="font-weight:bold; color:#fff;">SYSTEM SIMESIA</span> @ 2026</p>
+                    <p style="color: #5ad; text-align: center;"><span
+                            style="font-weight:bold; color:#fff;">En4bLeD_</span> & <span
+                            style="font-weight:bold; color:#fff;">SYSTEM SIMESIA</span> @ 2026</p>
                 </div>
 
-                <button id="btn-credits-back" class="menu-btn" style="width: 100%; margin: 0; padding: 10px;">← VOLVER</button>
+                <button id="btn-credits-back" class="menu-btn" style="width: 100%; margin: 0; padding: 10px;">←
+                    VOLVER</button>
             </div>
 
             <!-- Marquesina de Cambios -->
             <div id="marquee-container">
                 <div class="marquee-content">
-                    ÚLTIMOS CAMBIOS: Añadida textura Ball1.png al balón y reducción de velocidad global de coches — Mejoras profundas en el Editor de Mapas: resaltado dinámico por pestañas, inserción inteligente de puntos y soporte para redes de portería con efecto profundidad — Ajustados parámetros por defecto del editor al escenario Principal.
+                    ÚLTIMOS CAMBIOS: Implementado sistema USER.CONFIG con persistencia de ajustes — Nuevo Editor de
+                    Físicas Pro: reseteo individual de parámetros e Import/Export vía JSON para betatesters —
+                    Notificación de música ahora es arrastrable — Añadido control de volumen independiente para SFX y
+                    selector de cursor.
                 </div>
             </div>
-
         </div>
+
+        <!-- Panel de Edición de Físicas (Tecla º) -->
+        <div id="physics-editor-overlay" class="hidden"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9000; display: none; flex-direction: column; justify-content: center; align-items: center;">
+            <div class="pixel-border"
+                style="background: #0a0a19; padding: 15px 25px; width: 620px; display: flex; flex-direction: column; gap: 12px; border: 3px solid #f90 !important; max-height: 95vh; overflow: hidden;">
+                <h2 class="pixel-title"
+                    style="margin: 0; color: #f90; text-shadow: 0 0 10px #f90; font-size: 24px; text-align:center;">
+                    EDITOR DE FÍSICAS</h2>
+
+                <div id="physics-controls-container"
+                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 5px; overflow-y: auto;">
+                    <!-- Los controles se generan dinámicamente -->
+                </div>
+
+                <!-- Sección Importar/Exportar Compacta -->
+                <div class="pixel-border"
+                    style="background: rgba(0,0,0,0.3); padding: 10px; display: flex; flex-direction: column; gap: 6px; border-color: rgba(255, 153, 0, 0.2) !important;">
+                    <span
+                        style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 1px;">TRANSFERENCIA
+                        JSON</span>
+                    <textarea id="physics-config-io" placeholder="Pega ajustes aquí..."
+                        style="background: rgba(0,0,0,0.8); border: 1px solid #333; color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 10px; height: 30px; padding: 5px; resize: none; outline: none;"></textarea>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-physics-export" class="menu-btn"
+                            style="flex: 1; font-size: 10px; padding: 4px; margin: 0; border-color: #5ad; color: #5ad; height: auto;">COPIAR
+                            AJUSTES</button>
+                        <button id="btn-physics-import" class="menu-btn"
+                            style="flex: 1; font-size: 10px; padding: 4px; margin: 0; border-color: #4CAF50; color: #4CAF50; height: auto;">APLICAR
+                            PEGADO</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 5px;">
+                    <button id="btn-physics-apply" class="menu-btn primary"
+                        style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 150px; padding: 6px; font-size: 14px;">CERRAR</button>
+                    <button id="btn-physics-reset" class="menu-btn"
+                        style="width: 150px; padding: 6px; font-size: 14px;">RESETEAR TODO</button>
+                </div>
+            </div>
+        </div>
+
 
         <div id="countdown-overlay">3</div>
         <div id="goal-text-overlay">¡GOL!</div>
+        <div id="camera-mode-overlay"></div>
+        <div id="scoreboard-overlay"></div>
 
-        <!-- Notificación de Canción (Aparición progresiva - Posición centrada derecha) -->
-        <div id="song-notification" style="position: absolute; bottom: 100px; left: 220px; background: rgba(5, 5, 15, 0.98); border-left: 8px solid #5ad; padding: 15px 30px; display: none; align-items: center; gap: 20px; opacity: 0; transition: opacity 1s ease-in-out; z-index: 6000; backdrop-filter: blur(15px); color: white; font-family: 'Share Tech Mono', monospace; box-shadow: 0 0 40px rgba(0,0,0,0.8);">
+        <!-- Notificación de Canción (Arrastrable) -->
+        <div id="song-notification"
+            style="position: absolute; bottom: 100px; left: 220px; background: rgba(5, 5, 15, 0.98); border-left: 8px solid #5ad; padding: 15px 30px; display: none; align-items: center; gap: 20px; opacity: 0; transition: opacity 1s ease-in-out, transform 0.2s; z-index: 6000; backdrop-filter: blur(15px); color: white; font-family: 'Share Tech Mono', monospace; box-shadow: 0 0 40px rgba(0,0,0,0.8); cursor: move; user-select: none;">
             <div style="font-size: 30px; filter: drop-shadow(0 0 5px #5ad);">🎵</div>
             <div>
-                <div id="song-artist" style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #5ad; font-weight: bold;">ARTISTA</div>
-                <div id="song-name" style="font-size: 20px; font-weight: 400; letter-spacing: 1px; color: #fff;">NOMBRE_CANCIÓN</div>
+                <div id="song-artist"
+                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #5ad; font-weight: bold;">
+                    ARTISTA</div>
+                <div id="song-name" style="font-size: 20px; font-weight: 400; letter-spacing: 1px; color: #fff;">
+                    NOMBRE_CANCIÓN</div>
             </div>
         </div>
 
         <!-- HUD DE NOTIFICACIÓN GLOBAL -->
-        <div id="notification-hud" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 7000; pointer-events: none;">
-            <div id="notification-box" class="pixel-border" style="display: none; background: rgba(10, 10, 25, 0.95); padding: 15px 40px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 20px; letter-spacing: 2px; text-align: center; border-color: #f90 !important; box-shadow: 0 0 30px rgba(255, 153, 0, 0.2);">
+        <div id="notification-hud"
+            style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 7000; pointer-events: none;">
+            <div id="notification-box" class="pixel-border"
+                style="display: none; background: rgba(10, 10, 25, 0.95); padding: 15px 40px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 20px; letter-spacing: 2px; text-align: center; border-color: #f90 !important; box-shadow: 0 0 30px rgba(255, 153, 0, 0.2);">
                 NOTIFICACIÓN
             </div>
         </div>
+        <style>
+            .mode-option.active {
+                transform: scale(1.05);
+                box-shadow: 0 0 25px rgba(90, 173, 237, 0.4);
+            }
+
+            .mode-option.active .pixel-border {
+                border-color: #5ad !important;
+                background: rgba(90, 173, 237, 0.1) !important;
+                box-shadow: 0 0 30px rgba(90, 173, 237, 0.5) !important;
+            }
+        </style>
 
         <!-- ESCENA DE SELECCIÓN (ESTILO FINAL CON FONDO DE ESTADIO) -->
-        <div id="match-setup-overlay" class="hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('res/fondo_menu.png') center/cover; backdrop-filter: blur(10px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
-            <h1 class="pixel-title" style="color: #fff; font-size: 54px; text-shadow: 0 0 25px #ff4444; margin-bottom: 25px; letter-spacing: 8px; font-weight: 400;">CONFIGURACIÓN_PARTIDO</h1>
+        <div id="match-setup-overlay" class="hidden"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('recursos/fondo_menu.png') center/cover; backdrop-filter: blur(15px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
+            <h1 class="pixel-title"
+                style="color: #fff; font-size: 54px; text-shadow: 0 0 25px #ff4444; margin-bottom: 25px; letter-spacing: 8px; font-weight: 400;">
+                SELECCIÓN DE MAPA Y MODO</h1>
             <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: stretch;">
-                <div class="neon-container pixel-border" style="width: 600px; background: rgba(10, 10, 25, 0.85); border-radius: 12px; border: 3px solid #ff4444; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 15px;">
-                    <h2 class="neon-title" style="text-align: center; margin: 20px 0 10px; font-size: 40px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">MAPAS</h2>
-                    <div id="setup-map-list" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 260px; overflow: hidden; padding: 10px 25px 20px; flex: 1;"></div>
-                    <div style="padding: 0 15px; display: flex; align-items: center; justify-content: flex-end;">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 5px; width: 180px;">
-                            <button id="btn-map-prev" class="menu-btn" style="padding: 5px 15px; font-size: 18px;">&lt;</button>
-                            <span id="map-page-info" style="color: #fff; font-weight: 900; font-family: 'Rajdhani', sans-serif; min-width: 40px; text-align: center; font-size: 24px;">1</span>
-                            <button id="btn-map-next" class="menu-btn" style="padding: 5px 15px; font-size: 18px;">&gt;</button>
-                        </div>
+                <!-- Columna Mapas -->
+                <div class="neon-container pixel-border"
+                    style="width: 520px; background: rgba(5, 5, 15, 0.9); border-radius: 0; border: 3px solid #ff4444; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 15px;">
+                    <h2 class="neon-title"
+                        style="text-align: center; margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                        MAPAS</h2>
+                    <div id="setup-map-list"
+                        style="display: flex; justify-content: center; align-items: center; height: 420px; padding: 10px 20px; flex: 1; overflow: visible;">
                     </div>
                 </div>
-                <div class="neon-container pixel-border" style="width: 600px; background: rgba(10, 10, 25, 0.85); border-radius: 12px; border: 3px solid #5ad; display: flex; flex-direction: column; overflow: hidden; padding: 0 0 20px 0;">
-                    <h2 class="neon-title" style="text-align: center; margin: 20px 0 10px; font-size: 40px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">MODOS</h2>
-                    <div id="setup-mode-list" style="display: flex; flex-direction: column; gap: 20px; padding: 0 25px;">
-                        <!-- Fila 1 (3 modos principales) -->
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                            <button class="mode-option locked" data-mode="online">
-                                <div class="pixel-border" style="width: 100%; height: 120px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/ONLINE.png" style="width:100%; height:100%; object-fit: contain;">
+                <!-- Columna Modos -->
+                <div class="neon-container pixel-border"
+                    style="width: 520px; background: rgba(5, 5, 15, 0.95); border-radius: 0; border: 3px solid #5ad; display: flex; flex-direction: column; overflow: hidden; padding: 0 0 10px 0;">
+                    <h2 class="neon-title"
+                        style="text-align: center; margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                        MODOS</h2>
+                    <div id="setup-mode-list"
+                        style="display: flex; flex-direction: column; gap: 10px; padding: 0 20px;">
+                        <!-- Fila 1 (Principales) -->
+                        <div
+                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; justify-items: center;">
+                            <button class="mode-option locked" data-mode="online"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 160px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/ONLINE.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
-                                <div style="background: rgba(0,0,0,0.4); color: #fff; font-size: 12px; text-align: center; padding: 5px; font-weight: bold;">ONLINE</div>
+                                <div class="mode-soon-badge">PRÓXIMAMENTE</div>
                             </button>
-                            <button class="mode-option" data-mode="2vs2">
-                                <div class="pixel-border" style="width: 100%; height: 120px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/2VS2COMP.png" style="width:100%; height:100%; object-fit: contain;">
+                            <button class="mode-option" data-mode="2vs2"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 160px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/2VS2COMP.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
-                                <div style="background: rgba(0,0,0,0.4); color: #fff; font-size: 12px; text-align: center; padding: 5px; font-weight: bold;">2VS2</div>
                             </button>
-                            <button class="mode-option locked" data-mode="3vs3">
-                                <div class="pixel-border" style="width: 100%; height: 120px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/3VS3COMP.png" style="width:100%; height:100%; object-fit: contain;">
+                            <button class="mode-option locked" data-mode="3vs3"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 160px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/3VS3COMP.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
-                                <div style="background: rgba(0,0,0,0.4); color: #fff; font-size: 12px; text-align: center; padding: 5px; font-weight: bold;">3VS3</div>
+                                <div class="mode-soon-badge">PRÓXIMAMENTE</div>
                             </button>
                         </div>
-                        <!-- Fila 2 (Modos secundarios bloqueados) -->
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                            <button class="mode-option locked" data-mode="torneo">
-                                <div class="pixel-border" style="width: 100%; height: 80px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/CAMPEONATO.png" style="width:100%; height:100%; object-fit: contain;">
+                        <!-- Fila 2 (Secundarios más altos) -->
+                        <div
+                            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; justify-items: center;">
+                            <button class="mode-option locked" data-mode="torneo"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 110px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/CAMPEONATO.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </button>
-                            <button class="mode-option locked" data-mode="clasificacion">
-                                <div class="pixel-border" style="width: 100%; height: 80px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/CLASIFICACION.png" style="width:100%; height:100%; object-fit: contain;">
+                            <button class="mode-option locked" data-mode="clasificacion"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 110px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/CLASIFICACION.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </button>
-                            <button class="mode-option locked" data-mode="practica">
-                                <div class="pixel-border" style="width: 100%; height: 80px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/PRACTICA.png" style="width:100%; height:100%; object-fit: contain;">
+                            <button class="mode-option locked" data-mode="practica"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 110px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/PRACTICA.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </button>
-                            <button class="mode-option locked" data-mode="privadas">
-                                <div class="pixel-border" style="width: 100%; height: 80px; background: #000; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="res/PRIVADAS.png" style="width:100%; height:100%; object-fit: contain;">
+                            <button class="mode-option locked" data-mode="privadas"
+                                style="background: #0a0a19; border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative;">
+                                <div class="pixel-border"
+                                    style="width: 100%; height: 110px; background: linear-gradient(180deg, #1a1a40 0%, #050515 100%) !important; border: 2px solid #333 !important; overflow: hidden;">
+                                    <img src="recursos/PRIVADAS.png"
+                                        style="width:100%; height:100%; object-fit: contain;">
                                 </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="menu-buttons" style="width: 400px;">
-                <button id="setup-btn-play" class="menu-btn primary" disabled style="font-size: 24px; padding: 15px; background: #4CAF50; border-color: #2e7d32; color: #fff;">CONFIRMAR Y JUGAR</button>
+                <button id="setup-btn-play" class="menu-btn primary" disabled
+                    style="font-size: 24px; padding: 15px; background: #4CAF50; border-color: #2e7d32; color: #fff;">CONFIRMAR
+                    Y JUGAR</button>
                 <button id="setup-btn-exit" class="menu-btn" style="border-color: #555; color: #888;">CANCELAR</button>
             </div>
         </div>
 
         <!-- PANTALLA DE FIN DE PARTIDA -->
-        <div id="game-over-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); font-family: 'Rajdhani', sans-serif;">
-            <h1 id="game-over-title" style="color: #fff; font-size: 80px; text-shadow: 0 0 30px #5ad; margin-bottom: 10px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">¡PARTIDA FINALIZADA!</h1>
-            <div id="game-over-winner" style="font-size: 40px; color: #f90; margin-bottom: 40px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px #f90;">GANADOR: EQUIPO NARANJA</div>
-            <div style="display: flex; gap: 40px; margin-bottom: 60px; background: rgba(255,255,255,0.05); padding: 30px 60px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <div style="text-align: center;"><div style="font-size: 14px; color: #5ad;">EQUIPO AZUL</div><div id="final-score-blue" style="font-size: 64px; color: #fff;">0</div></div>
+        <div id="game-over-overlay"
+            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); font-family: 'Rajdhani', sans-serif;">
+            <h1 id="game-over-title"
+                style="color: #fff; font-size: 80px; text-shadow: 0 0 30px #5ad; margin-bottom: 10px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                ¡PARTIDA FINALIZADA!</h1>
+            <div id="game-over-winner"
+                style="font-size: 40px; color: #f90; margin-bottom: 40px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px #f90;">
+                GANADOR: EQUIPO NARANJA</div>
+            <div
+                style="display: flex; gap: 40px; margin-bottom: 60px; background: rgba(255,255,255,0.05); padding: 30px 60px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #5ad;">EQUIPO AZUL</div>
+                    <div id="final-score-blue" style="font-size: 64px; color: #fff;">0</div>
+                </div>
                 <div style="font-size: 48px; color: rgba(255,255,255,0.2);">VS</div>
-                <div style="text-align: center;"><div style="font-size: 14px; color: #f90;">EQUIPO NARANJA</div><div id="final-score-orange" style="font-size: 64px; color: #fff;">0</div></div>
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #f90;">EQUIPO NARANJA</div>
+                    <div id="final-score-orange" style="font-size: 64px; color: #fff;">0</div>
+                </div>
             </div>
             <div class="menu-buttons" style="width: 400px; display: flex; flex-direction: column; gap: 15px;">
                 <button id="btn-gameover-rematch" class="menu-btn primary">¡REVANCHA!</button>
-                <button id="btn-gameover-exit" class="menu-btn" style="border-color: #f33; color: #f33;">SALIR AL MENÚ</button>
+                <button id="btn-gameover-exit" class="menu-btn" style="border-color: #f33; color: #f33;">SALIR AL
+                    MENÚ</button>
             </div>
         </div>
+    </div>
 
-        <div id="match-transition">
-            <div style="position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); width: 400px; text-align: center;">
-                <div class="pixel-title" style="color: #5ad; font-size: 14px;">PREPARANDO ESTADIO...</div>
-                <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
-                    <div id="loading-bar-fill" style="width: 0%; height: 100%; background: #5ad;"></div>
-                </div>
+    <!-- Modal de Alerta Global (Reemplazo de Notificación HUD) -->
+    <div id="modal-alert-overlay" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
+        <div class="pixel-border"
+            style="background: #0a0a19; padding: 30px 50px; width: 500px; text-align: center; border: 4px solid #5ad !important; box-shadow: 0 0 50px rgba(90, 173, 237, 0.3);">
+            <div id="modal-alert-icon" style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒</div>
+            <h2 id="modal-alert-title" class="pixel-title"
+                style="color: #fff; font-size: 24px; margin-bottom: 15px; letter-spacing: 3px;">AVISO DEL SISTEMA</h2>
+            <p id="modal-alert-message" style="font-family: 'Share Tech Mono', monospace; color: #5ad; font-size: 16px; line-height: 1.5; margin-bottom: 30px; text-transform: uppercase;">
+                MENSAJE DE PRUEBA
+            </p>
+            <button id="btn-modal-alert-ok" class="menu-btn primary" style="width: 200px; font-size: 18px; padding: 10px;">ACEPTAR</button>
+        </div>
+    </div>
+
+    <!-- Popup de Confirmación de Salida -->
+    <div id="exit-confirm-overlay" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center;">
+        <div class="pixel-border"
+            style="background: #0a0a19; padding: 40px; width: 450px; text-align: center; border: 3px solid #f33 !important;">
+            <h2 class="pixel-title"
+                style="color: #fff; font-size: 30px; margin-bottom: 25px; text-shadow: 0 0 15px #f33;">¿SALIR DEL JUEGO?
+            </h2>
+            <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                <button id="btn-exit-confirm" class="menu-btn primary"
+                    style="background: #f33; border-color: #a00; color: #fff; width: 100%;">SÍ, SALIR</button>
+                <button id="btn-exit-cancel" class="menu-btn" style="width: 100%;">NO, VOLVER</button>
             </div>
         </div>
+    </div>
+
+    <!-- CONFIRMACIÓN EDITOR DE MAPAS -->
+    <div id="editor-confirm-overlay"
+        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7500; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
+        <div class="pixel-border"
+            style="background: #050515; padding: 40px; width: 450px; display: flex; flex-direction: column; gap: 20px; border: 4px solid #f90 !important; text-align: center;">
+            <h2 class="pixel-title"
+                style="color: #f90; font-size: 28px; text-shadow: 0 0 15px #f90; margin: 0 0 10px;">
+                ¿ABRIR EDITOR?</h2>
+            <p style="font-family: 'Share Tech Mono', monospace; color: #eee; font-size: 14px; margin-bottom: 10px;">
+                Se abrirá el editor avanzado en una pestaña nueva.<br>
+                Podrás crear y guardar tus propios estadios.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                <button id="btn-editor-confirm" class="menu-btn primary"
+                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 100%;">ACEPTAR</button>
+                <button id="btn-editor-cancel" class="menu-btn" style="width: 100%;">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="match-transition">
+        <div
+            style="position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%); width: 400px; text-align: center;">
+            <div class="pixel-title" style="color: #5ad; font-size: 14px;">PREPARANDO ESTADIO...</div>
+            <div
+                style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                <div id="loading-bar-fill" style="width: 0%; height: 100%; background: #5ad;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENÚ DE PAUSA -->
+    <div id="pause-menu"
+        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 8500; flex-direction: column; justify-content: center; align-items: center;">
+        <div class="pixel-border"
+            style="background: #050515; padding: 40px; width: 400px; display: flex; flex-direction: column; gap: 20px; border: 4px solid #5ad !important;">
+            <h2 class="pixel-title"
+                style="color: #5ad; font-size: 40px; text-shadow: 0 0 15px #5ad; margin: 0 0 10px; text-align: center;">
+                PAUSA</h2>
+            <button id="btn-pause-continue" class="menu-btn primary" style="width: 100%;">CONTINUAR</button>
+            <button id="btn-pause-exit" class="menu-btn" style="width: 100%; border-color: #f33; color: #f33;">SALIR AL
+                MENÚ</button>
+        </div>
+    </div>
     </div>
 
     <!-- Scripts -->
     <script type="module" src="js/main.js?v=115"></script>
 </body>
+
 </html>

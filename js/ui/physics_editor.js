@@ -34,29 +34,27 @@ export function initPhysicsEditor(toggleCallback) {
     });
 
     // Generar UI
+    container.innerHTML = '';
     EDITABLE_PARAMS.forEach(param => {
         const item = document.createElement('div');
-        item.style.display = 'flex';
-        item.style.flexDirection = 'column';
-        item.style.gap = '5px';
+        item.style.cssText = 'display: flex; flex-direction: column; gap: 2px; background: rgba(255,255,255,0.02); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);';
 
         const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.color = '#fff';
-        header.style.fontFamily = "'Rajdhani', sans-serif";
-        header.style.fontWeight = 'bold';
+        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,0.7); font-family: "Rajdhani", sans-serif; font-weight: bold; font-size: 11px;';
         
         const label = document.createElement('span');
         label.textContent = param.label;
         
         const valueDisplay = document.createElement('span');
         valueDisplay.id = `val-${param.key}`;
-        valueDisplay.style.color = '#5ad';
+        valueDisplay.style.cssText = 'color: #5ad; font-family: "Share Tech Mono", monospace; font-size: 11px;';
         valueDisplay.textContent = CONST.CONFIG[param.key];
 
         header.appendChild(label);
         header.appendChild(valueDisplay);
+
+        const controlRow = document.createElement('div');
+        controlRow.style.cssText = 'display: flex; align-items: center; gap: 8px;';
 
         const slider = document.createElement('input');
         slider.type = 'range';
@@ -65,31 +63,121 @@ export function initPhysicsEditor(toggleCallback) {
         slider.step = param.step;
         slider.value = CONST.CONFIG[param.key];
         slider.id = `slider-${param.key}`;
-        slider.style.width = '100%';
-        slider.style.accentColor = '#f90';
+        slider.style.cssText = 'flex: 1; accent-color: #f90; cursor: pointer; height: 12px;';
+
+        const resetBtn = document.createElement('button');
+        resetBtn.innerHTML = '↺';
+        resetBtn.style.cssText = 'background: none; border: 1px solid rgba(255,153,0,0.3); color: #f90; cursor: pointer; font-size: 9px; padding: 1px 4px; border-radius: 2px; transition: all 0.3s ease; opacity: 0; visibility: hidden;';
+        resetBtn.title = 'Reset';
+        resetBtn.onmouseover = () => { resetBtn.style.borderColor = '#f90'; resetBtn.style.background = 'rgba(255,153,0,0.1)'; };
+        resetBtn.onmouseout = () => { resetBtn.style.borderColor = 'rgba(255,153,0,0.3)'; resetBtn.style.background = 'none'; };
+
+        const updateResetVisibility = () => {
+            const isModified = Math.abs(CONST.CONFIG[param.key] - DEFAULT_VALUES[param.key]) > (param.step / 2);
+            resetBtn.style.opacity = isModified ? '1' : '0';
+            resetBtn.style.visibility = isModified ? 'visible' : 'hidden';
+        };
+
+        resetBtn.onclick = (e) => {
+            e.stopPropagation();
+            const def = DEFAULT_VALUES[param.key];
+            CONST.CONFIG[param.key] = def;
+            slider.value = def;
+            valueDisplay.textContent = def.toFixed(param.step < 0.01 ? 3 : 2);
+            updateResetVisibility();
+        };
 
         slider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             valueDisplay.textContent = val.toFixed(param.step < 0.01 ? 3 : 2);
-            CONST.CONFIG[param.key] = val; // ACTUALIZACIÓN EN TIEMPO REAL
+            CONST.CONFIG[param.key] = val;
+            updateResetVisibility();
         });
 
+        // Verificación inicial
+        updateResetVisibility();
+
+        controlRow.appendChild(slider);
+        controlRow.appendChild(resetBtn);
+        
         item.appendChild(header);
-        item.appendChild(slider);
+        item.appendChild(controlRow);
         container.appendChild(item);
     });
 
-    btnApply.addEventListener('click', () => toggleEditor(false));
+    if (btnApply) btnApply.addEventListener('click', () => toggleEditor(false));
     
-    btnReset.addEventListener('click', () => {
-        EDITABLE_PARAMS.forEach(param => {
-            CONST.CONFIG[param.key] = DEFAULT_VALUES[param.key];
-            const slider = document.getElementById(`slider-${param.key}`);
-            const display = document.getElementById(`val-${param.key}`);
-            if(slider) slider.value = DEFAULT_VALUES[param.key];
-            if(display) display.textContent = DEFAULT_VALUES[param.key];
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            if(confirm("¿Restablecer TODOS los parámetros a sus valores originales?")) {
+                EDITABLE_PARAMS.forEach(param => {
+                    const def = DEFAULT_VALUES[param.key];
+                    CONST.CONFIG[param.key] = def;
+                    const s = document.getElementById(`slider-${param.key}`);
+                    const d = document.getElementById(`val-${param.key}`);
+                    if(s) s.value = def;
+                    if(d) d.textContent = def.toFixed(param.step < 0.01 ? 3 : 2);
+                    // Como no tenemos acceso directo a cada updateResetVisibility aquí de forma limpia,
+                    // una reinicialización rápida de la UI es lo más efectivo si hay muchos cambios.
+                });
+                initPhysicsEditor(); // Regenerar para actualizar visibilidades
+            }
         });
-    });
+    }
+
+    // Lógica Importar/Exportar
+    const btnExport = document.getElementById('btn-physics-export');
+    const btnImport = document.getElementById('btn-physics-import');
+    const configArea = document.getElementById('physics-config-io');
+
+    if (btnExport && configArea) {
+        btnExport.onclick = async () => {
+            const config = {};
+            EDITABLE_PARAMS.forEach(p => config[p.key] = CONST.CONFIG[p.key]);
+            const json = JSON.stringify(config, null, 2);
+            configArea.value = json;
+            
+            try {
+                await navigator.clipboard.writeText(json);
+                btnExport.innerText = "¡COPIADO!";
+                btnExport.style.borderColor = "#fff";
+            } catch (err) {
+                configArea.select();
+                btnExport.innerText = "SELECCIONADO";
+            }
+            
+            setTimeout(() => { 
+                btnExport.innerText = "COPIAR AJUSTES"; 
+                btnExport.style.borderColor = "#5ad";
+            }, 2000);
+        };
+    }
+
+    if (btnImport && configArea) {
+        btnImport.onclick = () => {
+            try {
+                const config = JSON.parse(configArea.value);
+                EDITABLE_PARAMS.forEach(p => {
+                    if (config[p.key] !== undefined) {
+                        const val = parseFloat(config[p.key]);
+                        CONST.CONFIG[p.key] = val;
+                        const s = document.getElementById(`slider-${p.key}`);
+                        const d = document.getElementById(`val-${p.key}`);
+                        if (s) s.value = val;
+                        if (d) d.textContent = val.toFixed(p.step < 0.01 ? 3 : 2);
+                    }
+                });
+                btnImport.innerText = "¡APLICADO!";
+                btnImport.style.borderColor = "#fff";
+                setTimeout(() => { 
+                    btnImport.innerText = "APLICAR PEGADO"; 
+                    btnImport.style.borderColor = "#4CAF50";
+                }, 2000);
+            } catch(e) {
+                alert("Error: El formato de configuración no es válido.");
+            }
+        };
+    }
 
     // Escuchar la tecla º
     window.addEventListener('keydown', (e) => {

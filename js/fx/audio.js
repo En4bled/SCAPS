@@ -4,6 +4,7 @@ let musicAudio = null;
 let motorAudios = [];
 let isMusicMuted = false;
 let musicVolume = 0.5;
+let sfxVolume = 0.8;
 const TOTAL_SONGS = 8;
 const songMetadata = [
     { title: "NEON VELOCITY", artist: "SYNTHWAVE PRO" },
@@ -54,9 +55,14 @@ export function setMusicVolume(vol) {
     if (musicAudio) {
         musicAudio.volume = musicVolume;
     }
-    // Actualizar etiqueta de volumen en UI si existe
     const volLabel = document.getElementById('settings-vol-label');
     if (volLabel) volLabel.innerText = Math.round(vol * 100) + "%";
+}
+
+export function setSFXVolume(vol) {
+    sfxVolume = vol;
+    const sfxLabel = document.getElementById('settings-sfx-label');
+    if (sfxLabel) sfxLabel.innerText = Math.round(vol * 100) + "%";
 }
 
 export function initAudio(playerCar, allCars) {
@@ -75,7 +81,7 @@ export function initAudio(playerCar, allCars) {
 
     // 2. Motores para todos los coches
     allCars.forEach(car => {
-        const motor = new Audio('sound/motor.mp3');
+        const motor = new Audio('recursos/sound/motor.mp3');
         motor.loop = true;
         motor.volume = 0; 
         motor.preservesPitch = false; // Permite cambiar el pitch con el playbackRate
@@ -131,20 +137,20 @@ export function playSound(type, intensity = 1.0) {
     const now = audioCtx.currentTime;
 
     if (type === 'menu_click') {
-        const clickSnd = new Audio('sound/Modern2.wav');
-        clickSnd.volume = 0.5;
+        const clickSnd = new Audio('recursos/sound/Modern2.wav');
+        clickSnd.volume = 0.5 * sfxVolume;
         clickSnd.play().catch(e => {});
         return;
     } 
     if (type === 'countdown') {
-        const cdSnd = new Audio('sound/Countdown.mp3');
-        cdSnd.volume = 0.6;
+        const cdSnd = new Audio('recursos/sound/Countdown.mp3');
+        cdSnd.volume = 0.6 * sfxVolume;
         cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
         return;
     }
     if (type === 'menu_hover') {
-        const hoverSnd = new Audio('sound/Minimalist8.wav');
-        hoverSnd.volume = 0.3;
+        const hoverSnd = new Audio('recursos/sound/Minimalist8.wav');
+        hoverSnd.volume = 0.3 * sfxVolume;
         hoverSnd.play().catch(e => {});
         return;
     }
@@ -153,11 +159,8 @@ export function playSound(type, intensity = 1.0) {
         const baseFreq = 80 + (intensity * 120);
         osc.frequency.setValueAtTime(baseFreq, now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
-        
-        // Aumentamos el volumen del golpeo (antes era 0.6)
-        gainNode.gain.setValueAtTime(1.5 * intensity, now);
+        gainNode.gain.setValueAtTime(1.5 * intensity * sfxVolume, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        
         osc.start(now);
         osc.stop(now + 0.2);
     }
@@ -166,10 +169,8 @@ export function playSound(type, intensity = 1.0) {
         const baseFreq = 60 + (intensity * 60);
         osc.frequency.setValueAtTime(baseFreq, now);
         osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
-        
-        gainNode.gain.setValueAtTime(0.4 * intensity, now);
+        gainNode.gain.setValueAtTime(0.4 * intensity * sfxVolume, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        
         osc.start(now);
         osc.stop(now + 0.15);
     }
@@ -178,11 +179,9 @@ export function playSound(type, intensity = 1.0) {
         osc.frequency.setValueAtTime(200, now);
         osc.frequency.linearRampToValueAtTime(400, now + 0.5);
         osc.frequency.linearRampToValueAtTime(150, now + 1.5);
-        
-        gainNode.gain.setValueAtTime(0.4, now);
-        gainNode.gain.linearRampToValueAtTime(0.7, now + 0.2);
+        gainNode.gain.setValueAtTime(0.4 * sfxVolume, now);
+        gainNode.gain.linearRampToValueAtTime(0.7 * sfxVolume, now + 0.2);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
-        
         osc.start(now);
         osc.stop(now + 2.0);
     }
@@ -266,7 +265,7 @@ function playPlaylist() {
     }
 
     currentSongIdx = playlistOrder[playlistPointer];
-    musicAudio = new Audio(`music/song${currentSongIdx}.mp3`);
+    musicAudio = new Audio(`recursos/music/song${currentSongIdx}.mp3`);
     musicAudio.volume = musicVolume;
     musicAudio.muted = isMusicMuted;
     

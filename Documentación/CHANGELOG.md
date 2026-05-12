@@ -1,0 +1,150 @@
+# Changelog - SCAPS
+
+All notable changes to this project will be documented in this file.
+
+## [1.4.0] - 2026-05-12 - *Adaptabilidad Visual y Robustez del Sistema*
+### Added
+- **Diseño Adaptativo Global**: 
+    - Implementación de unidades relativas (`vw`, `vh`, `%`) en toda la interfaz para soporte nativo de resoluciones 2K y 1080p.
+    - Eliminación del límite de 1600px en el contenedor principal para permitir pantalla completa en monitores de alta gama.
+- **Expansión de Personalización**:
+    - Integración de 40 modelos de balón con sistema de paginación (4 páginas).
+    - Sistema de Previsualización de Boost y Explosión en tiempo real dentro del menú de personalización.
+    - Nuevo botón de cierre (X) rápido en la esquina superior derecha del panel de personalización.
+- **Seguridad de Navegación**:
+    - Overlay de confirmación con diseño neón para prevenir aperturas accidentales del Editor de Mapas.
+    - Gestión dinámica de visibilidad de botones secundarios según la pantalla activa.
+
+### Changed
+- **Optimización de UI**:
+    - Rediseño compacto de la escena de selección de mapa para evitar solapamientos con botones de acción.
+    - Escalado de fuentes y rellenos (paddings) basado en el ancho de ventana (`vw`).
+
+### Fixed
+- **Robustez del Editor**:
+    - Corrección de errores de sintaxis JSON al guardar mapas mediante la desactivación de avisos HTML en PHP.
+    - Implementación de verificaciones de permisos de escritura y existencia de directorios en `save_map.php`.
+
+## [1.3.1] - 2026-05-11 - *Estructura y Personalización Extendida*
+### Added
+- **Migración de Recursos**: 
+    - Consolidación de todos los assets en la carpeta `/recursos`.
+    - Actualización global de rutas en JSON, HTML, CSS y JS para mayor orden.
+- **Refactorización de Menú Personalizar**:
+    - Sistema de pestañas cuadrado (Estilo Rocket League).
+    - Secciones: Perfil, Vehículo, Balón, Boost y Explosión.
+    - Implementación de selector de Avatares y Tinte de Vehículo (Tono/Saturación).
+
+### Changed
+- **Estructura del Proyecto**: Eliminación de la carpeta `/res` obsoleta y centralización en `/recursos`.
+- **Filtros de Color**: Los vehículos ahora soportan ajustes dinámicos de color.
+
+### Fixed
+- **Cursor Global**: Solucionado el problema de visibilidad del cursor pixelado en todas las capas del juego.
+- **Rutas de Mapas**: Corregido el error de carga de imágenes en mapas personalizados tras el cambio de directorio.
+
+### Changed
+- **Motor de Audio**:
+    - Separación de controles de volumen para Música y Efectos (SFX).
+    - Actualización de todos los sonidos (osciladores y archivos) para respetar el volumen SFX.
+- **Navegación y Estructura**:
+    - La marquesina de cambios ahora solo es visible en el menú principal.
+    - Ajuste de posición predeterminada para el banner de canciones.
+
+### Fixed
+- **Sistema de Pausa**: Restaurada la funcionalidad de la tecla `Escape` y el panel de pausa durante el juego.
+- **Errores de Referencia**: Corregido fallo crítico en la inicialización de volúmenes al arrancar el motor.
+
+## [1.2.0] - 2026-05-11 - *Ciclo de Vida y Optimización UI*
+### Added
+- **Sistema de Game Over Dinámico**: 
+    - Nueva interfaz premium con detección de ganador, marcador final y botones de Revancha/Selector de Modo/Salida.
+- **Documentación Técnica Extendida**:
+    - Creación de `ESPECIFICACIONES_FISICAS.md` con detalles matemáticos sobre SAT, impulsos y lógica pseudo-3D.
+
+### Changed
+- **Experiencia Cinemática de Inicio**:
+    - Refactorización del Zoom Inicial a un sistema híbrido con mezcla (mix) suave hacia el jugador.
+    - Ajuste de velocidad cinematográfica para una entrada más fluida y profesional.
+- **Optimización de Rendimiento (Anti-Stutter)**:
+    - Implementación de pre-carga real con `img.decode()` durante la pantalla de carga.
+    - "Warm-up Render" para forzar la subida de texturas a la GPU (VRAM) antes del inicio del partido.
+- **Tiempo de Juego**: Estandarizado a 60 segundos por sesión.
+
+### Fixed
+- **Atribución de Goles y Asistencias**: Corregida la lógica para asignar puntos a los coches basándose en el historial de toques.
+- **Estabilidad de Código**: Corregido error de sintaxis en `updateUI` y depuración de listeners redundantes.
+
+## [1.1.0] - 2026-05-11 - *Experimental Physics & AI Mastery*
+### Added
+- **AI Engine V11 (Fix Matemático Definitivo)**:
+    - Reescritura completa de `updateCarAI` para resolver el error de offset de 90 grados.
+    - Implementación de Deterministic Angular Steering y Throttle Gating.
+    - Añadido sistema de retroceso (fallback) tras 30 frames de bloqueo.
+- **Real-Time Physics Editor**:
+    - Interfaz dinámica (Tecla º) para modificar `CONST.CONFIG` en tiempo real.
+- **Simulación de Eje Z (Vuelo)**:
+    - El balón ahora rebota con efecto de escala visual para simular altura tras impactos fuertes.
+
+### Changed
+- **Equilibrio de Físicas**:
+    - Ajustes de velocidad máxima y giro para mayor peso en la conducción.
+    - Incremento de fuerza de impacto para despejes largos.
+
+## [1.0.0] - 2026-05-10 - *Production Release: AI & Physics Overhaul*
+### Added
+- **AI Engine (Relentless Pursuit V9)**: Implementación de algoritmos deterministas de persecución.
+- **Motor de Colisiones Pro**: Resolución de impulsos elásticos 1D para choques coche-coche.
+- **Lógica de Rebote en Muros**: Implementación de rebotes con conservación de momento y clamping de velocidad.
+
+### Fixed
+- **Integridad de Sintaxis**: Limpieza de llaves redundantes en `physics.js`.
+- **Maniobrabilidad**: Corregida la amortiguación de giro a altas velocidades (80% agilidad mantenida).
+
+## [0.9.0] - 2026-05-10 - *Cinematic Implementation*
+### Added
+- **Manager de Secuencias Cinemáticas**: Orquestación de inicio con zoom dinámico (0.1 inicial).
+- **Espacialización de Audio**: Feedback auditivo basado en la magnitud del impacto.
+
+### Changed
+- **Escalado Global**: Incremento del 50% en las dimensiones de todas las entidades para mejorar visibilidad.
+
+## [0.8.0] - 2026-05-10 - *UI & Personalization Architecture*
+### Added
+- **Suite de Personalización**: Persistencia de nombres de jugador y selección de skins.
+- **Paginación Asíncrona**: Optimización O(1) para selectores de mapas y vehículos.
+
+## [0.7.0] - 2026-05-10 - *Audio Engine & UX Integration*
+### Added
+- **Controlador de Playlist Dinámico**: Sistema de reproducción aleatoria con notificaciones de metadatos.
+- **Ajustes In-Game**: Control de volumen y mute integrados.
+
+## [0.6.0] - 2026-05-10 - *Level Design Suite (Editor)*
+### Added
+- **Lógica de Porterías Desacoplada**: Definición independiente de triggers físicos y sprites visuales.
+- **Grid Snapping**: Heurísticas de ajuste a rejilla para precisión en el diseño.
+
+## [0.5.0] - 2026-05-09 - *Core Engine & Collision SAT*
+### Added
+- **Implementación SAT (Separating Axis Theorem)**: Detección precisa de colisiones poligonales.
+- **Sistema de Partículas**: Explosiones y confeti para efectos de gol.
+
+## [0.4.0] - 2026-05-08 - *Asset Integration*
+### Added
+- **Carga Dinámica de Texturas**: Soporte para múltiples modelos de coche y variaciones de balón.
+- **Fondo de Estadio**: Implementación del renderizado de campo con detalles de césped.
+
+## [0.3.0] - 2026-05-05 - *Map & Physics System*
+### Added
+- **Sistema de Mapas JSON**: Carga de niveles desde archivos externos.
+- **Fricción y Drag**: Simulación básica de resistencia al aire y fricción de rodadura.
+
+## [0.2.0] - 2026-05-02 - *Input & Movement*
+### Added
+- **Control por Teclado**: Soporte para WASD y flechas.
+- **Física de Conducción**: Implementación de giro, aceleración y frenado.
+
+## [0.1.0] - 2026-05-01 - *Initial Prototype*
+### Added
+- **Render Loop Base**: Configuración de Canvas y ciclo de dibujo.
+- **Entidades Básicas**: Coche cuadrado y balón circular moviéndose por pantalla.

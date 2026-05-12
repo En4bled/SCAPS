@@ -3,7 +3,7 @@ import { Particle, SkidMark } from '../fx/particles.js';
 import { checkPolygonCollision } from '../world/physics.js';
 
 export class Car {
-    constructor(x, y, color, controls, name, imgPath = null) {
+    constructor(x, y, color, controls, name, imgPath = null, hue = 0, saturate = 100) {
         this.x = x;
         this.y = y;
         this.width = CONST.CONFIG.CAR_WIDTH;
@@ -17,11 +17,12 @@ export class Car {
         this.vx = 0;
         this.vy = 0;
         this.boost = 33; 
+        this.hue = hue;
+        this.saturate = saturate;
         
         this.img = null;
         if (imgPath) {
-            this.img = new Image();
-            this.img.src = imgPath;
+            this.setAppearance(imgPath, hue, saturate);
         }
 
         this.isBoosting = false;
@@ -33,13 +34,32 @@ export class Car {
         this.aiState = { role: 'attacker', targetBoostPad: null }; 
     }
 
+    setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
+        this.hue = hue;
+        this.saturate = saturate;
+        if (!this.img || (typeof imgPath === 'string' && !this.img.src.includes(imgPath))) {
+            this.img = new Image();
+            this.img.src = imgPath;
+        }
+    }
+
+    // Alias para compatibilidad
+    set imgUrl(url) {
+        this.setAppearance(url);
+    }
+
     draw(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
         if (this.img && this.img.complete) {
+            // Aplicar tinte si es necesario
+            if (this.hue !== 0 || this.saturate !== 100) {
+                ctx.filter = `hue-rotate(${this.hue}deg) saturate(${this.saturate}%)`;
+            }
             ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.filter = 'none'; // Resetear para el resto del frame
         } else {
             // Fallback ultra-simple (Rectángulo de color)
             ctx.fillStyle = this.color;
