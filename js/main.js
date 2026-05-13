@@ -110,7 +110,7 @@ let selectedCarP2 = 'recursos/car2.png';
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1, currentBallPage = 1;
 let currentAvatarPage = 1;
 const CARS_PER_PAGE = 12;
-const AVATARS_PER_PAGE = 9;
+const AVATARS_PER_PAGE = 12;
 const MAPS_PER_PAGE = 1;
 const BALLS_PER_PAGE = 10;
 let currentZoom = 1.0, targetZoom = 0.85;
@@ -994,15 +994,16 @@ function renderCarSelection() {
         list.appendChild(item);
     });
 
-    // Añadir botón "PROXIMAMENTE" (Ocupando 2 huecos)
-    const nextItem = document.createElement('div');
-    nextItem.className = 'selectable-item';
-    nextItem.style.background = 'rgba(0,0,0,0.3)';
-    nextItem.style.borderStyle = 'dashed';
-    nextItem.style.opacity = '0.5';
-    nextItem.style.gridColumn = 'span 2'; // Ocupa 2 columnas
-    nextItem.innerHTML = `<span style="font-size: 11px; font-weight: bold; color: #5ad; text-align: center; padding: 5px; letter-spacing: 2px;">PROXIMAMENTE</span>`;
-    list.appendChild(nextItem);
+    // Añadir 2 botones "PROXIMAMENTE" para completar la rejilla 4x3 (10 coches + 2 huecos = 12)
+    for(let i=0; i<2; i++) {
+        const nextItem = document.createElement('div');
+        nextItem.className = 'selectable-item';
+        nextItem.style.background = 'rgba(0,0,0,0.3)';
+        nextItem.style.borderStyle = 'dashed';
+        nextItem.style.opacity = '0.5';
+        nextItem.innerHTML = ``; // Vacío para estética limpia
+        list.appendChild(nextItem);
+    }
 
     // Sincronizar sliders
     const hueSlider = document.getElementById('slider-car-hue');
@@ -1314,7 +1315,8 @@ async function loadSetupMaps() {
             
             // Estilos dinámicos para el efecto 3D
             card.style.width = isCenter ? "280px" : "180px";
-            card.style.height = "340px";
+            card.style.height = "fit-content !important"; // Forzar ajuste al contenido
+            card.style.minHeight = "0";
             card.style.zIndex = isCenter ? "10" : "5";
             card.style.opacity = isCenter ? "1" : "0.6";
             card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 35}px) rotateY(${offset * -20}deg)`;
@@ -1322,7 +1324,7 @@ async function loadSetupMaps() {
             card.style.cursor = "pointer";
             card.style.background = "#0a0a19";
             card.style.borderRadius = "12px";
-            card.style.padding = "10px";
+            card.style.padding = "10px 10px 10px 10px"; // Padding uniforme
             card.style.display = "flex";
             card.style.flexDirection = "column";
             card.style.boxSizing = "border-box";
@@ -1333,12 +1335,16 @@ async function loadSetupMaps() {
             }
 
             card.innerHTML = `
-                <div class="pixel-border" style="width: 100%; height: 240px; overflow: hidden; background: #000; border: ${isCenter ? '4px solid #5ad' : '2px solid #333'} !important;">
+                <div class="pixel-border" style="width: 100%; height: 290px; overflow: hidden; background: #000; border: ${isCenter ? '4px solid #5ad' : '2px solid #333'} !important; position: relative;">
                     <img src="recursos/Map${idx + 1}.png" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(10,10,25,1) 0%, rgba(10,10,25,0.7) 40%, transparent 100%); opacity: ${isCenter ? 1 : 0}; transition: opacity 0.3s;"></div>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; margin-top: 15px; opacity: ${isCenter ? 1 : 0}; transition: opacity 0.3s; pointer-events: none;">
-                    <div style="background: #5ad; color: #000; font-size: 12px; padding: 5px 25px; font-weight: bold; font-family: 'Share Tech Mono', monospace; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: 2px;">
-                        ${displayName}
+                <div style="display: flex; flex-direction: column; align-items: center; margin-top: -35px; opacity: ${isCenter ? 1 : 0}; transition: all 0.4s ease; pointer-events: none; z-index: 20; transform: ${isCenter ? 'translateY(0)' : 'translateY(15px)'}">
+                    <!-- Etiqueta Cyberpunk Neon Tag -->
+                    <div style="background: rgba(5, 5, 15, 0.9); border: 2px solid #5ad; padding: 4px 25px; box-shadow: 0 0 20px rgba(90, 173, 237, 0.4); position: relative; display: flex; align-items: center; justify-content: center; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);">
+                        <span style="color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase; text-shadow: 0 0 10px rgba(90, 173, 237, 0.8);">
+                            ${displayName}
+                        </span>
                     </div>
                 </div>
             `;
