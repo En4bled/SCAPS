@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-05-14 - *Diseñador de Banners Avanzado y Refinamiento de Perfil*
+### Added
+- **Diseñador Dinámico de Banners**: 
+    - Implementación de un editor procedimental que permite personalizar Fondo (Colores 1 y 2), Borde, Texto y Fondo de Avatar.
+    - Soporte para modos **Sólido** y **Degradado** con actualización en tiempo real.
+    - Integración de **Patrones Visuales** (Carbono, Puntos, Tech Grid) inyectados dinámicamente.
+- **Optimización de Interfaz de Perfil**:
+    - Rediseño de la pestaña Perfil en un sistema de dos columnas compactas para maximizar el espacio.
+    - Reubicación inteligente de controles (Selector de color de avatar y paginación alineados en el pie de la galería).
+    - Nueva vista previa escalada (0.65x) integrada directamente en el flujo del editor.
+- **Navegación Visual Mejorada**:
+    - Nuevos iconos animados (GIFs) en las pestañas de navegación para una estética más "Arcade/Retro".
+
+### Fixed
+- **Estabilidad de Menú**: Eliminada referencia huérfana a `renderBanners()` que causaba fallos al abrir la personalización.
+- **Corrección de Fuentes**: Ajuste de `line-height` y `padding` en inputs para evitar recortes en fuentes pixeladas (ej: "TURBOADICTO").
+
 ## [1.4.0] - 2026-05-12 - *Adaptabilidad Visual y Robustez del Sistema*
 ### Added
 - **Diseño Adaptativo Global**: 

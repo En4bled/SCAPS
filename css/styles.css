@@ -86,8 +86,8 @@ canvas {
     transform: translate(-50%, -50%);
     width: 800px;
     background-color: rgba(10, 10, 10, 0.85);
-    border: 2px solid #555;
-    border-radius: 15px;
+    border: 2px solid #333;
+    border-radius: 0; /* Sin redondeo para estilo pixelado */
     z-index: 200;
     display: none;
     flex-direction: column;
@@ -329,49 +329,134 @@ canvas {
 }
 
 /* Banner de Perfil Estilo Rocket League */
-#player-banner {
-    position: absolute;
-    bottom: 43px;
-    left: 12px;
-    /* Movido de nuevo a la izquierda */
+#player-banner, .banner-preview-sync {
     display: flex;
     align-items: center;
-    background: rgba(45, 96, 150, 0.9);
     padding: 0;
-    border: 2px solid #fff !important;
-    height: 60px;
-    /* Reducido de 80px */
-    z-index: 1000;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-    min-width: 240px;
-    /* Reducido de 320px */
+    height: 70px; /* Un poco más alto para los detalles */
+    min-width: 320px;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: relative;
+    overflow: visible;
 }
 
-#player-banner-avatar-frame {
-    width: 60px;
-    /* Reducido de 80px */
-    height: 60px;
-    /* Reducido de 80px */
-    background: #222;
+#player-banner {
+    position: absolute;
+    bottom: 30px;
+    left: 12px;
+    z-index: 1000;
+    transform: scale(0.8); /* Reducido de tamaño */
+    transform-origin: bottom left;
+}
+
+.banner-preview-sync {
+    position: relative !important;
+    z-index: 10 !important;
+    transform-origin: center;
+    margin: 10px 0;
+}
+
+/* Marco del Avatar Estilo Tech */
+#player-banner-avatar-frame, #custom-banner-avatar-frame {
+    width: 65px;
+    height: 65px;
+    background: #000;
     border: 3px solid #fff !important;
     position: relative;
-    margin-left: -5px;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    overflow: hidden;
-    z-index: 2;
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
+/* Detalles Tech (Tabs azules) */
+#player-banner-avatar-frame::before, #custom-banner-avatar-frame::before,
+#player-banner-avatar-frame::after, #custom-banner-avatar-frame::after {
+    content: '';
+    position: absolute;
+    background: #00f0ff;
+    box-shadow: 0 0 8px #00f0ff;
+    z-index: -1;
+}
 
+/* Tab Superior */
+#player-banner-avatar-frame::before, #custom-banner-avatar-frame::before {
+    top: -8px;
+    left: 15%;
+    right: 15%;
+    height: 6px;
+    clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+}
 
-#player-banner-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* Tab Inferior (reutilizando after con clip-path diferente) */
+#player-banner-avatar-frame::after, #custom-banner-avatar-frame::after {
+    bottom: -8px;
+    left: 15%;
+    right: 15%;
+    height: 6px;
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+}
+
+/* Cuerpo del Banner (Info) con Neón */
+.player-banner-info {
+    flex: 1;
+    height: 48px;
+    margin-left: -10px; /* Solapamiento */
+    padding: 5px 15px 5px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(0, 20, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borde mucho más sutil */
+    box-shadow: none; /* Eliminado el resplandor grueso */
+    position: relative;
+    z-index: 5;
+}
+
+#player-banner-title, #custom-banner-title {
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: -2px;
+    margin-bottom: 5px;
+    display: block;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+#player-banner-avatar, #custom-banner-avatar {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+}
+
+/* Clases Globales de Estilos de Banner (Aplicadas tanto al botón como al cuerpo del banner) */
+.banner-style-default, .banner-style-default .player-banner-info { background: #2d6096 !important; border-color: #fff !important; }
+.banner-style-heat, .banner-style-heat .player-banner-info { background: linear-gradient(90deg, #600, #f33) !important; border-color: #f90 !important; }
+.banner-style-toxic, .banner-style-toxic .player-banner-info { background: linear-gradient(90deg, #040, #0f0) !important; border-color: #fff !important; }
+.banner-style-royal, .banner-style-royal .player-banner-info { background: linear-gradient(90deg, #860, #f90) !important; border-color: #fff !important; }
+.banner-style-cyber, .banner-style-cyber .player-banner-info { background: linear-gradient(90deg, #606, #f0f) !important; border-color: #0ff !important; }
+.banner-style-deep, .banner-style-deep .player-banner-info { background: linear-gradient(90deg, #004, #50f) !important; border-color: #fff !important; }
+.banner-style-carbon, .banner-style-carbon .player-banner-info { background: #111 !important; border-color: #444 !important; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 4px 4px; }
+.banner-style-ocean, .banner-style-ocean .player-banner-info { background: linear-gradient(90deg, #044, #0ff) !important; border-color: #fff !important; }
+.banner-style-sunset, .banner-style-sunset .player-banner-info { background: linear-gradient(90deg, #b40, #f09) !important; border-color: #fff !important; }
+.banner-style-diamond, .banner-style-diamond .player-banner-info { background: linear-gradient(90deg, #777, #fff) !important; border-color: #5ad !important; }
+
+/* NUEVOS 10 DISEÑOS */
+.banner-style-nebula, .banner-style-nebula .player-banner-info { background: linear-gradient(45deg, #408, #f0f, #08f) !important; border-color: #fff !important; }
+.banner-style-forest, .banner-style-forest .player-banner-info { background: linear-gradient(90deg, #020, #060) !important; border-color: #ad0 !important; }
+.banner-style-gold, .banner-style-gold .player-banner-info { background: linear-gradient(90deg, #430, #ff0, #430) !important; border-color: #fff !important; }
+.banner-style-glitch, .banner-style-glitch .player-banner-info { background: repeating-linear-gradient(0deg, #000, #000 2px, #111 2px, #111 4px) !important; border-color: #f0f !important; }
+.banner-style-inferno, .banner-style-inferno .player-banner-info { background: radial-gradient(circle, #f00, #f90, #200) !important; border-color: #f00 !important; }
+.banner-style-ice, .banner-style-ice .player-banner-info { background: linear-gradient(135deg, #fff, #8df) !important; border-color: #fff !important; }
+.banner-style-toxic-waste, .banner-style-toxic-waste .player-banner-info { background: #adff2f !important; border-color: #000 !important; }
+.banner-style-midnight, .banner-style-midnight .player-banner-info { background: #000510 !important; border-color: #1a1a4a !important; }
+.banner-style-prism, .banner-style-prism .player-banner-info { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f) !important; border-color: #fff !important; }
+.banner-style-steel, .banner-style-steel .player-banner-info { background: linear-gradient(90deg, #333, #777, #333) !important; border-color: #aaa !important; };
 }
 
 .player-banner-info {
@@ -385,11 +470,10 @@ canvas {
     position: relative;
 }
 
-#player-banner-name {
+#player-banner-name, #custom-banner-name {
     color: #fff;
     font-family: 'Rajdhani', sans-serif;
     font-size: 24px;
-    /* Reducido de 32px */
     font-weight: 400;
     letter-spacing: 1px;
     margin-bottom: 2px;
@@ -717,7 +801,8 @@ input[type="range"]::-moz-range-thumb {
     font-family: 'Share Tech Mono', monospace !important;
     text-transform: uppercase;
     letter-spacing: 4px;
-    font-weight: 400;
+    /* font-weight: 400; */
+    text-align: center;
 }
 
 @keyframes pixel-neon-cycle {
@@ -781,7 +866,9 @@ input[type="range"]::-moz-range-thumb {
 .mode-option.selected .pixel-border {
     border-color: #f90 !important;
     background: rgba(255, 153, 0, 0.2) !important;
-    box-shadow: 0 0 25px rgba(255, 153, 0, 0.4) !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+    text-align: center !important;
+    width: 100%;
 }
 
 .mode-option.locked {
@@ -804,12 +891,20 @@ input[type="range"]::-moz-range-thumb {
    SISTEMA DE PERSONALIZACIÓN RESPONSIVO (ULTIMATE SYNC)
    ========================================================================== */
 
-.personalization-menu {
+.personalization-wrapper {
     display: none;
-    width: 65em !important;
-    /* 65% del ancho del juego */
-    height: 42.5em !important;
-    /* Aproximadamente 75% del alto del juego (que es 56.25em) */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    z-index: 6000;
+}
+
+.personalization-menu {
+    display: flex;
+    width: 80em !important; /* Más ancho */
+    height: 45em !important; /* Un poco más alto */
     background: rgba(5, 5, 15, 0.97);
     border: 0.3em solid #5ad !important;
     position: relative;
@@ -817,37 +912,46 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: column;
     align-items: stretch !important;
     box-sizing: border-box;
-    z-index: 6000;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2);
 }
 
-/* Alias para compatibilidad */
-#menu-custom {
-    display: none;
-}
-
-#menu-custom h2 {
-    font-size: 2em !important;
-    margin-bottom: 1.2em !important;
+.personalization-banner {
+    font-size: 3em !important;
+    color: #ff9900; /* Naranja sólido */
+    font-family: 'Rajdhani', sans-serif !important;
+    text-transform: uppercase;
+    pointer-events: none;
+    margin: 0 0 0.2em 0 !important;
+    letter-spacing: 2px;
+    font-weight: 900;
+    animation: none !important; /* Eliminar cambio de color */
+    
+    /* Borde y Grosor */
+    -webkit-text-stroke: 2px #552200;
+    
+    /* Efecto Retro/Arcade */
+    text-shadow: 
+        4px 4px 0px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(255, 153, 0, 0.4);
 }
 
 .custom-tabs-container {
     width: 100%;
     display: flex;
-    justify-content: flex-start;
-    gap: 0.5em;
-    margin-bottom: 1.2em;
+    justify-content: space-between;
+    gap: 0.8em;
+    margin-bottom: 1.5em;
 }
 
 .custom-tab-btn {
     flex: 1;
-    max-width: 12em;
-    height: 4.5em;
+    margin-top: 1px;
+    height: 5.5em; /* Más alto */
     background: rgba(255, 255, 255, 0.05);
     border: 0.15em solid rgba(90, 173, 237, 0.2);
     color: rgba(255, 255, 255, 0.5);
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.8em;
+    font-size: 1.1em; /* Más grande */
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
@@ -859,9 +963,13 @@ input[type="range"]::-moz-range-thumb {
     transition: all 0.3s ease;
 }
 
-.custom-tab-btn i {
-    font-size: 1.5vw;
+.custom-tab-btn i, .tab-icon-gif {
+    font-size: 2.5vw;
     font-style: normal;
+    width: 3vw;
+    height: 3vw;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
 }
 
 .custom-tab-btn.active {
@@ -895,9 +1003,7 @@ input[type="range"]::-moz-range-thumb {
     flex: 1;
 }
 
-/* Forzar stack vertical en pestañas de 100% */
-#pane-balon.active,
-#pane-explosion.active {
+#pane-balon.active {
     flex-direction: column;
 }
 
@@ -935,7 +1041,48 @@ input[type="range"]::-moz-range-thumb {
     flex: 0 0 calc(50% - 0.6em) !important;
     max-width: calc(50% - 0.6em) !important;
     min-width: 0;
-    justify-content: center; /* Centrado vertical del contenido */
+    display: flex;
+    flex-direction: column;
+}
+
+.banner-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 5px !important;
+}
+
+.banner-item-preview {
+    width: 100%;
+    height: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.banner-item-preview.selected {
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.custom-select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #111 !important;
+    color: #fff !important;
+    border: 2px solid #5ad !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235ad' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+    line-height: 1.2;
+    padding-top: 4px;
+}
+
+.custom-select option {
+    background: #222;
+    color: #fff;
 }
 
 /* Pestañas de 100% de ancho */
@@ -956,7 +1103,7 @@ input[type="range"]::-moz-range-thumb {
 
 .custom-label {
     color: #5ad;
-    font-size: 0.7em;
+    font-size: 0.95em; /* Aumentado */
     font-weight: bold;
     letter-spacing: 0.05em;
     text-align: center;
@@ -966,12 +1113,13 @@ input[type="range"]::-moz-range-thumb {
     background: rgba(255, 255, 255, 0.05);
     border: 0.1em solid #5ad;
     color: #fff;
-    padding: 0.6em;
+    padding: 0.5em 0.6em;
     font-family: 'Rajdhani', sans-serif;
     font-size: 1em;
     text-align: center;
     width: 100%;
     box-sizing: border-box;
+    line-height: 1;
 }
 
 /* Sliders de Tinte */
@@ -1049,7 +1197,7 @@ input[type="range"]::-moz-range-thumb {
     justify-items: center !important;
     overflow: hidden !important;
     max-height: none !important;
-    gap: 0.6em; 
+    gap: 0.6em;
     padding: 0 !important;
     width: 100% !important;
     margin: 0 !important;
@@ -1057,7 +1205,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .ball-grid .selectable-item {
-    max-width: 7.5em !important; 
+    max-width: 7.5em !important;
 }
 
 .custom-box-ball {
@@ -1107,13 +1255,21 @@ input[type="range"]::-moz-range-thumb {
     box-sizing: border-box;
 }
 
+.avatar-grid-3x3 .selectable-item {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 5.5em !important; /* Mismo tamaño que el garaje */
+    height: auto !important;
+}
+
 .boost-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
     justify-content: center !important;
     justify-items: center !important;
-    gap: 0.8em; 
-    padding: 0.5em 30% !important; /* Restaurado al 30% */
+    /* gap: 0.8em; */
+    padding: 0.5em 5% !important;
+    /* Maximizado para ocupar el cuadro */
     width: 100% !important;
     max-width: 30em;
     margin: 0 auto !important;
@@ -1131,22 +1287,76 @@ input[type="range"]::-moz-range-thumb {
     aspect-ratio: 1 / 1;
 }
 
-.custom-box-boost {
-    flex: 0 0 calc(50% - 0.6em) !important; 
+.custom-box-boost,
+.custom-box-explosion {
+    flex: 0 0 calc(50% - 0.6em) !important;
     max-width: calc(50% - 0.6em) !important;
 }
 
-.custom-box-preview-boost {
-    flex: 0 0 calc(50% - 0.6em) !important;
-    max-width: calc(50% - 0.6em) !important;
+.custom-box-preview-boost,
+.custom-box-preview-explosion {
+    flex: 0 0 calc(50% - 1.5em) !important;
+    max-width: calc(50% - 1.5em) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-right: 1.25em !important;
+    /* Espacio externo a la derecha */
+}
+
+.explosion-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    padding: 1em 8% !important;
+    /* Punto intermedio: Ni muy grandes ni muy pequeños */
+    width: 100% !important;
+    max-width: 30em;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    scrollbar-width: none;
+}
+
+.explosion-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.explosion-preview-frame {
+    width: 88%;
+    /* Menos ancha */
+    aspect-ratio: 1 / 1;
+    /* Más cuadrada */
+    background: radial-gradient(circle, rgba(40, 20, 20, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
+    border: 0.1em solid rgba(255, 153, 0, 0.3);
+    position: relative;
+    border-radius: 0.5em;
+    overflow: hidden;
+    margin-top: 1em;
+    margin-bottom: 1.5em;
+}
+
+.explosion-title {
+    margin-top: 1.5em !important;
+    margin-bottom: 0em !important;
+    text-align: center;
+    font-size: 1.2em !important;
+}
+
+.btn-save-custom {
+    width: fit-content !important;
+    /* Forzar ajuste al contenido anulando el 100% base */
+    min-width: 12em;
+    /* Mínimo para que no sea excesivamente pequeño */
+    padding: 0.6em 3em !important;
+    margin: 0 auto !important;
+    margin-top: auto;
 }
 
 .boost-preview-frame {
     width: 100%;
-    height: 12em; /* Restaurado a 12em */
+    height: 12em; 
     background: radial-gradient(circle, rgba(20, 20, 40, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
     border: 0.1em solid rgba(90, 173, 237, 0.3);
     position: relative;
@@ -1190,8 +1400,41 @@ input[type="range"]::-moz-range-thumb {
     text-align: left;
 }
 
+.gallery-title {
+    text-align: center !important;
+    width: 100%;
+    margin-bottom: 0.8em !important;
+    color: #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+.garage-title, .ball-title, .boost-title, .explosion-title {
+    margin-bottom: 0.8em !important;
+    color: #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+.avatar-preview-box {
+    width: 8em;
+    height: 8em;
+    margin: 1em auto;
+    border: 3px solid #5ad !important;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(90, 173, 237, 0.3);
+}
+
+.avatar-preview-box img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+}
+
 .boost-title {
-    margin-top: 1.5em !important; 
+    text-align: center;
     margin-bottom: 0.8em !important;
 }
 
@@ -1218,6 +1461,10 @@ input[type="range"]::-moz-range-thumb {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.avatar-grid-3x3 .selectable-item {
+    border-radius: 0 !important;
 }
 
 .selectable-item img {
@@ -1283,12 +1530,17 @@ input[type="range"]::-moz-range-thumb {
 
 /* Botón Guardar */
 .btn-save-custom {
-    padding: 0.6em 0 !important;
+    width: fit-content !important; 
+    min-width: 12em;
+    padding: 0.6em 3em !important;
     font-size: 1em !important;
     border-color: #5ad !important;
-    width: 100% !important;
     margin-top: auto !important;
+    margin-bottom: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     font-family: 'Share Tech Mono', monospace;
+    display: block;
 }
 
 /* Otros */
@@ -1349,4 +1601,62 @@ input[type="range"]::-moz-range-thumb {
     font-weight: bold;
     min-width: 4em;
     text-align: center;
+}
+
+/* --- Estilos Compactos para el Editor de Banners --- */
+.custom-label-tiny {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.custom-color-picker-small {
+    width: 100%;
+    height: 20px;
+    background: #111;
+    border: 1px solid #444;
+    cursor: pointer;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.custom-select-small {
+    width: 100%;
+    height: 24px;
+    background: #111;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+.custom-input-small {
+    width: 100%;
+    height: 24px;
+    background: #111;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 10px;
+    padding: 0 5px;
+    font-family: 'Share Tech Mono', monospace;
+    box-sizing: border-box;
+}
+
+.custom-box-profile {
+    width: 440px !important;
+    max-width: 440px !important;
+    display: flex;
+    flex-direction: column;
+    padding: 12px !important;
+    height: auto;
+    overflow: visible !important;
+}
+
+.custom-box-gallery {
+    flex: 1;
 }

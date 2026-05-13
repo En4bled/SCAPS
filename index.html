@@ -68,6 +68,7 @@
                 </div>
                 <div class="player-banner-info">
                     <span id="player-banner-name">PILOTO_01</span>
+                    <span id="player-banner-title">ALPHA TESTER</span>
                     <div class="player-banner-exp-bar">
                         <div class="player-banner-exp-fill"></div>
                     </div>
@@ -87,228 +88,283 @@
                 style="position: absolute; bottom: 5vh; right: 2vw; font-size: 0.8vw; padding: 1vh 0; width: 15vw; min-width: 200px; z-index: 2000; border-color: #5ad; color: #5ad; display: block; text-align: center;">NOTAS
                 DE DESARROLLO</button>
 
-            <!-- Panel de Personalización (REDISEÑO PESTAÑAS) -->
-            <div id="menu-custom" class="menu-buttons pixel-border personalization-menu">
+                <div id="menu-custom" class="personalization-wrapper" style="display: none;">
+                    <!-- Título exterior (Banner) ahora fuera del cuadro -->
+                    <h2 class="neon-title pixel-title personalization-banner">
+                        SISTEMA DE PERSONALIZACIÓN</h2>
 
-                <!-- Botón de Cierre (Aspa) -->
-                <button onclick="document.getElementById('btn-custom-back').click()"
-                    style="position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; background: rgba(255, 255, 255, 0.05); border: 2px solid #5ad; color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 100; transition: all 0.2s;"
-                    onmouseover="this.style.background='#f33'; this.style.color='#fff'; this.style.borderColor='#fff';"
-                    onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='#5ad'; this.style.borderColor='#5ad';">
-                    ✕
-                </button>
-
-                <h2 class="neon-title pixel-title"
-                    style="margin: 0 0 20px; color: #5ad; text-shadow: 0 0 15px #5ad; font-size: 32px; text-align:center; letter-spacing: 5px;">
-                    SISTEMA DE PERSONALIZACIÓN</h2>
-
-                <!-- Navegación de Pestañas -->
-                <div class="custom-tabs-container">
-                    <button class="custom-tab-btn active" data-tab="perfil">
-                        <i>👤</i>
-                        <span>Perfil</span>
-                    </button>
-                    <button class="custom-tab-btn" data-tab="vehiculo">
-                        <i>🏎️</i>
-                        <span>Vehículo</span>
-                    </button>
-                    <button class="custom-tab-btn" data-tab="balon">
-                        <i>⚽</i>
-                        <span>Balón</span>
-                    </button>
-                    <button class="custom-tab-btn" data-tab="boost">
-                        <i>🔥</i>
-                        <span>Boost</span>
-                    </button>
-                    <button class="custom-tab-btn" data-tab="explosion">
-                        <i>💥</i>
-                        <span>Explosión</span>
-                    </button>
-                </div>
-
-                <!-- Contenedor de Paneles (Responsivo) -->
-                <div class="custom-panes-container" style="flex: 1; width: 100%; min-height: 0;">
-
-                    <!-- PESTAÑA PERFIL -->
-                    <div id="pane-perfil" class="custom-pane active">
-                        <div style="display: flex; gap: 20px; height: 100%; width: 100%;">
-
-                            <!-- [BLOQUE 1] Datos del Piloto: Nombre y Color -->
-                            <div id="box-profile-data" class="neon-container pixel-border custom-box-profile">
-                                <div class="custom-input-group">
-                                    <label class="custom-label">NOMBRE DEL PILOTO:</label>
-                                    <input type="text" id="input-player-name" value="PILOTO_01" maxlength="12"
-                                        class="custom-input">
-                                </div>
-
-                                <div class="custom-color-group">
-                                    <label class="custom-label-small">COLOR DE FONDO:</label>
-                                    <input type="color" id="input-avatar-bg" value="#222222"
-                                        class="custom-color-picker">
-                                </div>
-
-                                <!-- Botón de Guardado del Perfil -->
-                                <button onclick="document.getElementById('btn-custom-back').click()"
-                                    class="menu-btn primary btn-save-custom">GUARDAR PERFIL</button>
-                            </div>
-
-                            <!-- [BLOQUE 2] Selector de Avatares (Rejilla 3x3) -->
-                            <div id="box-profile-gallery" class="neon-container pixel-border custom-box-gallery">
-                                <h3 class="pixel-title gallery-title">GALERÍA DE AVATARES</h3>
-
-                                <div id="avatar-list" class="item-grid avatar-grid-3x3">
-                                    <!-- Los avatares se cargan dinámicamente desde main.js -->
-                                </div>
-
-                                <!-- Controles de Paginación (< 1/12 >) -->
-                                <div class="custom-pagination-compact">
-                                    <button id="btn-avatar-prev" class="menu-btn btn-nav-compact">&lt;</button>
-                                    <span id="avatar-page-info" class="page-info">1</span>
-                                    <button id="btn-avatar-next" class="menu-btn btn-nav-compact">&gt;</button>
-                                </div>
-                            </div>
-
+                    <div class="pixel-border personalization-menu" style="display: flex !important;">
+                        <!-- Navegación de Pestañas -->
+                        <div class="custom-tabs-container">
+                            <button class="custom-tab-btn active" data-tab="perfil">
+                                <img src="recursos/profile-selector-tab.gif" class="tab-icon-gif">
+                                <span>Perfil</span>
+                            </button>
+                            <button class="custom-tab-btn" data-tab="vehiculo">
+                                <img src="recursos/car-selecctor-tab.gif" class="tab-icon-gif">
+                                <span>Vehículo</span>
+                            </button>
+                            <button class="custom-tab-btn" data-tab="balon">
+                                <img src="recursos/ball-selector-tab.gif" class="tab-icon-gif">
+                                <span>Balón</span>
+                            </button>
+                            <button class="custom-tab-btn" data-tab="boost">
+                                <img src="recursos/boost-selector-tab.gif" class="tab-icon-gif">
+                                <span>Boost</span>
+                            </button>
+                            <button class="custom-tab-btn" data-tab="explosion">
+                                <i>💥</i>
+                                <span>Explosión</span>
+                            </button>
                         </div>
-                    </div>
 
-                    <!-- PESTAÑA VEHÍCULO -->
-                    <div id="pane-vehiculo" class="custom-pane">
-                        <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
+                        <!-- Contenedor de Paneles (Responsivo) -->
+                        <div class="custom-panes-container" style="flex: 1; width: 100%; min-height: 0;">
 
-                            <!-- [BLOQUE 1] Garaje de Vehículos (Iconos de coches) -->
-                            <div id="box-vehicle-garage" class="neon-container pixel-border custom-box-garage">
-                                <h3 class="pixel-title garage-title">GARAJE DE VEHÍCULOS</h3>
-                                <div id="custom-car-list" class="item-grid garage-grid">
-                                    <!-- Los coches se cargan dinámicamente desde main.js -->
-                                </div>
-                            </div>
+                            <!-- PESTAÑA PERFIL -->
+                            <div id="pane-perfil" class="custom-pane active">
+                                <div style="display: flex; gap: 20px; height: 100%; width: 100%;">
 
-                            <!-- [BLOQUE 2] Personalización y Vista Previa -->
-                            <div id="box-vehicle-controls" class="neon-container pixel-border custom-box-controls">
+                                        <!-- [BLOQUE 1] Datos del Piloto -->
+                                        <div id="box-profile-data" class="neon-container pixel-border custom-box-profile" style="display: flex; flex-direction: column; gap: 2px;">
+                                            
+                                            <!-- Fila 1: Nombre y Título -->
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                                <div class="custom-input-group">
+                                                    <label class="custom-label" style="font-size: 0.8em;">PILOTO:</label>
+                                                    <input type="text" id="input-player-name" value="PILOTO_01" maxlength="12" class="custom-input" style="height: 2em;">
+                                                </div>
+                                                <div class="custom-input-group">
+                                                    <label class="custom-label" style="font-size: 0.8em;">TÍTULO:</label>
+                                                    <select id="select-player-title" class="custom-input custom-select" style="height: 2em;">
+                                                        <!-- Títulos cargados por JS -->
+                                                    </select>
+                                                </div>
+                                            </div>
 
-                                <!-- Controles de Tinte (Hue y Saturación) -->
-                                <div class="tint-control">
-                                    <div class="slider-group">
-                                        <label class="slider-label">TONALIDAD (HUE)</label>
-                                        <div class="slider-row">
-                                            <input type="range" id="slider-car-hue" min="0" max="360" value="0"
-                                                class="tint-slider">
-                                            <button id="reset-car-hue" title="Restablecer"
-                                                class="btn-reset-small">↺</button>
+                                            <!-- Fila 2: Grid de Diseño (2 Columnas) -->
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 4px; margin-top: 2px;">
+                                                
+                                            <!-- Columna Colores -->
+                                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                <h4 class="custom-label-small" style="color: #5ad; border-bottom: 1px solid #5ad; padding-bottom: 3px;">COLORES</h4>
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                                                    <div class="custom-color-group">
+                                                        <label class="custom-label-tiny">FONDO 1</label>
+                                                        <input type="color" id="input-banner-bg1" class="custom-color-picker-small">
+                                                    </div>
+                                                    <div class="custom-color-group">
+                                                        <label class="custom-label-tiny">FONDO 2</label>
+                                                        <input type="color" id="input-banner-bg2" class="custom-color-picker-small">
+                                                    </div>
+                                                    <div class="custom-color-group">
+                                                        <label class="custom-label-tiny">BORDE</label>
+                                                        <input type="color" id="input-banner-border" class="custom-color-picker-small">
+                                                    </div>
+                                                    <div class="custom-color-group">
+                                                        <label class="custom-label-tiny">TEXTO</label>
+                                                        <input type="color" id="input-banner-text" class="custom-color-picker-small">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                                <!-- Columna Estilos -->
+                                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                    <h4 class="custom-label-small" style="color: #f90; border-bottom: 1px solid #f90; padding-bottom: 3px;">ESTILO</h4>
+                                                    <div class="custom-input-group">
+                                                        <label class="custom-label-tiny">TIPO RELLENO</label>
+                                                        <select id="select-banner-type" class="custom-select-small">
+                                                            <option value="solid">SÓLIDO</option>
+                                                            <option value="gradient">DEGRADADO</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="custom-input-group">
+                                                        <label class="custom-label-tiny">PATRÓN</label>
+                                                        <select id="select-banner-pattern" class="custom-select-small">
+                                                            <option value="none">NINGUNO</option>
+                                                            <option value="carbon">CARBONO</option>
+                                                            <option value="dots">PUNTOS</option>
+                                                            <option value="tech">TECH GRID</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+
+                                            <!-- Fila 3: Vista Previa (Escalada para encajar) -->
+                                            <div style="display: flex; flex-direction: column; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; margin-top: 2px;">
+                                                <label class="custom-label-tiny" style="color: rgba(255,255,255,0.4); margin-bottom: 2px;">VISTA PREVIA</label>
+                                                <div id="custom-banner-preview" class="banner-preview-sync" style="transform: scale(0.65); transform-origin: top center; margin-bottom: -15px;">
+                                                    <div id="custom-banner-avatar-frame">
+                                                        <img id="custom-banner-avatar" src="recursos/avatar/avatar (1).png">
+                                                    </div>
+                                                    <div class="player-banner-info">
+                                                        <span id="custom-banner-name">PILOTO_01</span>
+                                                        <span id="custom-banner-title">ALPHA TESTER</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Botón de Guardado del Perfil -->
+                                            <button onclick="document.getElementById('btn-custom-back').click()"
+                                                class="menu-btn primary btn-save-custom" style="margin-top: 15px; width: 100%; height: 35px;">GUARDAR PERFIL</button>
+                                        </div>
+
+                                    <!-- [BLOQUE 2] Selector de Avatares (Vuelve a ser grande) -->
+                                    <div id="box-profile-gallery" class="neon-container pixel-border custom-box-gallery">
+                                        <h3 class="pixel-title gallery-title">GALERÍA DE AVATARES</h3>
+                                        <div id="avatar-list" class="item-grid avatar-grid-3x3">
+                                            <!-- Los avatares se cargan dinámicamente -->
+                                        </div>
+                                        <div class="gallery-footer" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05);">
+                                            <div class="avatar-bg-control" style="display: flex; align-items: center; gap: 10px;">
+                                                <label class="custom-label-tiny" style="margin-bottom: 0;">COLOR FONDO:</label>
+                                                <input type="color" id="input-avatar-bg" class="custom-color-picker-small" style="width: 50px; height: 25px;">
+                                            </div>
+                                            <div class="custom-pagination-compact" style="margin: 0; width: auto; gap: 10px;">
+                                                <button id="btn-avatar-prev" class="menu-btn btn-nav-compact">&lt;</button>
+                                                <span id="avatar-page-info" class="page-info" style="min-width: 2em;">1</span>
+                                                <button id="btn-avatar-next" class="menu-btn btn-nav-compact">&gt;</button>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="slider-group">
-                                        <label class="slider-label">SATURACIÓN</label>
-                                        <div class="slider-row">
-                                            <input type="range" id="slider-car-saturate" min="0" max="200" value="100"
-                                                class="tint-slider"
-                                                style="background: linear-gradient(to right, #444, #fff) !important;">
-                                            <button id="reset-car-saturate" title="Restablecer"
-                                                class="btn-reset-small">↺</button>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA VEHÍCULO -->
+                            <div id="pane-vehiculo" class="custom-pane">
+                                <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
+
+                                    <!-- [BLOQUE 1] Garaje de Vehículos (Iconos de coches) -->
+                                    <div id="box-vehicle-garage" class="neon-container pixel-border custom-box-garage">
+                                        <h3 class="pixel-title garage-title">GARAJE DE VEHÍCULOS</h3>
+                                        <div id="custom-car-list" class="item-grid garage-grid">
+                                            <!-- Los coches se cargan dinámicamente desde main.js -->
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Contenedor de Vista Previa 360° -->
-                                <div id="car-preview-container" class="car-preview-frame">
-                                    <img id="car-preview-img" src="recursos/Car1.png" class="car-preview-img">
-                                    <div class="preview-tag">360° PREVIEW SYSTEM</div>
-                                </div>
+                                    <!-- [BLOQUE 2] Personalización y Vista Previa -->
+                                    <div id="box-vehicle-controls" class="neon-container pixel-border custom-box-controls">
 
-                                <!-- Botón de Acción Principal -->
-                                <button onclick="document.getElementById('btn-custom-back').click()"
-                                    class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
+                                        <!-- Controles de Tinte (Hue y Saturación) -->
+                                        <div class="tint-control">
+                                            <div class="slider-group">
+                                                <label class="slider-label">TONALIDAD (HUE)</label>
+                                                <div class="slider-row">
+                                                    <input type="range" id="slider-car-hue" min="0" max="360" value="0"
+                                                        class="tint-slider">
+                                                    <button id="reset-car-hue" title="Restablecer"
+                                                        class="btn-reset-small">↺</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="slider-group">
+                                                <label class="slider-label">SATURACIÓN</label>
+                                                <div class="slider-row">
+                                                    <input type="range" id="slider-car-saturate" min="0" max="200" value="100"
+                                                        class="tint-slider"
+                                                        style="background: linear-gradient(to right, #444, #fff) !important;">
+                                                    <button id="reset-car-saturate" title="Restablecer"
+                                                        class="btn-reset-small">↺</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Contenedor de Vista Previa 360° -->
+                                        <div id="car-preview-container" class="car-preview-frame">
+                                            <img id="car-preview-img" src="recursos/Car1.png" class="car-preview-img">
+                                            <div class="preview-tag">360° PREVIEW SYSTEM</div>
+                                        </div>
+
+                                        <!-- Botón de Acción Principal -->
+                                        <button onclick="document.getElementById('btn-custom-back').click()"
+                                            class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA BALÓN -->
+                            <div id="pane-balon" class="custom-pane">
+                                <!-- Bloque Único: Selector de Balones -->
+                                <div id="box-ball-selector" class="neon-container pixel-border custom-box-ball">
+                                    <h3 class="pixel-title ball-title">MODELOS DE BALÓN</h3>
+                                    
+                                    <div id="ball-list" class="item-grid ball-grid">
+                                        <!-- Generado por JS -->
+                                    </div>
+
+                                    <!-- Navegación Compacta -->
+                                    <div class="custom-pagination-compact">
+                                        <button id="btn-ball-prev" class="menu-btn btn-nav-compact">&lt;</button>
+                                        <span id="ball-page-info" class="page-info">1 / 4</span>
+                                        <button id="btn-ball-next" class="menu-btn btn-nav-compact">&gt;</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA BOOST -->
+                            <div id="pane-boost" class="custom-pane">
+                                <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
+                                    <!-- [BLOQUE 1] Selector de Boosts (Rejilla 4x3) -->
+                                    <div id="box-boost-selector" class="neon-container pixel-border custom-box-boost">
+                                        <h3 class="pixel-title boost-title">SISTEMA DE PROPULSIÓN</h3>
+                                        <div id="custom-boost-list" class="item-grid boost-grid">
+                                            <!-- Generado dinámicamente por main.js -->
+                                        </div>
+                                    </div>
+
+                                    <!-- [BLOQUE 2] Previsualización Dinámica -->
+                                    <div id="box-boost-preview" class="neon-container pixel-border custom-box-preview-boost">
+                                        <h3 class="pixel-title boost-title">VISTA PREVIA</h3>
+                                        <div class="boost-preview-frame">
+                                            <canvas id="canvas-boost-preview"></canvas>
+                                            <div id="boost-name-tag" class="preview-tag-name">ESTÁNDAR</div>
+                                        </div>
+                                        
+                                        <!-- Botón de Acción Principal (Mismo estilo que vehículo) -->
+                                        <button onclick="document.getElementById('btn-custom-back').click()"
+                                            class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA EXPLOSIÓN -->
+                            <div id="pane-explosion" class="custom-pane">
+                                <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
+                                    <!-- [BLOQUE 1] Selector de Explosiones (Rejilla 4x3) -->
+                                    <div id="box-explosion-selector" class="neon-container pixel-border custom-box-explosion">
+                                        <h3 class="pixel-title explosion-title">SISTEMA DE DETONACIÓN</h3>
+                                        <div id="custom-explosion-list" class="item-grid explosion-grid">
+                                            <!-- Generado dinámicamente por main.js -->
+                                        </div>
+                                    </div>
+
+                                    <!-- [BLOQUE 2] Previsualización de Explosión -->
+                                    <div id="box-explosion-preview" class="neon-container pixel-border custom-box-preview-explosion">
+                                        <h3 class="pixel-title explosion-title">VISTA PREVIA</h3>
+                                        <div class="explosion-preview-frame">
+                                            <canvas id="canvas-explosion-preview"></canvas>
+                                            <div id="explosion-name-tag" class="preview-tag-name">ESTÁNDAR</div>
+                                        </div>
+                                        
+                                        <!-- Botón de Acción Principal -->
+                                        <button onclick="document.getElementById('btn-custom-back').click()"
+                                            class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
-                    </div>
 
-                    <!-- PESTAÑA BALÓN -->
-                    <div id="pane-balon" class="custom-pane">
-                        <!-- Bloque Único: Selector de Balones -->
-                        <div id="box-ball-selector" class="neon-container pixel-border custom-box-ball">
-                            <h3 class="pixel-title ball-title">MODELOS DE BALÓN</h3>
-                            
-                            <div id="ball-list" class="item-grid ball-grid">
-                                <!-- Generado por JS -->
-                            </div>
-
-                            <!-- Navegación Compacta -->
-                            <div class="custom-pagination-compact">
-                                <button id="btn-ball-prev" class="menu-btn btn-nav-compact">&lt;</button>
-                                <span id="ball-page-info" class="page-info">1 / 4</span>
-                                <button id="btn-ball-next" class="menu-btn btn-nav-compact">&gt;</button>
-                            </div>
+                        <div id="global-custom-footer"
+                            style="width: 100%; display: none; gap: 15px; margin-top: 10px; justify-content: center;">
+                            <button id="btn-custom-back" class="menu-btn primary"
+                                style="padding: 10px 40px; font-size:18px; border-color: #5ad; width: 280px;">ACEPTAR Y
+                                GUARDAR</button>
                         </div>
                     </div>
-
-                    <!-- PESTAÑA BOOST -->
-                    <div id="pane-boost" class="custom-pane">
-                        <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
-                            <!-- [BLOQUE 1] Selector de Boosts (Rejilla 4x3) -->
-                            <div id="box-boost-selector" class="neon-container pixel-border custom-box-boost">
-                                <h3 class="pixel-title boost-title">SISTEMA DE PROPULSIÓN</h3>
-                                <div id="custom-boost-list" class="item-grid boost-grid">
-                                    <!-- Generado dinámicamente por main.js -->
-                                </div>
-                            </div>
-
-                            <!-- [BLOQUE 2] Previsualización Dinámica -->
-                            <div id="box-boost-preview" class="neon-container pixel-border custom-box-preview-boost">
-                                <h3 class="pixel-title boost-title">VISTA PREVIA</h3>
-                                <div class="boost-preview-frame">
-                                    <canvas id="canvas-boost-preview"></canvas>
-                                    <div id="boost-name-tag" class="preview-tag-name">ESTÁNDAR</div>
-                                </div>
-                                
-                                <!-- Botón de Acción Principal (Mismo estilo que vehículo) -->
-                                <button onclick="document.getElementById('btn-custom-back').click()"
-                                    class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PESTAÑA EXPLOSIÓN -->
-                    <div id="pane-explosion" class="custom-pane">
-                        <div style="display: flex; gap: 20px; height: 100%;">
-                            <!-- Lista de Explosiones -->
-                            <div class="neon-container pixel-border"
-                                style="flex: 1; padding: 15px; display: flex; flex-direction: column;">
-                                <h3 class="pixel-title"
-                                    style="color: #f90; font-size: 12px; margin-bottom: 10px; text-align: center;">
-                                    EXPLOSIONES DE GOL</h3>
-                                <div id="custom-explosion-list" class="item-grid"
-                                    style="grid-template-columns: repeat(3, 1fr); flex: 1;">
-                                    <!-- Generado por JS -->
-                                </div>
-                            </div>
-                            <!-- Previsualización -->
-                            <div class="neon-container pixel-border"
-                                style="width: 280px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);">
-                                <h3 class="pixel-title" style="color: #f90; font-size: 11px; margin-bottom: 15px;">
-                                    IMPACTO</h3>
-                                <div id="explosion-preview-box"
-                                    style="width: 100%; height: 150px; background: #000; border: 1px solid #333; position: relative; overflow: hidden; border-radius: 4px;">
-                                    <canvas id="canvas-explosion-preview" width="250" height="150"
-                                        style="width: 100%; height: 100%;"></canvas>
-                                </div>
-                                <div id="explosion-name-tag"
-                                    style="margin-top: 10px; color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold;">
-                                    CLÁSICA</div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-
-                <div id="global-custom-footer"
-                    style="width: 100%; display: none; gap: 15px; margin-top: 10px; justify-content: center;">
-                    <button id="btn-custom-back" class="menu-btn primary"
-                        style="padding: 10px 40px; font-size:18px; border-color: #5ad; width: 280px;">ACEPTAR Y
-                        GUARDAR</button>
-                </div>
-            </div>
 
             <!-- Panel de Ajustes (GADGET MP3 v2.0) -->
             <div id="menu-settings" class="menu-buttons pixel-border"
@@ -430,9 +486,17 @@
                     </ul>
 
                     <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.8.0 - PERSONALIZACIÓN</p>
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.5.0 - BANNER DESIGNER</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Suite de Personalización: Nombres y Skins.</li>
-                        <li>+ Paginación Asíncrona O(1) en galerías.</li>
+                        <li>+ Diseñador de Banner Procedimental (Degradados/Patrones).</li>
+                        <li>+ UI de Perfil de 2 columnas con vista previa integrada.</li>
+                        <li>+ Corrección de errores de carga y renderizado de menús.</li>
+                    </ul>
+
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.4.0 - ADAPTABILITY</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ UI 100% Adaptativa (VW/VH) para 1080p y 2K.</li>
+                        <li>+ Integración de 40 balones y paginación O(1).</li>
                     </ul>
 
                     <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.6.0 - LEVEL EDITOR</p>
@@ -460,10 +524,7 @@
             <!-- Marquesina de Cambios -->
             <div id="marquee-container">
                 <div class="marquee-content">
-                    ÚLTIMOS CAMBIOS: Implementado sistema USER.CONFIG con persistencia de ajustes — Nuevo Editor de
-                    Físicas Pro: reseteo individual de parámetros e Import/Export vía JSON para betatesters —
-                    Notificación de música ahora es arrastrable — Añadido control de volumen independiente para SFX y
-                    selector de cursor.
+                    ÚLTIMOS CAMBIOS: Implementado Diseñador de Banners Avanzado (v1.5.0) con personalización de degradados y patrones — Refinado panel de perfil con distribución de 2 columnas — Corrección de errores en menús y escalado de fuentes — Optimización de UI para resoluciones 2K.
                 </div>
             </div>
         </div>

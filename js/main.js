@@ -11,10 +11,13 @@ import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhys
 import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
+import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
     playerName: 'PILOTO_01',
+    playerTitle: 'ALPHA TESTER',
+    playerBanner: 'banner-style-default',
     playerAvatar: 'recursos/Car1.png',
     playerCar: 'recursos/Car1.png',
     playerCarHue: 0,
@@ -25,8 +28,21 @@ const USER_CONFIG = {
     playerExplosion: 'classic',
     musicVolume: 50,
     sfxVolume: 80,
-    bannerPos: { left: 220, bottom: 100 }
+    bannerPos: { left: 220, bottom: 100 },
+    // Nuevas propiedades del diseñador avanzado
+    bannerBgColor1: '#2d6096',
+    bannerBgColor2: '#1a1a4a',
+    bannerBorderColor: '#ffffff',
+    bannerTextColor: '#ffffff',
+    bannerType: 'gradient',
+    bannerAngle: 90,
+    bannerPattern: 'none',
+    bannerBorderStyle: 'simple'
 };
+
+function saveUserConfig() {
+    localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
+}
 
 function loadUserConfig() {
     const saved = localStorage.getItem('SCAPS_USER_CONFIG');
@@ -41,8 +57,46 @@ function loadUserConfig() {
     const inputName = document.getElementById('input-player-name');
     if (inputName) inputName.value = USER_CONFIG.playerName;
     const inputAvatarBg = document.getElementById('input-avatar-bg');
-    if (inputAvatarBg) inputAvatarBg.value = USER_CONFIG.playerAvatarBg;
+    if (inputAvatarBg) {
+        inputAvatarBg.value = USER_CONFIG.playerAvatarBg;
+        inputAvatarBg.oninput = (e) => {
+            USER_CONFIG.playerAvatarBg = e.target.value;
+            saveUserConfig();
+            updatePlayerBanner();
+        };
+    }
+
+    // Eventos del Diseñador de Banner Avanzado
+    const bannerInputs = [
+        { id: 'input-banner-bg1', prop: 'bannerBgColor1' },
+        { id: 'input-banner-bg2', prop: 'bannerBgColor2' },
+        { id: 'input-banner-border', prop: 'bannerBorderColor' },
+        { id: 'input-banner-text', prop: 'bannerTextColor' },
+        { id: 'select-banner-type', prop: 'bannerType' },
+        { id: 'select-banner-pattern', prop: 'bannerPattern' }
+    ];
+
+    bannerInputs.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (el) {
+            el.value = USER_CONFIG[item.prop];
+            el.oninput = (e) => {
+                USER_CONFIG[item.prop] = e.target.value;
+                saveUserConfig();
+                updatePlayerBanner();
+            };
+            if (el.tagName === 'SELECT' || el.type === 'number') {
+                el.onchange = (e) => {
+                    USER_CONFIG[item.prop] = e.target.value;
+                    saveUserConfig();
+                    updatePlayerBanner();
+                };
+            }
+        }
+    });
+
     selectedCarP1 = USER_CONFIG.playerCar;
+    setupTitleSelect(); // Activar títulos
     updatePlayerBanner();
 }
 
@@ -53,20 +107,98 @@ function updatePlayerBanner() {
     const avatarImg = document.getElementById('player-banner-avatar');
     const avatarFrame = document.getElementById('player-banner-avatar-frame');
     const nameSpan = document.getElementById('player-banner-name');
+    const titleSpan = document.getElementById('player-banner-title');
+    const infoBox = banner.querySelector('.player-banner-info');
 
+    // Sincronizar Avatar y Textos
     if (avatarImg) avatarImg.src = USER_CONFIG.playerAvatar;
     if (avatarFrame) avatarFrame.style.background = USER_CONFIG.playerAvatarBg;
-    if (nameSpan) nameSpan.innerText = USER_CONFIG.playerName;
-    
+    if (nameSpan) {
+        nameSpan.innerText = USER_CONFIG.playerName;
+        nameSpan.style.color = USER_CONFIG.bannerTextColor;
+    }
+    if (titleSpan) {
+        titleSpan.innerText = USER_CONFIG.playerTitle || '';
+        titleSpan.style.color = USER_CONFIG.bannerTextColor;
+    }
+
+    // Vista previa dentro del menú de personalización
+    const previewBanner = document.getElementById('custom-banner-preview');
+    const previewAvatar = document.getElementById('custom-banner-avatar');
+    const previewFrame = document.getElementById('custom-banner-avatar-frame');
+    const previewName = document.getElementById('custom-banner-name');
+    const previewTitle = document.getElementById('custom-banner-title');
+    const previewInfo = previewBanner ? previewBanner.querySelector('.player-banner-info') : null;
+
+    if (previewAvatar) previewAvatar.src = USER_CONFIG.playerAvatar;
+    if (previewFrame) previewFrame.style.background = USER_CONFIG.playerAvatarBg;
+    if (previewName) {
+        previewName.innerText = USER_CONFIG.playerName;
+        previewName.style.color = USER_CONFIG.bannerTextColor;
+    }
+    if (previewTitle) {
+        previewTitle.innerText = USER_CONFIG.playerTitle || '';
+        previewTitle.style.color = USER_CONFIG.bannerTextColor;
+    }
+
+    // APLICAR ESTILO DINÁMICO
+    const applyStyle = (el) => {
+        if (!el) return;
+        
+        // Fondo
+        if (USER_CONFIG.bannerType === 'gradient') {
+            el.style.background = `linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})`;
+        } else {
+            el.style.background = USER_CONFIG.bannerBgColor1;
+        }
+
+        // Patrón (Superpuesto al fondo)
+        let patternCSS = '';
+        if (USER_CONFIG.bannerPattern === 'carbon') {
+            patternCSS = `radial-gradient(${USER_CONFIG.bannerBgColor1} 1px, transparent 1px)`;
+            el.style.backgroundSize = '4px 4px, 100% 100%';
+        } else if (USER_CONFIG.bannerPattern === 'dots') {
+            patternCSS = `radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)`;
+            el.style.backgroundSize = '10px 10px, 100% 100%';
+        } else if (USER_CONFIG.bannerPattern === 'tech') {
+            patternCSS = `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`;
+            el.style.backgroundSize = '20px 20px, 20px 20px, 100% 100%';
+        }
+
+        if (patternCSS) {
+            el.style.backgroundImage = patternCSS + (USER_CONFIG.bannerType === 'gradient' ? 
+                `, linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})` : 
+                `, linear-gradient(0deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor1})`);
+        } else {
+            el.style.backgroundImage = 'none';
+        }
+
+        // Borde
+        el.style.borderColor = USER_CONFIG.bannerBorderColor;
+        
+        // Estilo de Borde
+        if (USER_CONFIG.bannerBorderStyle === 'neon') {
+            el.style.boxShadow = `0 0 15px ${USER_CONFIG.bannerBorderColor}66`;
+            el.style.borderWidth = '1px';
+        } else if (USER_CONFIG.bannerBorderStyle === 'double') {
+            el.style.boxShadow = `inset 0 0 0 2px rgba(0,0,0,0.3)`;
+            el.style.borderWidth = '4px';
+        } else {
+            el.style.boxShadow = 'none';
+            el.style.borderWidth = '1px';
+        }
+    };
+
+    applyStyle(infoBox);
+    applyStyle(previewInfo);
+
     // Solo se muestra si estamos en el menú principal inicial
     const isMainInitial = (menuInitial && menuInitial.style.display !== 'none');
     banner.style.display = (gameState === 'menu' && isMainInitial) ? 'flex' : 'none';
     banner.style.opacity = (gameState === 'menu' && isMainInitial) ? '1' : '0';
 }
 
-function saveUserConfig() {
-    localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
-}
+
 
 
 function applyBannerPosition() {
@@ -138,6 +270,149 @@ let currentCamX = 0, currentCamY = 0, currentRotation = 0;
 
 let player1, player1_teammate, player2, player2_teammate, allCars, ball;
 let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
+
+function renderExplosionSelection() {
+    const list = document.getElementById('custom-explosion-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    Object.keys(EXPLOSION_DEFS).forEach(key => {
+        const def = EXPLOSION_DEFS[key];
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
+        item.style.flexDirection = 'column';
+        item.innerHTML = `
+            <div style="font-size: 1.5em; margin-bottom: 0.2em;">${def.icon}</div>
+            <div style="font-size: 0.6em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-weight: bold; text-align: center;">${def.name}</div>
+        `;
+        item.onclick = () => {
+            USER_CONFIG.playerExplosion = key;
+            const tag = document.getElementById('explosion-name-tag');
+            if (tag) {
+                tag.innerText = def.name;
+                tag.style.color = def.color === 'multi' ? '#f90' : def.color;
+            }
+            saveUserConfig();
+            renderExplosionSelection();
+            playSound('menu_click');
+            explosionPreviewManager.trigger();
+        };
+        list.appendChild(item);
+    });
+}
+
+const explosionPreviewManager = {
+    canvas: null,
+    ctx: null,
+    particles: [],
+    animationId: null,
+    lastTime: 0,
+
+    init() {
+        this.canvas = document.getElementById('canvas-explosion-preview');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        this.start();
+    },
+
+    resize() {
+        if (!this.canvas) return;
+        this.canvas.width = this.canvas.offsetWidth;
+        this.canvas.height = this.canvas.offsetHeight;
+    },
+
+    trigger() {
+        this.particles = [];
+        const def = EXPLOSION_DEFS[USER_CONFIG.playerExplosion] || EXPLOSION_DEFS.classic;
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+
+        for (let i = 0; i < def.count; i++) {
+            let color = def.color;
+            if (color === 'multi') {
+                const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+                color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 6 + 2;
+
+            this.particles.push({
+                x: centerX,
+                y: centerY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                size: Math.random() * 6 + 2,
+                color: color,
+                type: def.particles,
+                duration: def.duration
+            });
+        }
+    },
+
+    start() {
+        if (this.animationId) return;
+        const loop = (time) => {
+            this.update(time);
+            this.draw();
+            this.animationId = requestAnimationFrame(loop);
+        };
+        this.animationId = requestAnimationFrame(loop);
+    },
+
+    update(time) {
+        const dt = time - this.lastTime;
+        this.lastTime = time;
+
+        // Auto-loop: Si no hay partículas, disparar de nuevo
+        if (this.particles.length === 0) {
+            this.trigger();
+        }
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.98;
+            p.vy *= 0.98;
+            p.life -= (1000 / p.duration / 60);
+            p.size *= 0.99;
+            if (p.life <= 0) this.particles.splice(i, 1);
+        }
+    },
+
+    draw() {
+        if (!this.ctx) return;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        ctx.save();
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            
+            if (p.type === 'squares' || p.type === 'big_pixels') {
+                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+            } else if (p.type === 'shards') {
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - p.size);
+                ctx.lineTo(p.x + p.size, p.y + p.size);
+                ctx.lineTo(p.x - p.size, p.y + p.size);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        ctx.restore();
+    }
+};
 
 function renderBoostSelection() {
     const list = document.getElementById('custom-boost-list');
@@ -337,7 +612,10 @@ const boostPreviewManager = {
     }
 };
 
-window.addEventListener('resize', () => boostPreviewManager.resize());
+window.addEventListener('resize', () => {
+    boostPreviewManager.resize();
+    explosionPreviewManager.resize();
+});
 
 async function init() {
     console.log("SCAPS: Inicializando motor...");
@@ -432,9 +710,10 @@ async function init() {
         loadUserConfig();
         setupDraggableBanner();
         
-        // Inicializar Previsualización de Boost
+        // Inicializar Previsualizaciones
         boostPreviewManager.init();
         updateBoostPreviewInfo(USER_CONFIG.playerBoost);
+        explosionPreviewManager.init();
 
         // Listeners de botones con salvaguardas
         if (btnPlay) btnPlay.onclick = () => { initAudio(player1, allCars); startGame(); };
@@ -1051,7 +1330,10 @@ function setupCustomizationMenu() {
             document.getElementById('pane-' + target).classList.add('active');
             playSound('menu_click');
             
-            if (target === 'perfil') renderAvatars();
+            if (target === 'perfil') {
+                renderAvatars();
+                setupTitleSelect();
+            }
             if (target === 'vehiculo') renderCarSelection();
             if (target === 'balon') renderBallSelection();
             if (target === 'boost') { 
@@ -1059,7 +1341,10 @@ function setupCustomizationMenu() {
                 updateBoostPreviewInfo(USER_CONFIG.playerBoost);
                 setTimeout(() => boostPreviewManager.resize(), 50); 
             }
-            if (target === 'explosion') { renderExplosionSelection(); startCustomPreview('explosion'); }
+            if (target === 'explosion') { 
+                renderExplosionSelection(); 
+                setTimeout(() => explosionPreviewManager.resize(), 50);
+            }
         };
     });
 
@@ -1163,7 +1448,6 @@ function renderAvatars() {
         item.className = 'selectable-item' + (USER_CONFIG.playerAvatar === url ? ' selected' : '');
         // Aplicamos fondo personalizado
         item.style.background = USER_CONFIG.playerAvatarBg;
-        item.style.borderRadius = '4px';
         
         item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
         item.onclick = () => {
@@ -1260,162 +1544,34 @@ function renderBallSelection() {
     });
 }
 
-
-
-const EXPLOSION_DEFS = {
-    'classic': { name: 'CLÁSICA', color: '#5ad' },
-    'nuclear': { name: 'NUCLEAR', color: '#fff' },
-    'confetti': { name: 'FIESTA', color: '#f90' }
-};
-
-
-function renderExplosionSelection() {
-    const list = document.getElementById('custom-explosion-list');
-    if (!list) return;
-    list.innerHTML = '';
-
-    Object.keys(EXPLOSION_DEFS).forEach(key => {
-        const def = EXPLOSION_DEFS[key];
-        const item = document.createElement('div');
-        item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
-        item.style.flexDirection = 'column';
-        item.innerHTML = `
-            <div style="font-size: 24px; margin-bottom: 5px;">💥</div>
-            <div style="font-size: 10px; color: ${def.color}; font-weight: bold;">${def.name}</div>
-        `;
-        item.onclick = () => {
-            USER_CONFIG.playerExplosion = key;
-            const tag = document.getElementById('explosion-name-tag');
-            if (tag) tag.innerText = def.name;
-            saveUserConfig();
-            renderExplosionSelection();
-            playSound('menu_click');
-            // Forzar una explosión de prueba
-            if (currentPreviewMode === 'explosion') triggerPreviewExplosion();
-        };
-        list.appendChild(item);
+function setupTitleSelect() {
+    const select = document.getElementById('select-player-title');
+    if (!select) return;
+    
+    const titles = [
+        "Su ilustrísima", "Random noob", "Alpha Tester", "Beta Tester", 
+        "Leyenda Urbana", "Maestro del Balón", "Turboadicto", 
+        "Goleador Nato", "Rey del Aire", "Velocidad Absoluta"
+    ];
+    
+    select.innerHTML = '';
+    titles.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.innerText = t.toUpperCase();
+        if (USER_CONFIG.playerTitle === t) opt.selected = true;
+        select.appendChild(opt);
     });
-}
-
-let customPreviewActive = false;
-let currentPreviewMode = null; // 'boost' o 'explosion'
-let previewParticles = [];
-let previewTimer = 0;
-
-function startCustomPreview(mode) {
-    currentPreviewMode = mode;
-    previewParticles = [];
-    if (customPreviewActive) return;
     
-    customPreviewActive = true;
-    requestAnimationFrame(updateCustomPreview);
+    select.onchange = (e) => {
+        USER_CONFIG.playerTitle = e.target.value;
+        saveUserConfig();
+        updatePlayerBanner();
+        playSound('menu_click');
+    };
 }
 
-function updateCustomPreview() {
-    if (!customPreviewActive || gameState !== 'menu') {
-        customPreviewActive = false;
-        return;
-    }
 
-    const canvas = document.getElementById(currentPreviewMode === 'boost' ? 'canvas-boost-preview' : 'canvas-explosion-preview');
-    if (!canvas) {
-        customPreviewActive = false;
-        return;
-    }
-
-    const pctx = canvas.getContext('2d');
-    pctx.fillStyle = '#000';
-    pctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (currentPreviewMode === 'boost') {
-        // Generar partículas de boost
-        const def = BOOST_DEFS[USER_CONFIG.playerBoost] || BOOST_DEFS.classic;
-        if (Math.random() > 0.3) {
-            previewParticles.push({
-                x: 50, y: 75,
-                vx: (Math.random() - 0.5) * 2 - 5,
-                vy: (Math.random() - 0.5) * 2,
-                life: 1.0,
-                color: def.particles[Math.floor(Math.random() * def.particles.length)],
-                size: Math.random() * 4 + 2
-            });
-        }
-    } else {
-        // Lógica de explosión: Disparar periódicamente
-        previewTimer++;
-        if (previewTimer > 100) {
-            triggerPreviewExplosion();
-            previewTimer = 0;
-        }
-    }
-
-    // Actualizar y dibujar partículas
-    for (let i = previewParticles.length - 1; i >= 0; i--) {
-        const p = previewParticles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.02;
-        
-        if (p.life <= 0) {
-            previewParticles.splice(i, 1);
-            continue;
-        }
-
-        pctx.globalAlpha = p.life;
-        pctx.fillStyle = p.color;
-        pctx.beginPath();
-        pctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        pctx.fill();
-    }
-    pctx.globalAlpha = 1.0;
-
-    requestAnimationFrame(updateCustomPreview);
-}
-
-function triggerPreviewExplosion() {
-    const canvas = document.getElementById('canvas-explosion-preview');
-    if (!canvas) return;
-    
-    const def = EXPLOSION_DEFS[USER_CONFIG.playerExplosion] || EXPLOSION_DEFS.classic;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    if (USER_CONFIG.playerExplosion === 'confetti') {
-        for(let i=0; i<30; i++) {
-            previewParticles.push({
-                x: centerX, y: centerY,
-                vx: (Math.random() - 0.5) * 10,
-                vy: (Math.random() - 0.5) * 10,
-                life: 1.0,
-                color: `hsl(${Math.random()*360}, 100%, 50%)`,
-                size: Math.random() * 5 + 2
-            });
-        }
-    } else if (USER_CONFIG.playerExplosion === 'nuclear') {
-        for(let i=0; i<60; i++) {
-            previewParticles.push({
-                x: centerX, y: centerY,
-                vx: (Math.random() - 0.5) * 15,
-                vy: (Math.random() - 0.5) * 15,
-                life: 1.5,
-                color: Math.random() > 0.5 ? '#fff' : '#ff0',
-                size: Math.random() * 8 + 4
-            });
-        }
-    } else {
-        // Clásica
-        for(let i=0; i<25; i++) {
-            previewParticles.push({
-                x: centerX, y: centerY,
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8,
-                life: 1.0,
-                color: def.color,
-                size: Math.random() * 4 + 2
-            });
-        }
-    }
-}
 
 function showMenuScreen(screenId) {
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
