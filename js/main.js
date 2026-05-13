@@ -10,6 +10,7 @@ import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
 import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
+import { BOOST_DEFS } from './fx/boost_definitions.js';
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
@@ -112,7 +113,7 @@ let currentAvatarPage = 1;
 const CARS_PER_PAGE = 12;
 const AVATARS_PER_PAGE = 12;
 const MAPS_PER_PAGE = 1;
-const BALLS_PER_PAGE = 10;
+const BALLS_PER_PAGE = 12; // 6 columnas x 2 filas
 let currentZoom = 1.0, targetZoom = 0.85;
 let currentVOffset = 0;
 
@@ -137,6 +138,206 @@ let currentCamX = 0, currentCamY = 0, currentRotation = 0;
 
 let player1, player1_teammate, player2, player2_teammate, allCars, ball;
 let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
+
+function renderBoostSelection() {
+    const list = document.getElementById('custom-boost-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    Object.keys(BOOST_DEFS).forEach(key => {
+        const def = BOOST_DEFS[key];
+        const item = document.createElement('div');
+        item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
+        item.style.flexDirection = 'column';
+        item.innerHTML = `
+            <div style="font-size: 1.5em; margin-bottom: 0.2em;">${def.icon}</div>
+            <div style="font-size: 0.6em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-weight: bold; text-align: center;">${def.name}</div>
+        `;
+        item.onclick = () => {
+            USER_CONFIG.playerBoost = key;
+            updateBoostPreviewInfo(key);
+            saveUserConfig();
+            renderBoostSelection();
+            playSound('menu_click');
+        };
+        list.appendChild(item);
+    });
+}
+
+function updateBoostPreviewInfo(key) {
+    const def = BOOST_DEFS[key];
+    const nameTag = document.getElementById('boost-name-tag');
+    const descBox = document.querySelector('.boost-description');
+    if (nameTag) {
+        nameTag.innerText = def.name;
+        nameTag.style.color = def.color === 'multi' ? '#fff' : def.color;
+        nameTag.style.borderColor = def.color === 'multi' ? '#fff' : def.color;
+    }
+    if (descBox) {
+        const descriptions = {
+            'classic': 'Propulsión mediante combustión de nitrógeno estándar.',
+            'fire': 'Llamaradas de alta temperatura que incineran el asfalto.',
+            'neon': 'Rastro de partículas de neón con estética ochentera.',
+            'plasma': 'Energía ionizada de alta intensidad purpura.',
+            'toxic': 'Emisión de gases radioactivos altamente corrosivos.',
+            'glitch': 'Distorsión de la realidad en fragmentos digitales.',
+            'gold': 'Lluvia de partículas de oro puro fundido.',
+            'ice': 'Congelación instantánea del aire circundante.',
+            'void': 'Consumo total de luz en una estela de oscuridad.',
+            'rainbow': 'Espectro completo de luz refractada en movimiento.',
+            'cyber': 'Filamentos de datos de alta velocidad en red.',
+            'nature': 'Rastro de hojas y esencia botánica regenerativa.'
+        };
+        descBox.innerText = descriptions[key] || 'Efecto de propulsión avanzado.';
+    }
+}
+
+const boostPreviewManager = {
+    canvas: null,
+    ctx: null,
+    particles: [],
+    animationId: null,
+    lastTime: 0,
+    carImg: new Image(),
+
+    init() {
+        this.canvas = document.getElementById('canvas-boost-preview');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        this.start();
+    },
+
+    resize() {
+        if (!this.canvas) return;
+        this.canvas.width = this.canvas.offsetWidth;
+        this.canvas.height = this.canvas.offsetHeight;
+    },
+
+    start() {
+        if (this.animationId) return;
+        const loop = (time) => {
+            this.update(time);
+            this.draw();
+            this.animationId = requestAnimationFrame(loop);
+        };
+        this.animationId = requestAnimationFrame(loop);
+    },
+
+    update(time) {
+        if (!this.canvas || this.canvas.width === 0) return;
+        const dt = time - this.lastTime;
+        this.lastTime = time;
+
+        const boost = BOOST_DEFS[USER_CONFIG.playerBoost] || BOOST_DEFS.classic;
+        
+        // Generar partículas desde la parte trasera del coche (centrado)
+        if (Math.random() < 0.3 * boost.density) {
+            this.particles.push(this.createParticle(boost));
+        }
+
+        // Actualizar partículas
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x -= p.vx;
+            p.y += p.vy;
+            p.life -= 0.015 * boost.speed;
+            p.size *= 0.985;
+            if (p.life <= 0) this.particles.splice(i, 1);
+        }
+    },
+
+    createParticle(boost) {
+        const canvasMidY = this.canvas.height / 2;
+        const canvasMidX = this.canvas.width * 0.7;
+        
+        let color = boost.color;
+        if (color === 'multi') {
+            const hues = [0, 60, 120, 180, 240, 300];
+            color = `hsl(${hues[Math.floor(Math.random() * hues.length)]}, 100%, 50%)`;
+        }
+
+        return {
+            x: canvasMidX - 20,
+            y: canvasMidY + (Math.random() - 0.5) * 10,
+            vx: Math.random() * 5 + 2,
+            vy: (Math.random() - 0.5) * 2,
+            life: 1.0,
+            size: Math.random() * 5 + 3,
+            color: color,
+            secondary: boost.secondary,
+            type: boost.particles
+        };
+    },
+
+    draw() {
+        if (!this.ctx) return;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        ctx.save();
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            
+            if (p.type === 'squares' || p.type === 'glitch') {
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            } else if (p.type === 'lines' || p.type === 'cyber') {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = p.color;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + p.size * 4, p.y);
+                ctx.stroke();
+            } else if (p.type === 'bubbles' || p.type === 'toxic') {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.strokeStyle = p.color;
+                ctx.stroke(); // Solo borde para burbujas
+            } else if (p.type === 'sparkles' || p.type === 'gold') {
+                const s = p.size;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - s);
+                ctx.lineTo(p.x + s/2, p.y);
+                ctx.lineTo(p.x, p.y + s);
+                ctx.lineTo(p.x - s/2, p.y);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                // Default: Círculos suaves (fuego, humo, etc.)
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        ctx.restore();
+
+        if (this.carImg.src !== window.location.origin + '/' + USER_CONFIG.playerCar) {
+            this.carImg.src = USER_CONFIG.playerCar;
+        }
+
+        ctx.save();
+        const carSize = 80;
+        const posX = this.canvas.width * 0.7;
+        const posY = this.canvas.height / 2;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%)`;
+        ctx.translate(posX, posY);
+        ctx.rotate(Math.PI / 2); // Rotar 90 grados
+        
+        // Calcular altura proporcional para mantener aspect ratio
+        const aspect = this.carImg.width / this.carImg.height;
+        const h = carSize / aspect;
+        
+        ctx.drawImage(this.carImg, -carSize/2, -h/2, carSize, h);
+        ctx.restore();
+    }
+};
+
+window.addEventListener('resize', () => boostPreviewManager.resize());
 
 async function init() {
     console.log("SCAPS: Inicializando motor...");
@@ -230,6 +431,10 @@ async function init() {
         setupCustomizationMenu();
         loadUserConfig();
         setupDraggableBanner();
+        
+        // Inicializar Previsualización de Boost
+        boostPreviewManager.init();
+        updateBoostPreviewInfo(USER_CONFIG.playerBoost);
 
         // Listeners de botones con salvaguardas
         if (btnPlay) btnPlay.onclick = () => { initAudio(player1, allCars); startGame(); };
@@ -849,7 +1054,11 @@ function setupCustomizationMenu() {
             if (target === 'perfil') renderAvatars();
             if (target === 'vehiculo') renderCarSelection();
             if (target === 'balon') renderBallSelection();
-            if (target === 'boost') { renderBoostSelection(); startCustomPreview('boost'); }
+            if (target === 'boost') { 
+                renderBoostSelection(); 
+                updateBoostPreviewInfo(USER_CONFIG.playerBoost);
+                setTimeout(() => boostPreviewManager.resize(), 50); 
+            }
             if (target === 'explosion') { renderExplosionSelection(); startCustomPreview('explosion'); }
         };
     });
@@ -1040,7 +1249,7 @@ function renderBallSelection() {
     pageItems.forEach(url => {
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerBall === url ? ' selected' : '');
-        item.innerHTML = `<img src="${url}" style="width: 75%; height: 75%; object-fit: contain;">`;
+        item.innerHTML = `<img src="${url}">`;
         item.onclick = () => {
             USER_CONFIG.playerBall = url;
             saveUserConfig();
@@ -1051,12 +1260,7 @@ function renderBallSelection() {
     });
 }
 
-const BOOST_DEFS = {
-    'classic': { name: 'ESTÁNDAR', color: '#5ad', particles: ['#5ad', '#fff'] },
-    'fire': { name: 'FUEGO INFERNAL', color: '#f50', particles: ['#f50', '#f90', '#ff0'] },
-    'neon': { name: 'NEÓN VAPOR', color: '#f0f', particles: ['#f0f', '#0ff'] },
-    'plasma': { name: 'PLASMA CORE', color: '#a0f', particles: ['#a0f', '#fff'] }
-};
+
 
 const EXPLOSION_DEFS = {
     'classic': { name: 'CLÁSICA', color: '#5ad' },
@@ -1064,31 +1268,6 @@ const EXPLOSION_DEFS = {
     'confetti': { name: 'FIESTA', color: '#f90' }
 };
 
-function renderBoostSelection() {
-    const list = document.getElementById('custom-boost-list');
-    if (!list) return;
-    list.innerHTML = '';
-
-    Object.keys(BOOST_DEFS).forEach(key => {
-        const def = BOOST_DEFS[key];
-        const item = document.createElement('div');
-        item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
-        item.style.flexDirection = 'column';
-        item.innerHTML = `
-            <div style="font-size: 24px; margin-bottom: 5px;">🔥</div>
-            <div style="font-size: 10px; color: ${def.color}; font-weight: bold;">${def.name}</div>
-        `;
-        item.onclick = () => {
-            USER_CONFIG.playerBoost = key;
-            const tag = document.getElementById('boost-name-tag');
-            if (tag) tag.innerText = def.name;
-            saveUserConfig();
-            renderBoostSelection();
-            playSound('menu_click');
-        };
-        list.appendChild(item);
-    });
-}
 
 function renderExplosionSelection() {
     const list = document.getElementById('custom-explosion-list');
@@ -1507,6 +1686,8 @@ function applyMapConfig(c) {
     console.log("Mapa aplicado:", { goals: c.goals, spawns: c.spawns?.length, boosts: c.boosts?.length });
 }
 
+
+
 // EVENTOS DE AUDIO Y REPRODUCTOR MP3
 document.addEventListener('DOMContentLoaded', () => {
     const sliderVol = document.getElementById('slider-settings-vol');
@@ -1580,6 +1761,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Inicializar el gestor de boost cuando sea necesario
+// (Esto se llamará dentro de init() o al abrir el panel)
 
 // Ejecutar el inicio del juego
 init();

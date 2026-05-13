@@ -897,7 +897,6 @@ input[type="range"]::-moz-range-thumb {
 
 /* Forzar stack vertical en pestañas de 100% */
 #pane-balon.active,
-#pane-boost.active,
 #pane-explosion.active {
     flex-direction: column;
 }
@@ -918,7 +917,8 @@ input[type="range"]::-moz-range-thumb {
 .custom-box-profile,
 .custom-box-gallery,
 .custom-box-garage,
-.custom-box-controls {
+.custom-box-controls,
+.custom-box-ball {
     display: flex;
     flex-direction: column;
     padding: 1em;
@@ -935,6 +935,7 @@ input[type="range"]::-moz-range-thumb {
     flex: 0 0 calc(50% - 0.6em) !important;
     max-width: calc(50% - 0.6em) !important;
     min-width: 0;
+    justify-content: center; /* Centrado vertical del contenido */
 }
 
 /* Pestañas de 100% de ancho */
@@ -1042,6 +1043,28 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Forzar que los iconos del garaje sean cuadrados y más pequeños */
+.ball-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    overflow: hidden !important;
+    max-height: none !important;
+    gap: 0.6em; 
+    padding: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+.ball-grid .selectable-item {
+    max-width: 7.5em !important; 
+}
+
+.custom-box-ball {
+    width: 100% !important;
+    flex: 1;
+}
+
 .custom-box-garage .item-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
@@ -1072,26 +1095,111 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .avatar-grid-3x3 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr) !important;
     justify-content: center !important;
     justify-items: center !important;
     overflow: hidden !important;
     max-height: none !important;
     gap: 0.3em;
     padding: 0.5em 10% !important;
-    /* Sincronizado con el garaje para consistencia */
     width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
 }
 
-.gallery-title,
-.garage-title {
-    margin-top: 0.3em !important;
-    margin-bottom: 0.3em !important;
-    font-size: 1.2em !important;
+.boost-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    gap: 0.8em; 
+    padding: 0.5em 30% !important; /* Restaurado al 30% */
+    width: 100% !important;
+    max-width: 30em;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    scrollbar-width: none;
+}
+
+.boost-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.boost-grid .selectable-item {
+    max-width: 6em !important;
+    aspect-ratio: 1 / 1;
+}
+
+.custom-box-boost {
+    flex: 0 0 calc(50% - 0.6em) !important; 
+    max-width: calc(50% - 0.6em) !important;
+}
+
+.custom-box-preview-boost {
+    flex: 0 0 calc(50% - 0.6em) !important;
+    max-width: calc(50% - 0.6em) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.boost-preview-frame {
+    width: 100%;
+    height: 12em; /* Restaurado a 12em */
+    background: radial-gradient(circle, rgba(20, 20, 40, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
+    border: 0.1em solid rgba(90, 173, 237, 0.3);
+    position: relative;
+    border-radius: 0.5em;
+    overflow: hidden;
+    margin-bottom: 1em;
+}
+
+#canvas-boost-preview {
+    width: 100%;
+    height: 100%;
+}
+
+.preview-tag-name {
+    position: absolute;
+    bottom: 0.5em;
+    right: 0.5em;
+    background: rgba(90, 173, 237, 0.2);
+    color: #5ad;
+    padding: 0.2em 0.8em;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    font-size: 0.8em;
+    border: 1px solid #5ad;
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.boost-description {
+    width: 100%;
+    padding: 1em;
+    background: rgba(10, 10, 25, 0.8);
+    border-left: 0.2em solid #5ad;
+    color: #fff;
+    font-size: 0.7em;
+    font-family: 'Share Tech Mono', monospace;
+    line-height: 1.4;
+    min-height: 4em;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    margin-bottom: 1em;
+    text-align: left;
+}
+
+.boost-title {
+    margin-top: 1.5em !important; 
+    margin-bottom: 0.8em !important;
+}
+
+.ball-title {
+    margin-top: 0 !important;
+    margin-bottom: 0.2em !important;
     text-align: center;
-    /* Título centrado */
+    font-size: 1.2em !important;
 }
 
 .avatar-grid-3x3 .selectable-item {

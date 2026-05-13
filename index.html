@@ -226,57 +226,45 @@
 
                     <!-- PESTAÑA BALÓN -->
                     <div id="pane-balon" class="custom-pane">
-                        <div class="neon-container pixel-border"
-                            style="padding: 15px; display: flex; flex-direction: column; height: 100%;">
-                            <h3 class="pixel-title"
-                                style="color: #fff; font-size: 14px; margin-bottom: 10px; text-align: center;">MODELOS
-                                DE BALÓN</h3>
-                            <div id="ball-list" class="item-grid"
-                                style="grid-template-columns: repeat(5, 1fr); flex: 1;">
+                        <!-- Bloque Único: Selector de Balones -->
+                        <div id="box-ball-selector" class="neon-container pixel-border custom-box-ball">
+                            <h3 class="pixel-title ball-title">MODELOS DE BALÓN</h3>
+                            
+                            <div id="ball-list" class="item-grid ball-grid">
                                 <!-- Generado por JS -->
                             </div>
 
-                            <!-- Navegación Balones -->
-                            <div
-                                style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-                                <button id="btn-ball-prev" class="menu-btn"
-                                    style="padding: 5px 15px; font-size: 14px; width: auto;">&lt;</button>
-                                <span id="ball-page-info"
-                                    style="color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold; min-width: 60px; text-align: center;">1
-                                    / 4</span>
-                                <button id="btn-ball-next" class="menu-btn"
-                                    style="padding: 5px 15px; font-size: 14px; width: auto;">&gt;</button>
+                            <!-- Navegación Compacta -->
+                            <div class="custom-pagination-compact">
+                                <button id="btn-ball-prev" class="menu-btn btn-nav-compact">&lt;</button>
+                                <span id="ball-page-info" class="page-info">1 / 4</span>
+                                <button id="btn-ball-next" class="menu-btn btn-nav-compact">&gt;</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- PESTAÑA BOOST -->
                     <div id="pane-boost" class="custom-pane">
-                        <div style="display: flex; gap: 20px; height: 100%;">
-                            <!-- Lista de Boosts -->
-                            <div class="neon-container pixel-border"
-                                style="flex: 1; padding: 15px; display: flex; flex-direction: column;">
-                                <h3 class="pixel-title"
-                                    style="color: #5ad; font-size: 12px; margin-bottom: 10px; text-align: center;">
-                                    EFECTOS DE BOOST</h3>
-                                <div id="custom-boost-list" class="item-grid"
-                                    style="grid-template-columns: repeat(3, 1fr); flex: 1;">
-                                    <!-- Generado por JS -->
+                        <div style="display: flex; gap: 1.25em; height: 100%; width: 100%;">
+                            <!-- [BLOQUE 1] Selector de Boosts (Rejilla 4x3) -->
+                            <div id="box-boost-selector" class="neon-container pixel-border custom-box-boost">
+                                <h3 class="pixel-title boost-title">SISTEMA DE PROPULSIÓN</h3>
+                                <div id="custom-boost-list" class="item-grid boost-grid">
+                                    <!-- Generado dinámicamente por main.js -->
                                 </div>
                             </div>
-                            <!-- Previsualización -->
-                            <div class="neon-container pixel-border"
-                                style="width: 280px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4);">
-                                <h3 class="pixel-title" style="color: #5ad; font-size: 11px; margin-bottom: 15px;">
-                                    PREVIEW</h3>
-                                <div id="boost-preview-box"
-                                    style="width: 100%; height: 150px; background: #000; border: 1px solid #333; position: relative; overflow: hidden; border-radius: 4px;">
-                                    <canvas id="canvas-boost-preview" width="250" height="150"
-                                        style="width: 100%; height: 100%;"></canvas>
+
+                            <!-- [BLOQUE 2] Previsualización Dinámica -->
+                            <div id="box-boost-preview" class="neon-container pixel-border custom-box-preview-boost">
+                                <h3 class="pixel-title boost-title">VISTA PREVIA</h3>
+                                <div class="boost-preview-frame">
+                                    <canvas id="canvas-boost-preview"></canvas>
+                                    <div id="boost-name-tag" class="preview-tag-name">ESTÁNDAR</div>
                                 </div>
-                                <div id="boost-name-tag"
-                                    style="margin-top: 10px; color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 14px; font-weight: bold;">
-                                    ESTÁNDAR</div>
+                                
+                                <!-- Botón de Acción Principal (Mismo estilo que vehículo) -->
+                                <button onclick="document.getElementById('btn-custom-back').click()"
+                                    class="menu-btn primary btn-save-custom">ACEPTAR Y GUARDAR</button>
                             </div>
                         </div>
                     </div>
