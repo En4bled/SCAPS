@@ -4,6 +4,7 @@
  */
 
 export const CONFIG = {
+    VERSION: '1.6.0 - STABLE',
     // Dimensiones del Mundo
     WORLD_W: 4000,
     WORLD_H: 3000,

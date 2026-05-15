@@ -59,6 +59,10 @@ function loadUserConfig() {
     setSFXVolume(USER_CONFIG.sfxVolume / 100);
     applyBannerPosition();
 
+    // Actualizar Tag de Versión
+    const versionTag = document.getElementById('game-version-tag');
+    if (versionTag) versionTag.innerText = `VERSIÓN ${CONST.CONFIG.VERSION}`;
+
     // Sincronizar UI inicial
     const inputName = document.getElementById('input-player-name');
     if (inputName) inputName.value = USER_CONFIG.playerName;

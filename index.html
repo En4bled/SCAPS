@@ -51,6 +51,9 @@
 
         <!-- Menú Principal -->
         <div id="main-menu" class="hidden">
+            <!-- Versión del Juego -->
+            <div id="game-version-tag" style="position: absolute; top: 20px; right: 20px; font-family: 'Share Tech Mono', monospace; color: rgba(90, 173, 237, 0.8); font-size: 14px; letter-spacing: 2px; z-index: 2000; text-shadow: 0 0 10px rgba(90, 173, 237, 0.5);">VERSIÓN 1.6.0 - STABLE</div>
+
             <img src="recursos/LOGO.png" id="menu-logo" alt="SCAPS LOGO">
 
             <div id="menu-initial" class="menu-buttons">
@@ -454,69 +457,63 @@
                     NOTAS DE DESARROLLO</h2>
 
                 <div class="pixel-border"
-                    style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 300px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.3.0 - PERSONALIZACIÓN & PRO
-                        TOOLS</p>
+                    style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
+                    
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS (ACTUAL)</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Implementación de Hit-Stop (micro-pausas) y Screen Shake selectivo.</li>
+                        <li>+ Sistema de Post-procesado Bloom (resplandor) global y configurable.</li>
+                        <li>+ Nueva IA Arcade 2D con "Modo Pánico" (anti-bloqueo).</li>
+                        <li>+ Reajuste de masas y transferencia de inercia coche-balón.</li>
+                        <li>+ Respawn inteligente (Fijo para P1, aleatorio para Bots).</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.5.0 - BANNER DESIGNER & PROFILE V2</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Diseñador de Banners avanzado: degradados, patrones y colores pro.</li>
+                        <li>+ Rediseño de Interfaz de Perfil en 2 columnas con vista previa 0.65x.</li>
+                        <li>+ Iconografía animada (GIFs) en navegación de pestañas.</li>
+                    </ul>
+
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.4.0 - ADAPTABILITY & CONTENT</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ UI 100% Adaptativa mediante unidades Viewport (1080p/2K/4K).</li>
+                        <li>+ Integración de 40 diseños de balón con paginación optimizada.</li>
+                        <li>+ Sistema de Previsualización dinámica de Boosts y Explosiones.</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.3.0 - PERSONALIZACIÓN & PRO TOOLS</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
                         <li>+ Persistencia USER.CONFIG en localStorage (Ajustes guardados).</li>
                         <li>+ Editor de Físicas Avanzado: Reseteo individual e Import/Export JSON.</li>
                         <li>+ HUD Interactivo: Banner de música arrastrable con memoria.</li>
-                        <li>+ Selector de Cursor Pixel/Sistema en Ajustes.</li>
+                    </ul>
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.2.0 - CICLO DE VIDA</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Sistema de Game Over con estadísticas detalladas y revancha.</li>
+                        <li>+ Optimización de pre-carga de texturas GPU (img.decode / Warm-up).</li>
+                        <li>+ Zoom cinematográfico inicial suavizado.</li>
                     </ul>
 
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.2.0 - CICLO DE VIDA</p>
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.1.0 - PHYSICS & AI ENGINE</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Sistema de Game Over con estadísticas y revancha.</li>
-                        <li>+ Documentación Técnica de Físicas (SAT/Impulsos).</li>
-                        <li>+ Optimización de pre-carga de texturas GPU (Warm-up).</li>
+                        <li>+ AI Engine V11: Persecución determinista y control de throttle.</li>
+                        <li>+ Editor de Físicas en tiempo real integrado (Tecla º).</li>
+                        <li>+ Simulación visual de altura (Eje Z) en el balón.</li>
                     </ul>
 
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.1.0 - PHYSICS & AI</p>
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.0.0 - PRODUCTION RELEASE</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ AI Engine V11: Corrección de 90° y control de aceleración.</li>
-                        <li>+ Editor de Físicas en tiempo real (Tecla º).</li>
-                        <li>+ Simulación de eje Z (vuelo del balón) en colisiones.</li>
+                        <li>+ Motor de Colisiones SAT (Separating Axis Theorem).</li>
+                        <li>+ Lógica de rebote en muros con conservación de momento.</li>
+                        <li>+ Lanzamiento oficial del núcleo del motor SCAPS.</li>
                     </ul>
 
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.0.0 - PRODUCTION RELEASE
-                    </p>
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.5.0 - ALPHA FOUNDATION</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Motor de Colisiones Pro: Impulsos elásticos 1D.</li>
-                        <li>+ IA Relentless Pursuit V9: Algoritmos deterministas.</li>
-                        <li>+ Rebote en muros con conservación de momento.</li>
-                    </ul>
-
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.9.0 - CINEMATIC UPDATE</p>
-                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Manager de Secuencias Cinemáticas (Zoom 0.1).</li>
-                        <li>+ Espacialización de Audio por magnitud de impacto.</li>
-                        <li>+ Escalado global de entidades (+50%).</li>
-                    </ul>
-
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.8.0 - PERSONALIZACIÓN</p>
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.5.0 - BANNER DESIGNER</p>
-                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Diseñador de Banner Procedimental (Degradados/Patrones).</li>
-                        <li>+ UI de Perfil de 2 columnas con vista previa integrada.</li>
-                        <li>+ Corrección de errores de carga y renderizado de menús.</li>
-                    </ul>
-
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.4.0 - ADAPTABILITY</p>
-                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ UI 100% Adaptativa (VW/VH) para 1080p y 2K.</li>
-                        <li>+ Integración de 40 balones y paginación O(1).</li>
-                    </ul>
-
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.6.0 - LEVEL EDITOR</p>
-                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Lógica de Porterías Desacoplada (Trigger/Visual).</li>
-                        <li>+ Grid Snapping para diseño de precisión.</li>
-                    </ul>
-
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 0.1.0 - PROTOTYPE</p>
-                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Render Loop Base y Entidades cuadradas.</li>
-                        <li>+ Control WASD y física de conducción básica.</li>
+                        <li>+ Implementación de Mapas JSON y Editor de Niveles básico.</li>
+                        <li>+ Sistema de Partículas para Goles y Explosiones.</li>
+                        <li>+ Motor de Audio con Playlist dinámica.</li>
                     </ul>
 
                     <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
@@ -532,7 +529,27 @@
             <!-- Marquesina de Cambios -->
             <div id="marquee-container">
                 <div class="marquee-content">
-                    ÚLTIMOS CAMBIOS (v1.6.0 GAME FEEL & PHYSICS UPDATE): [1] Hit-Stop (micro-pausas dramáticas) para enfatizar colisiones masivas — [2] Añadido efecto Bloom (resplandor neón) a todo el juego y menús — [3] Opción de Bloom configurable en Ajustes y Pausa — [4] Ajustada masa del balón para evitar arrastre continuo — [5] Transferencia realista de inercia coche-balón — [6] Aumentada velocidad máxima y fuerza del balón — [7] Anti-tunneling activo para evitar que el balón atraviese paredes — [8] Sombra direccional dinámica del balón — [9] Nueva IA bot de conducción Arcade 2D — [10] Modo Pánico para IA (desbloqueo de atascos) — [11] Screen Shake vibratorio para impactos y goles — [12] Shake y Hit-Stop selectivo (solo se activa si impacta el jugador) — [13] FOV Dinámico que se aleja a velocidades supersónicas — [14] Respawn fijo para el jugador tras demolición — [15] Respawn táctico aleatorio para bots en su campo — [16] UI escalable 100% fluida (1080p/2K) — [17] Paginación ultra-rápida de 40 diseños de balones — [18] Corrección del backend PHP en guardado de mapas — [19] Diseñador de Banners avanzado (degradados/patrones) — [20] Reestructuración del layout de Perfil en doble columna.
+                    <span style="color: #fff; font-weight: bold;">ÚLTIMOS CAMBIOS (v1.6.0 GAME FEEL & PHYSICS UPDATE):</span> 
+                    <span style="color: #5ad;">[1] Hit-Stop (micro-pausas dramáticas) para enfatizar colisiones masivas —</span> 
+                    <span style="color: #f90;">[2] Añadido efecto Bloom (resplandor neón) a todo el juego y menús —</span> 
+                    <span style="color: #5ad;">[3] Opción de Bloom configurable en Ajustes y Pausa —</span> 
+                    <span style="color: #f90;">[4] Ajustada masa del balón para evitar arrastre continuo —</span> 
+                    <span style="color: #5ad;">[5] Transferencia realista de inercia coche-balón —</span> 
+                    <span style="color: #f90;">[6] Aumentada velocidad máxima y fuerza del balón —</span> 
+                    <span style="color: #5ad;">[7] Anti-tunneling activo para evitar que el balón atraviese paredes —</span> 
+                    <span style="color: #f90;">[8] Sombra direccional dinámica del balón —</span> 
+                    <span style="color: #5ad;">[9] Nueva IA bot de conducción Arcade 2D —</span> 
+                    <span style="color: #f90;">[10] Modo Pánico para IA (desbloqueo de atascos) —</span> 
+                    <span style="color: #5ad;">[11] Screen Shake vibratorio para impactos y goles —</span> 
+                    <span style="color: #f90;">[12] Shake y Hit-Stop selectivo (solo se activa si impacta el jugador) —</span> 
+                    <span style="color: #5ad;">[13] FOV Dinámico que se aleja a velocidades supersónicas —</span> 
+                    <span style="color: #f90;">[14] Respawn fijo para el jugador tras demolición —</span> 
+                    <span style="color: #5ad;">[15] Respawn táctico aleatorio para bots en su campo —</span> 
+                    <span style="color: #f90;">[16] UI escalable 100% fluida (1080p/2K) —</span> 
+                    <span style="color: #5ad;">[17] Paginación ultra-rápida de 40 diseños de balones —</span> 
+                    <span style="color: #f90;">[18] Corrección del backend PHP en guardado de mapas —</span> 
+                    <span style="color: #5ad;">[19] Diseñador de Banners avanzado (degradados/patrones) —</span> 
+                    <span style="color: #f90;">[20] Reestructuración del layout de Perfil en doble columna.</span>
                 </div>
             </div>
         </div>
