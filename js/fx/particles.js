@@ -1,16 +1,46 @@
 export class Particle { 
     constructor(x, y, type) {
         this.x = x; this.y = y; this.type = type;
-        if (type === 'boost') { 
-            this.color = (Math.random() > 0.5) ? 'rgba(255, 150, 50, 0.8)' : 'rgba(100, 180, 255, 0.8)'; 
-            this.size = Math.random() * 8 + 5; this.vx = (Math.random() - 0.5) * 4; this.vy = (Math.random() - 0.5) * 4; this.lifespan = 40; 
+        
+        // Colores según el tipo de boost seleccionado
+        const boostColors = {
+            'classic': ['rgba(100, 180, 255, 0.8)', 'rgba(255, 255, 255, 0.5)'],
+            'fire': ['rgba(255, 100, 0, 0.9)', 'rgba(255, 200, 0, 0.7)'],
+            'neon': ['rgba(255, 0, 255, 0.9)', 'rgba(0, 255, 255, 0.7)'],
+            'plasma': ['rgba(160, 0, 255, 0.9)', 'rgba(255, 255, 255, 0.8)'],
+            'toxic': ['rgba(50, 255, 0, 0.9)', 'rgba(150, 255, 0, 0.7)'],
+            'glitch': ['rgba(255, 255, 255, 0.9)', 'rgba(255, 0, 0, 0.7)'],
+            'gold': ['rgba(255, 215, 0, 0.9)', 'rgba(255, 255, 255, 0.7)'],
+            'ice': ['rgba(150, 230, 255, 0.9)', 'rgba(255, 255, 255, 0.7)'],
+            'void': ['rgba(50, 0, 50, 0.9)', 'rgba(0, 0, 0, 0.8)'],
+            'rainbow': ['rgba(255, 0, 0, 0.8)', 'rgba(0, 255, 0, 0.8)', 'rgba(0, 0, 255, 0.8)'],
+            'cyber': ['rgba(0, 255, 255, 0.9)', 'rgba(100, 100, 255, 0.7)'],
+            'nature': ['rgba(0, 200, 0, 0.9)', 'rgba(255, 255, 255, 0.7)']
+        };
+
+        if (boostColors[type]) {
+            const palette = boostColors[type];
+            this.color = palette[Math.floor(Math.random() * palette.length)];
+            this.size = Math.random() * 8 + 5; 
+            this.vx = (Math.random() - 0.5) * 4; 
+            this.vy = (Math.random() - 0.5) * 4; 
+            this.lifespan = 40; 
         } 
-        else { 
+        else if (type === 'smoke') { 
             this.color = 'rgba(180, 180, 180, 0.5)'; 
             this.size = Math.random() * 5 + 2; this.vx = (Math.random() - 0.5) * 1; this.vy = (Math.random() - 0.5) * 1; this.lifespan = 50; 
         }
+        else {
+            this.color = 'rgba(100, 100, 100, 0.3)';
+            this.size = 4; this.vx = 0; this.vy = 0; this.lifespan = 30;
+        }
     }
-    update() { this.x += this.vx; this.y += this.vy; this.lifespan--; this.size *= 0.95; }
+    update(timeScale = 1.0) { 
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
+        this.lifespan -= timeScale; 
+        this.size *= Math.pow(0.95, timeScale); 
+    }
     draw(ctx) { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
 }
 
@@ -25,8 +55,15 @@ export class ExplosionParticle {
         this.gravity = 0.2; 
         this.colorOffset = colorOffset; 
     }
-    update() { this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.lifespan--; this.size *= 0.985; this.vx *= 0.98; this.vy *= 0.98; } 
-    draw(ctx) {
+    update(timeScale = 1.0) { 
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
+        this.vy += this.gravity * timeScale; 
+        this.lifespan -= timeScale; 
+        this.size *= Math.pow(0.985, timeScale); 
+        this.vx *= Math.pow(0.98, timeScale); 
+        this.vy *= Math.pow(0.98, timeScale); 
+    }    draw(ctx) {
         if (this.lifespan <= 0) return;
         const alpha = Math.max(0, this.lifespan / this.initialLifespan);
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
@@ -79,7 +116,7 @@ export class ConfettiParticle {
 export class SkidMark { 
     constructor(x, y, angle) { 
         this.x = x; this.y = y; this.angle = angle; this.width = 6; this.height = 18; 
-        this.lifespan = 120; this.initialLifespan = 120; 
+        this.lifespan = 600; this.initialLifespan = 600; 
     }
     update() { this.lifespan--; }
     draw(ctx) {

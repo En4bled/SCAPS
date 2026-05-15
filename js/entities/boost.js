@@ -1,3 +1,5 @@
+import { playSound } from '../fx/audio.js';
+
 export class BoostPad {
     constructor(x, y, isMini = false) {
         this.x = x; this.y = y; this.isMini = isMini; 
@@ -44,6 +46,7 @@ export class BoostPad {
             this.active = false; 
             this.respawnTimer = this.respawnTime; 
             car.boost = Math.min(100, car.boost + this.amount); 
+            playSound('boost_pickup', 0.5);
         } 
     }
 }

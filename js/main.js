@@ -7,11 +7,12 @@ import { setupInput } from './core/input.js';
 import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
-import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics } from './world/physics.js';
-import { initAudio, updateAudio, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
+import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from './world/physics.js';
+import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
+import { ReplaySystem } from './core/replay.js';
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
@@ -40,6 +41,10 @@ const USER_CONFIG = {
     bannerBorderStyle: 'simple'
 };
 
+// Exportar para acceso desde UI tras inicialización
+window.musicVolume = USER_CONFIG.musicVolume / 100;
+window.sfxVolume = USER_CONFIG.sfxVolume / 100;
+
 function saveUserConfig() {
     localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
 }
@@ -47,12 +52,12 @@ function saveUserConfig() {
 function loadUserConfig() {
     const saved = localStorage.getItem('SCAPS_USER_CONFIG');
     if (saved) {
-        try { Object.assign(USER_CONFIG, JSON.parse(saved)); } catch(e) {}
+        try { Object.assign(USER_CONFIG, JSON.parse(saved)); } catch (e) { }
     }
     setMusicVolume(USER_CONFIG.musicVolume / 100);
     setSFXVolume(USER_CONFIG.sfxVolume / 100);
     applyBannerPosition();
-    
+
     // Sincronizar UI inicial
     const inputName = document.getElementById('input-player-name');
     if (inputName) inputName.value = USER_CONFIG.playerName;
@@ -103,7 +108,7 @@ function loadUserConfig() {
 function updatePlayerBanner() {
     const banner = document.getElementById('player-banner');
     if (!banner) return;
-    
+
     const avatarImg = document.getElementById('player-banner-avatar');
     const avatarFrame = document.getElementById('player-banner-avatar-frame');
     const nameSpan = document.getElementById('player-banner-name');
@@ -144,7 +149,7 @@ function updatePlayerBanner() {
     // APLICAR ESTILO DINÁMICO
     const applyStyle = (el) => {
         if (!el) return;
-        
+
         // Fondo
         if (USER_CONFIG.bannerType === 'gradient') {
             el.style.background = `linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})`;
@@ -166,8 +171,8 @@ function updatePlayerBanner() {
         }
 
         if (patternCSS) {
-            el.style.backgroundImage = patternCSS + (USER_CONFIG.bannerType === 'gradient' ? 
-                `, linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})` : 
+            el.style.backgroundImage = patternCSS + (USER_CONFIG.bannerType === 'gradient' ?
+                `, linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})` :
                 `, linear-gradient(0deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor1})`);
         } else {
             el.style.backgroundImage = 'none';
@@ -175,7 +180,7 @@ function updatePlayerBanner() {
 
         // Borde
         el.style.borderColor = USER_CONFIG.bannerBorderColor;
-        
+
         // Estilo de Borde
         if (USER_CONFIG.bannerBorderStyle === 'neon') {
             el.style.boxShadow = `0 0 15px ${USER_CONFIG.bannerBorderColor}66`;
@@ -236,8 +241,8 @@ let countdownEl, goalTextEl, cameraModeEl, scoreboardEl, mainMenuEl;
 let btnPlay, btnSettings, btnCredits, btnCustom, menuInitial, menuCredits, menuCustom, menuSettings;
 let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
 let gameOverOverlay, gameOverWinner, finalScoreBlue, finalScoreOrange;
-let selectedMap = 'URBAN'; 
-let selectedMode = null; 
+let selectedMap = 'URBAN';
+let selectedMode = null;
 let selectedCarP1 = 'recursos/car1.png';
 let selectedCarP2 = 'recursos/car2.png';
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1, currentBallPage = 1;
@@ -270,6 +275,7 @@ let currentCamX = 0, currentCamY = 0, currentRotation = 0;
 
 let player1, player1_teammate, player2, player2_teammate, allCars, ball;
 let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
+let replaySystem = new ReplaySystem();
 
 function renderExplosionSelection() {
     const list = document.getElementById('custom-explosion-list');
@@ -334,7 +340,7 @@ const explosionPreviewManager = {
                 const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
                 color = colors[Math.floor(Math.random() * colors.length)];
             }
-            
+
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 6 + 2;
 
@@ -394,9 +400,9 @@ const explosionPreviewManager = {
             ctx.shadowBlur = 10;
             ctx.shadowColor = p.color;
             ctx.fillStyle = p.color;
-            
+
             if (p.type === 'squares' || p.type === 'big_pixels') {
-                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+                ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
             } else if (p.type === 'shards') {
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y - p.size);
@@ -505,7 +511,7 @@ const boostPreviewManager = {
         this.lastTime = time;
 
         const boost = BOOST_DEFS[USER_CONFIG.playerBoost] || BOOST_DEFS.classic;
-        
+
         // Generar partículas desde la parte trasera del coche (centrado)
         if (Math.random() < 0.3 * boost.density) {
             this.particles.push(this.createParticle(boost));
@@ -525,7 +531,7 @@ const boostPreviewManager = {
     createParticle(boost) {
         const canvasMidY = this.canvas.height / 2;
         const canvasMidX = this.canvas.width * 0.7;
-        
+
         let color = boost.color;
         if (color === 'multi') {
             const hues = [0, 60, 120, 180, 240, 300];
@@ -556,7 +562,7 @@ const boostPreviewManager = {
             ctx.shadowBlur = 15;
             ctx.shadowColor = p.color;
             ctx.fillStyle = p.color;
-            
+
             if (p.type === 'squares' || p.type === 'glitch') {
                 ctx.fillRect(p.x, p.y, p.size, p.size);
             } else if (p.type === 'lines' || p.type === 'cyber') {
@@ -575,9 +581,9 @@ const boostPreviewManager = {
                 const s = p.size;
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y - s);
-                ctx.lineTo(p.x + s/2, p.y);
+                ctx.lineTo(p.x + s / 2, p.y);
                 ctx.lineTo(p.x, p.y + s);
-                ctx.lineTo(p.x - s/2, p.y);
+                ctx.lineTo(p.x - s / 2, p.y);
                 ctx.closePath();
                 ctx.fill();
             } else {
@@ -602,12 +608,12 @@ const boostPreviewManager = {
         ctx.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%)`;
         ctx.translate(posX, posY);
         ctx.rotate(Math.PI / 2); // Rotar 90 grados
-        
+
         // Calcular altura proporcional para mantener aspect ratio
         const aspect = this.carImg.width / this.carImg.height;
         const h = carSize / aspect;
-        
-        ctx.drawImage(this.carImg, -carSize/2, -h/2, carSize, h);
+
+        ctx.drawImage(this.carImg, -carSize / 2, -h / 2, carSize, h);
         ctx.restore();
     }
 };
@@ -618,6 +624,9 @@ window.addEventListener('resize', () => {
 });
 
 async function init() {
+    if (window.SCAPS_ENGINE_LOADED) return;
+    window.SCAPS_ENGINE_LOADED = true;
+    
     console.log("SCAPS: Inicializando motor...");
     // Cargar mapa PRINCIPAL por defecto al inicio
     try {
@@ -646,7 +655,7 @@ async function init() {
         btnCustom = getEl('btn-custom');
         menuInitial = getEl('menu-initial');
         menuCredits = getEl('menu-credits');
-        
+
         // Listener Modal Alerta
         const btnModalOk = document.getElementById('btn-modal-alert-ok');
         if (btnModalOk) {
@@ -676,7 +685,7 @@ async function init() {
         // Iniciar Editor de Físicas
         initPhysicsEditor((isOpening) => {
             if (isOpening) {
-                if (gameState === 'playing' || gameState === 'countdown') {
+                if (gameState === 'playing' || gameState === 'countdown' || gameState === 'goalScored' || gameState === 'gameOver' || gameState === 'panning' || gameState === 'zooming') {
                     isPaused = true;
                     return true;
                 }
@@ -709,7 +718,7 @@ async function init() {
         setupCustomizationMenu();
         loadUserConfig();
         setupDraggableBanner();
-        
+
         // Inicializar Previsualizaciones
         boostPreviewManager.init();
         updateBoostPreviewInfo(USER_CONFIG.playerBoost);
@@ -720,7 +729,7 @@ async function init() {
         if (btnCustom) btnCustom.onclick = () => { showMenuScreen('custom'); };
         if (btnSettings) btnSettings.onclick = () => showMenuScreen('settings');
         if (btnCredits) btnCredits.onclick = () => showMenuScreen('credits');
-        
+
         const btnMapEditor = getEl('btn-map-editor');
         const editorOverlay = getEl('editor-confirm-overlay');
         const btnEditorConfirm = getEl('btn-editor-confirm');
@@ -787,6 +796,7 @@ async function init() {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
             }
+            stopAllMotors();
             playSound('menu_click');
         };
 
@@ -822,11 +832,12 @@ async function init() {
                 playSound('menu_click');
                 score = { blue: 0, orange: 0 };
                 gameTime = 60;
+                replaySystem.reset();
                 finalizeStartGame();
             };
             validateMatchSetup();
         }
-        
+
         const btnCustomBack = getEl('btn-custom-back');
         if (btnCustomBack) btnCustomBack.onclick = () => {
             const inputName = getEl('input-player-name');
@@ -843,6 +854,7 @@ async function init() {
             if (gameOverOverlay) gameOverOverlay.style.display = 'none';
             score = { blue: 0, orange: 0 };
             gameTime = 60;
+            replaySystem.reset();
             finalizeStartGame();
             playSound('menu_click');
         };
@@ -862,6 +874,7 @@ async function init() {
                 const videoBg = document.getElementById('menu-video-bg');
                 if (videoBg) videoBg.style.opacity = '1';
             }
+            stopAllMotors();
             playSound('menu_click');
         };
 
@@ -919,6 +932,7 @@ async function init() {
                 return;
             }
 
+            if (e.code === 'Tab') { e.preventDefault(); e.stopPropagation(); }
             if (e.code === 'Escape' && gameState !== 'menu') { togglePause(); }
         });
 
@@ -928,8 +942,45 @@ async function init() {
 
         // Listeners de Pausa
         const pContinue = getEl('btn-pause-continue'); if (pContinue) pContinue.onclick = () => togglePause();
-        const pRestart = getEl('btn-pause-restart'); if (pRestart) pRestart.onclick = () => { score = { blue: 0, orange: 0 }; gameTime = 60; togglePause(); resetAfterGoal(); };
-        const pExit = getEl('btn-pause-exit'); if (pExit) pExit.onclick = () => { isPaused = false; const pm = getEl('pause-menu'); if (pm) pm.style.display = 'none'; gameState = 'menu'; showMenuScreen('initial'); if (mainMenuEl) { mainMenuEl.classList.remove('hidden'); mainMenuEl.style.display = 'flex'; const videoBg = document.getElementById('menu-video-bg'); if (videoBg) videoBg.style.opacity = '1'; } };
+        
+        const pRestart = getEl('btn-pause-restart'); 
+        if (pRestart) pRestart.onclick = () => { 
+            score = { blue: 0, orange: 0 }; 
+            gameTime = 60; 
+            if (typeof updateScoreboard === 'function') updateScoreboard(scoreboardEl, allCars, score);
+            togglePause(); 
+            resetAfterGoal(); 
+        };
+
+        const pExit = getEl('btn-pause-exit');
+        if (pExit) pExit.onclick = () => {
+            isPaused = false;
+            const pm = getEl('pause-menu');
+            if (pm) pm.style.display = 'none';
+            gameState = 'menu';
+            showMenuScreen('initial');
+            if (mainMenuEl) {
+                mainMenuEl.classList.remove('hidden');
+                mainMenuEl.style.display = 'flex';
+                const videoBg = document.getElementById('menu-video-bg');
+                if (videoBg) videoBg.style.opacity = '1';
+            }
+            stopAllMotors();
+        };
+
+        // MP3 en Pausa
+        const pPP = getEl('btn-pause-play-pause');
+        if (pPP) pPP.onclick = () => { togglePlayPause(); syncPauseMenuAudioUI(); };
+        const pPrev = getEl('btn-pause-prev');
+        if (pPrev) pPrev.onclick = () => { prevSong(); syncPauseMenuAudioUI(); };
+        const pNext = getEl('btn-pause-next');
+        if (pNext) pNext.onclick = () => { nextSong(); syncPauseMenuAudioUI(); };
+
+        const psMusic = getEl('slider-pause-music');
+        if (psMusic) psMusic.oninput = (e) => { setMusicVolume(e.target.value / 100); };
+        const psSFX = getEl('slider-pause-sfx');
+        if (psSFX) psSFX.oninput = (e) => { setSFXVolume(e.target.value / 100); };
+
         const pMusic = getEl('btn-toggle-music-pause');
         const syncMuteUI = (muted) => {
             if (pMusic) pMusic.innerText = muted ? '🔇' : '🔊';
@@ -1013,6 +1064,12 @@ function renderFrame() {
     }
 
     let camLerp = (gameState === 'zooming' || gameState === 'panning') ? 0.04 : 0.08;
+    if (gameState === 'replay') {
+        targetX = ball.x;
+        targetY = ball.y;
+        targetZoom = 1.15; 
+        camLerp = 0.06;
+    }
     currentCamX += (targetX - currentCamX) * camLerp;
     currentCamY += (targetY - currentCamY) * camLerp;
     currentVOffset += (vOffset - currentVOffset) * 0.05;
@@ -1021,44 +1078,134 @@ function renderFrame() {
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2 + currentVOffset);
     ctx.rotate(currentRotation);
-    
+
     // Aplicar Zoom Dinámico (Cinemática de inicio)
     ctx.scale(currentZoom, currentZoom);
-    
+
     ctx.translate(-currentCamX, -currentCamY);
 
     drawAll();
 
     // Solo dibujar nombres y HUD si estamos en partida
-    if (gameState !== 'menu' && gameState !== 'intro') {
-        drawCarNames(ctx, allCars, player1, cameraMode, gameState);
-        drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
-    }
+    drawCarNames(ctx, allCars, player1, cameraMode, gameState);
+    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
+    drawFeed(ctx, canvas);
 
     ctx.restore();
 }
 
+// --- SISTEMA DE NOTIFICACIONES (FEED) ---
+let feedMessages = [];
+export function addFeedMessage(type, actor, victim = null) {
+    const msg = {
+        type,
+        actor: actor ? actor.name : 'Alguien',
+        victim: victim ? victim.name : null,
+        timer: 300, // 5 segundos
+        color: actor ? actor.color : 'white'
+    };
+    feedMessages.unshift(msg);
+    if (feedMessages.length > 4) feedMessages.pop();
+}
+
+function drawFeed(ctx, canvas) {
+    ctx.save();
+    ctx.font = 'bold 18px "Share Tech Mono"';
+    const startX = canvas.width - 20;
+    const startY = 80;
+    const gap = 30;
+
+    feedMessages.forEach((msg, i) => {
+        const text = msg.type === 'goal'
+            ? `⚽ GOL de ${msg.actor}`
+            : `💥 ${msg.actor} explotó a ${msg.victim}`;
+
+        ctx.textAlign = 'right';
+        ctx.globalAlpha = Math.min(1, msg.timer / 60);
+
+        // Sombra de texto
+        ctx.fillStyle = 'black';
+        ctx.fillText(text, startX + 2, startY + (i * gap) + 2);
+
+        // Texto principal
+        ctx.fillStyle = msg.color;
+        ctx.fillText(text, startX, startY + (i * gap));
+
+        msg.timer--;
+    });
+
+    feedMessages = feedMessages.filter(m => m.timer > 0);
+    ctx.restore();
+}
+
 function updateAll(dt) {
-    if (gameState === 'playing' || gameState === 'countdown') {
-        // Actualizar IA de cada bot de forma independiente
-        updateCarAI(player1_teammate, ball, boostPads, gameState, player1_teammate.aiKeys, allCars);
-        updateCarAI(player2, ball, boostPads, gameState, player2.aiKeys, allCars);
-        updateCarAI(player2_teammate, ball, boostPads, gameState, player2_teammate.aiKeys, allCars);
+    // Factor de escala basado en 60fps
+    const timeScale = dt * 60;
 
-        // El jugador usa keysPressed (teclado), los bots usan sus aiKeys
-        player1.update(keysPressed, gameState, particles, skidMarks);
-        player1_teammate.update(player1_teammate.aiKeys, gameState, particles, skidMarks);
-        player2.update(player2.aiKeys, gameState, particles, skidMarks);
-        player2_teammate.update(player2_teammate.aiKeys, gameState, particles, skidMarks);
+    if (gameState === 'playing' || gameState === 'countdown' || gameState === 'goalScored') {
+        // 1. Actualizar Entidades (Multiplicar por timeScale para físicas consistentes)
+        player1.update(keysPressed, gameState, particles, skidMarks, timeScale);
+        applyTirePhysics(player1, timeScale);
 
-        ball.update(gameState, explosionParticles);
+        allCars.forEach(car => {
+            if (car !== player1) {
+                const aiKeys = {};
+                updateCarAI(car, ball, boostPads, gameState, aiKeys, allCars);
+                car.update(aiKeys, gameState, particles, skidMarks, timeScale);
+                applyTirePhysics(car, timeScale);
+            }
+        });
+
+        ball.update(gameState, particles, timeScale);
+        
+        // 2. Colisiones Ball/Car
+        allCars.forEach(car => {
+            checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale);
+        });
+
+        applyGlobalFriction(ball, allCars, timeScale);
         boostPads.forEach(pad => pad.update());
+
+        // Manejo de Respawn de coches explotados
+        allCars.forEach((car, i) => {
+            if (car.isExploded && car.respawnTimer <= 0) {
+                const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 };
+                car.x = sp.x;
+                car.y = sp.y;
+                car.angle = sp.a || 0;
+                car.speed = 0;
+                car.vx = 0;
+                car.vy = 0;
+                car.boost = 33;
+                car.isExploded = false;
+                console.log(`Car ${car.name} respawned.`);
+            }
+        });
 
         checkCollisions();
     }
 
+    // --- LÓGICA DE REPLAY ---
+    if (gameState === 'replay') {
+        const stillPlaying = replaySystem.applyFrame(ball, allCars);
+        if (!stillPlaying) {
+            gameState = 'panning'; // Estado temporal para bloquear este bloque
+            triggerTransition();
+            setTimeout(resetAfterGoal, 400); 
+        }
+    } else if (gameState === 'playing' || gameState === 'goalScored') {
+        // Seguimos grabando durante 'goalScored' para capturar el final
+        replaySystem.record(ball, allCars);
+    }
+
     [particles, explosionParticles, confettiParticles, skidMarks].forEach(arr => {
-        for (let i = arr.length - 1; i >= 0; i--) { arr[i].update(); if (arr[i].lifespan <= 0) arr.splice(i, 1); }
+        for (let i = arr.length - 1; i >= 0; i--) {
+            const obj = arr[i];
+            if (obj && typeof obj.update === 'function') {
+                obj.update();
+            }
+            if (obj.lifespan <= 0) arr.splice(i, 1);
+        }
     });
 
     animationFrameCounter++;
@@ -1068,13 +1215,14 @@ function updateAll(dt) {
 }
 
 function checkCollisions() {
-    if (gameState !== 'playing') return;
+    // Permitimos que corra durante goalScored para que los coches puedan moverse (car.move)
+    if (gameState !== 'playing' && gameState !== 'goalScored') return;
 
     for (let i = 0; i < allCars.length; i++) {
         const car = allCars[i];
         checkCarBallCollision(car, ball, touchHistory, gameTime);
         for (let j = i + 1; j < allCars.length; j++) {
-            checkCarCarCollision(car, allCars[j]);
+            checkCarCarCollision(car, allCars[j], explosionParticles);
         }
         boostPads.forEach(pad => {
             if (pad.active) {
@@ -1087,14 +1235,29 @@ function checkCollisions() {
     checkGoalPhysics(ball);
     allCars.forEach(car => car.move());
 
-    const scorer = ball.checkGoal();
-    if (scorer) handleGoal(scorer);
+    // Solo detectar nuevos goles si estamos en modo juego
+    if (gameState === 'playing') {
+        const scorer = ball.checkGoal();
+        if (scorer) handleGoal(scorer);
+    }
+}
+
+function triggerTransition() {
+    const stinger = document.getElementById('replay-transition');
+    if (stinger) {
+        stinger.classList.remove('active');
+        void stinger.offsetWidth; // Force reflow
+        stinger.classList.add('active');
+        setTimeout(() => {
+            stinger.classList.remove('active');
+        }, 850); // Duración de la animación stinger
+    }
 }
 
 function handleGoal(scorer) {
     if (scorer === 'blue') score.blue++; else score.orange++;
     gameState = 'goalScored';
-    
+
     // Atribuir gol y asistencia
     const teamColor = scorer === 'blue' ? '#5ad' : '#f90';
     let scoringCar = null;
@@ -1104,7 +1267,7 @@ function handleGoal(scorer) {
             break;
         }
     }
-    
+
     if (scoringCar) {
         scoringCar.goals++;
         scoringCar.score += 100;
@@ -1123,15 +1286,51 @@ function handleGoal(scorer) {
 
     playSound('goal');
     ball.isFireball = true; ball.fireballTimer = 180; ball.vx = 0; ball.vy = 0;
-    spawnGoalEffects(ball.x, ball.y);
-    if (goalTextEl) goalTextEl.style.display = 'block';
+
+    // Usar efecto de explosión seleccionado por el usuario (si es el jugador quien marca)
+    const explosionStyle = (scoringCar === player1) ? USER_CONFIG.playerExplosion : 'classic';
+    spawnGoalEffects(ball.x, ball.y, teamColor, explosionStyle);
+
+    // Añadir al feed
+    addFeedMessage('goal', scoringCar);
+
+    if (goalTextEl) {
+        goalTextEl.innerText = scoringCar ? `¡GOL DE ${scoringCar.name.toUpperCase()}!` : "¡GOL!";
+        goalTextEl.style.display = 'block';
+    }
     setTimeout(() => { if (goalTextEl) goalTextEl.style.display = 'none'; }, 2500);
-    setTimeout(resetAfterGoal, 5000);
+    
+    // Dejamos que el sistema siga grabando durante 2 segundos (120 frames aprox)
+    // para ver la reacción y el balón entrando en la red.
+    setTimeout(() => {
+        if (gameState === 'goalScored') {
+            triggerTransition();
+            setTimeout(() => {
+                replaySystem.startPlayback();
+                gameState = 'replay';
+                if (goalTextEl) {
+                    goalTextEl.innerText = "REPETICIÓN";
+                    goalTextEl.style.display = 'block';
+                    goalTextEl.style.color = teamColor;
+                }
+            }, 400); // Mitad de la cortinilla
+        }
+    }, 1500); 
 }
 
-function spawnGoalEffects(x, y) {
-    for (let i = 0; i < 120; i++) explosionParticles.push(new ExplosionParticle(x, y, Math.random() * 50 - 25));
-    for (let i = 0; i < 150; i++) confettiParticles.push(new ConfettiParticle(x, y));
+function spawnGoalEffects(x, y, teamColor, styleKey = 'classic') {
+    const config = EXPLOSION_DEFS[styleKey] || EXPLOSION_DEFS['classic'];
+    const count = config.count || 50;
+
+    // Efecto de partículas de explosión base
+    for (let i = 0; i < count; i++) {
+        explosionParticles.push(new ExplosionParticle(x, y, Math.random() * 50 - 25));
+    }
+
+    // Añadir confeti si el estilo lo pide o por defecto
+    for (let i = 0; i < 150; i++) {
+        confettiParticles.push(new ConfettiParticle(x, y));
+    }
 }
 
 function updateUI(dt) {
@@ -1146,18 +1345,18 @@ function updateUI(dt) {
     if (gameState === 'panning') {
         const dx = currentCamX - player1.x;
         const dy = currentCamY - player1.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
+        const dist = Math.sqrt(dx * dx + dy * dy);
         // Umbral reducido para un encuadre perfecto antes de empezar
         if (dist < 10) {
             resetAfterGoal(); // Esto pone gameState = 'countdown'
         }
     }
-    if (gameState === 'playing') { 
-        gameTime -= dt; 
-        if (gameTime <= 0) { 
-            gameTime = 0; 
-            showGameOver(); 
-        } 
+    if (gameState === 'playing') {
+        gameTime -= dt;
+        if (gameTime <= 0) {
+            gameTime = 0;
+            showGameOver();
+        }
     }
     if (gameState === 'countdown') {
         countdownTimer -= dt;
@@ -1181,6 +1380,7 @@ function resetAfterGoal() {
     ball.isFireball = false; ball.fireballTimer = 0; ball.visualRadius = ball.radius; ball.targetRadius = ball.radius;
     skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
     countdownTimer = 3; gameState = 'countdown';
+    targetZoom = 0.85; // Resetear zoom de cámara
     if (countdownEl) countdownEl.style.display = 'block';
     if (gameOverOverlay) gameOverOverlay.style.display = 'none';
     playSound('countdown');
@@ -1190,7 +1390,7 @@ function showGameOver() {
     gameState = 'gameOver';
     if (gameOverOverlay) {
         gameOverOverlay.style.display = 'flex';
-        
+
         if (finalScoreBlue) finalScoreBlue.innerText = score.blue;
         if (finalScoreOrange) finalScoreOrange.innerText = score.orange;
 
@@ -1210,7 +1410,7 @@ function showGameOver() {
             gameOverWinner.style.color = winnerColor;
             gameOverWinner.style.textShadow = `0 0 15px ${winnerColor}`;
         }
-        
+
         playSound('goal'); // Reutilizamos el sonido de gol para el final
     }
 }
@@ -1234,8 +1434,8 @@ function drawAll() {
 }
 
 function setupBoostPads() { boostPads = []; CONST.CONFIG.BOOST_POSITIONS.forEach(pos => { boostPads.push(new BoostPad(pos.x, pos.y, !pos.isBig)); }); }
-function toggleCamera() { 
-    cameraMode = (cameraMode === 'rotating') ? 'fixed' : 'rotating'; 
+function toggleCamera() {
+    cameraMode = (cameraMode === 'rotating') ? 'fixed' : 'rotating';
     if (cameraModeEl) {
         cameraModeEl.innerText = (cameraMode === 'rotating') ? 'CÁMARA ROTATIVA' : 'CÁMARA FIJA';
         cameraModeEl.style.display = 'block';
@@ -1245,8 +1445,55 @@ function toggleCamera() {
     playSound('menu_click');
 }
 function toggleScoreboard(show) { if (show) showScoreboard(scoreboardEl, allCars, score); else hideScoreboard(scoreboardEl, gameState); }
-function togglePause() { isPaused = !isPaused; const pm = document.getElementById('pause-menu'); if (pm) pm.style.display = isPaused ? 'flex' : 'none'; }
-function applySpawns() { allCars.forEach((car, i) => { const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 }; car.x = sp.x; car.y = sp.y; car.angle = sp.a; }); }
+function togglePause() {
+    isPaused = !isPaused;
+    const pm = document.getElementById('pause-menu');
+    if (pm) {
+        pm.style.display = isPaused ? 'flex' : 'none';
+        if (isPaused) {
+            syncPauseMenuAudioUI();
+        }
+    }
+}
+
+function syncPauseMenuAudioUI() {
+    // Sincronizar el mini-reproductor de pausa
+    const songName = document.getElementById('pause-song-name');
+    const songInfo = document.getElementById('pause-song-info');
+    const sMusic = document.getElementById('slider-pause-music');
+    const sSFX = document.getElementById('slider-pause-sfx');
+
+    const currentTrack = window.currentTrack || { name: 'SIN PISTA', artist: '---' };
+    if (songName) songName.innerText = currentTrack.name;
+    
+    if (sMusic) sMusic.value = (window.musicVolume || 0.5) * 100;
+    if (sSFX) sSFX.value = (window.sfxVolume || 0.8) * 100;
+}
+function applySpawns() {
+    allCars.forEach((car, i) => {
+        const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 };
+        car.x = sp.x;
+        car.y = sp.y;
+        car.angle = sp.a || 0;
+        car.vx = 0;
+        car.vy = 0;
+        car.speed = 0;
+        car.boost = 33;
+    });
+    if (ball) {
+        ball.x = CONST.CONFIG.WORLD_W / 2;
+        ball.y = CONST.CONFIG.WORLD_H / 2;
+        ball.vx = 0;
+        ball.vy = 0;
+        ball.onWallTimer = 0;
+        ball.isFireball = false;
+        ball.fireballTimer = 0;
+    }
+    skidMarks = [];
+    particles = [];
+    explosionParticles = [];
+    confettiParticles = [];
+}
 
 function startIntro() {
     introPhase = 1;
@@ -1305,7 +1552,8 @@ async function transitionToPhase(newPhase) {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
                 // La música comienza AQUÍ
-                initAudio(player1, allCars);
+                // initAudio ya se llama en finalizeStartGame para el ralentí
+    // initAudio(player1, allCars);
 
                 // CROSSFADE A VÍDEO ANIMADO
                 setTimeout(() => {
@@ -1324,25 +1572,25 @@ function setupCustomizationMenu() {
         btn.onclick = () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             const target = btn.dataset.tab;
             document.querySelectorAll('.custom-pane').forEach(p => p.classList.remove('active'));
             document.getElementById('pane-' + target).classList.add('active');
             playSound('menu_click');
-            
+
             if (target === 'perfil') {
                 renderAvatars();
                 setupTitleSelect();
             }
             if (target === 'vehiculo') renderCarSelection();
             if (target === 'balon') renderBallSelection();
-            if (target === 'boost') { 
-                renderBoostSelection(); 
+            if (target === 'boost') {
+                renderBoostSelection();
                 updateBoostPreviewInfo(USER_CONFIG.playerBoost);
-                setTimeout(() => boostPreviewManager.resize(), 50); 
+                setTimeout(() => boostPreviewManager.resize(), 50);
             }
-            if (target === 'explosion') { 
-                renderExplosionSelection(); 
+            if (target === 'explosion') {
+                renderExplosionSelection();
                 setTimeout(() => explosionPreviewManager.resize(), 50);
             }
         };
@@ -1405,11 +1653,11 @@ function setupCustomizationMenu() {
     // Reset de Tinte
     const btnResetHue = document.getElementById('reset-car-hue');
     const btnResetSat = document.getElementById('reset-car-saturate');
-    if (btnResetHue) btnResetHue.onclick = () => { 
+    if (btnResetHue) btnResetHue.onclick = () => {
         const hueSlider = document.getElementById('slider-car-hue');
         if (hueSlider) { hueSlider.value = 0; USER_CONFIG.playerCarHue = 0; updatePreview(); saveUserConfig(); playSound('menu_click'); }
     };
-    if (btnResetSat) btnResetSat.onclick = () => { 
+    if (btnResetSat) btnResetSat.onclick = () => {
         const satSlider = document.getElementById('slider-car-saturate');
         if (satSlider) { satSlider.value = 100; USER_CONFIG.playerCarSaturate = 100; updatePreview(); saveUserConfig(); playSound('menu_click'); }
     };
@@ -1426,11 +1674,11 @@ function renderAvatars() {
     const pageInfo = document.getElementById('avatar-page-info');
     if (!container) return;
     container.innerHTML = '';
-    
+
     // Generar lista de 100 avatares
     const totalAvatars = 100;
     const avatars = [];
-    for(let i=1; i<=totalAvatars; i++) {
+    for (let i = 1; i <= totalAvatars; i++) {
         avatars.push(`recursos/avatar/avatar (${i}).png`);
     }
 
@@ -1448,7 +1696,7 @@ function renderAvatars() {
         item.className = 'selectable-item' + (USER_CONFIG.playerAvatar === url ? ' selected' : '');
         // Aplicamos fondo personalizado
         item.style.background = USER_CONFIG.playerAvatarBg;
-        
+
         item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
         item.onclick = () => {
             USER_CONFIG.playerAvatar = url;
@@ -1467,10 +1715,10 @@ function renderCarSelection() {
     if (!list) return;
 
     const carImages = [];
-    for(let i=1; i<=10; i++) carImages.push(`recursos/Car${i}.png`);
+    for (let i = 1; i <= 10; i++) carImages.push(`recursos/Car${i}.png`);
 
     list.innerHTML = '';
-    
+
     // Renderizar los 10 coches reales
     carImages.forEach(img => {
         const item = document.createElement('div');
@@ -1488,7 +1736,7 @@ function renderCarSelection() {
     });
 
     // Añadir 2 botones "PROXIMAMENTE" para completar la rejilla 4x3 (10 coches + 2 huecos = 12)
-    for(let i=0; i<2; i++) {
+    for (let i = 0; i < 2; i++) {
         const nextItem = document.createElement('div');
         nextItem.className = 'selectable-item';
         nextItem.style.background = 'rgba(0,0,0,0.3)';
@@ -1514,10 +1762,10 @@ function renderBallSelection() {
     const pageInfo = document.getElementById('ball-page-info');
     if (!container) return;
     container.innerHTML = '';
-    
+
     const totalBalls = 40;
     const balls = [];
-    for(let i=1; i<=totalBalls; i++) {
+    for (let i = 1; i <= totalBalls; i++) {
         balls.push(`recursos/balls/ball_${i}.png`);
     }
 
@@ -1547,13 +1795,13 @@ function renderBallSelection() {
 function setupTitleSelect() {
     const select = document.getElementById('select-player-title');
     if (!select) return;
-    
+
     const titles = [
-        "Su ilustrísima", "Random noob", "Alpha Tester", "Beta Tester", 
-        "Leyenda Urbana", "Maestro del Balón", "Turboadicto", 
-        "Goleador Nato", "Rey del Aire", "Velocidad Absoluta"
+        "Su ilustrísima", "Random noob", "Alpha Tester", "Beta Tester",
+        "Leyenda Urbana", "Maestro del Balón", "Turboadicto",
+        "Goleador Nato", "Rey del Aire", "Developer"
     ];
-    
+
     select.innerHTML = '';
     titles.forEach(t => {
         const opt = document.createElement('option');
@@ -1562,7 +1810,7 @@ function setupTitleSelect() {
         if (USER_CONFIG.playerTitle === t) opt.selected = true;
         select.appendChild(opt);
     });
-    
+
     select.onchange = (e) => {
         USER_CONFIG.playerTitle = e.target.value;
         saveUserConfig();
@@ -1575,10 +1823,10 @@ function setupTitleSelect() {
 
 function showMenuScreen(screenId) {
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
-    
+
     const logo = document.getElementById('menu-logo');
     if (logo) logo.style.display = (screenId === 'initial') ? 'block' : 'none';
-    
+
     const btnMapEditor = document.getElementById('btn-map-editor');
     if (btnCredits) btnCredits.style.display = (screenId === 'initial') ? 'block' : 'none';
     if (btnMapEditor) btnMapEditor.style.display = (screenId === 'initial') ? 'block' : 'none';
@@ -1608,13 +1856,13 @@ async function loadSetupMaps() {
     try {
         const resp = await fetch('php/get_maps.php');
         let maps = await resp.json();
-        
+
         // Asegurar al menos 10 mapas para la demostración de paginación si faltan
         while (maps.length < 10) maps.push(`MAPA ${maps.length + 1}`);
 
         const MAPS_LIST = ['URBAN', 'ATLANTIS', 'VOLCANO', 'WINTER'];
         const totalMaps = MAPS_LIST.length;
-        
+
         // El currentMapPage ahora actuará como el índice del mapa central (1 a totalMaps)
         if (currentMapPage > totalMaps) currentMapPage = totalMaps;
         if (currentMapPage < 1) currentMapPage = 1;
@@ -1644,10 +1892,10 @@ async function loadSetupMaps() {
             const m = MAPS_LIST[idx];
             const isCenter = (offset === 0);
             const displayName = m.toUpperCase();
-            
+
             const card = document.createElement('div');
             card.className = `setup-map-item coverflow-card ${isCenter ? 'center' : 'side'}`;
-            
+
             // Estilos dinámicos para el efecto 3D
             card.style.width = isCenter ? "280px" : "180px";
             card.style.height = "fit-content !important"; // Forzar ajuste al contenido
@@ -1663,8 +1911,8 @@ async function loadSetupMaps() {
             card.style.display = "flex";
             card.style.flexDirection = "column";
             card.style.boxSizing = "border-box";
-            card.style.margin = "0 -35px"; 
-            
+            card.style.margin = "0 -35px";
+
             if (isCenter) {
                 card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(90,173,237,0.3)";
             }
@@ -1693,7 +1941,7 @@ async function loadSetupMaps() {
                 validateMatchSetup();
                 playSound('menu_click');
             };
-            
+
             mapListContainer.appendChild(card);
         });
     } catch (e) { console.error("Error load setup maps:", e); }
@@ -1707,7 +1955,7 @@ function validateMatchSetup() {
     const validMaps = ['urban', 'atlantis', 'volcano', 'winter'];
     const isValidMap = validMaps.includes(currentMap);
     const isValidMode = (currentMode === '2vs2');
-    
+
     console.log("Validando Setup:", { map: currentMap, mode: currentMode, isValid: (isValidMap && isValidMode) });
 
     const btnPlay = document.getElementById('setup-btn-play');
@@ -1721,23 +1969,29 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
     const msg = document.getElementById('modal-alert-message');
     const ico = document.getElementById('modal-alert-icon');
     const title = document.getElementById('modal-alert-title');
-    
+
     if (overlay && msg) {
         msg.innerText = text;
         if (ico) ico.innerText = icon;
         if (title) title.style.color = color;
-        
+
         overlay.style.display = 'flex';
         overlay.classList.remove('hidden');
-        
+
         playSound('menu_error');
     }
 }
 
 async function finalizeStartGame() {
-    const trans = document.getElementById('match-transition'); 
+    // IMPORTANTE: Resumir audio context por gesto de usuario
+    const { audioCtx } = await import('./fx/audio.js');
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    const trans = document.getElementById('match-transition');
     const fill = document.getElementById('loading-bar-fill');
-    
+
     if (trans) trans.classList.add('active');
     if (setupOverlay) setupOverlay.style.display = 'none';
 
@@ -1751,11 +2005,13 @@ async function finalizeStartGame() {
         player1.imgUrl = USER_CONFIG.playerCar;
         player1.hue = USER_CONFIG.playerCarHue;
         player1.saturate = USER_CONFIG.playerCarSaturate;
+        player1.boostType = USER_CONFIG.playerBoost; // Sincronizar Boost
     }
     if (player1_teammate) {
         player1_teammate.imgUrl = USER_CONFIG.playerCar;
         player1_teammate.hue = USER_CONFIG.playerCarHue;
         player1_teammate.saturate = USER_CONFIG.playerCarSaturate;
+        player1_teammate.boostType = USER_CONFIG.playerBoost;
     }
     // Para los oponentes, podemos dejar el car2 por defecto o añadir lógica similar
     if (player2) player2.imgUrl = selectedCarP2;
@@ -1786,7 +2042,7 @@ async function finalizeStartGame() {
                 const img = new Image();
                 img.onload = async () => {
                     if (img.decode) {
-                        try { await img.decode(); } catch(e) { console.warn("Error decoding img", src); }
+                        try { await img.decode(); } catch (e) { console.warn("Error decoding img", src); }
                     }
                     resolve();
                 };
@@ -1806,16 +2062,16 @@ async function finalizeStartGame() {
             drawField(ctx);
             drawGoalNets(ctx);
             ctx.restore();
-        } catch(e) { console.warn("Warm-up render failed", e); }
+        } catch (e) { console.warn("Warm-up render failed", e); }
 
         // 4. Pequeño margen para que el DOM respire y el fade-out sea suave
         setTimeout(() => {
             updateBar(100);
-            
+
             setTimeout(() => {
                 if (mainMenuEl) mainMenuEl.classList.add('hidden');
                 if (trans) trans.classList.remove('active');
-                
+
                 // Configurar inicio de partida
                 currentZoom = 0.1;
                 targetZoom = 0.85;
@@ -1824,6 +2080,8 @@ async function finalizeStartGame() {
                 currentRotation = 0;
 
                 gameState = 'zooming';
+                allCars = [player1, player1_teammate, player2, player2_teammate];
+                initAudio(player1, allCars);
                 applySpawns();
             }, 500);
         }, 300);
@@ -1902,7 +2160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedMode = btn.getAttribute('data-mode');
-            
+
             playSound('menu_click');
             validateMatchSetup();
         });

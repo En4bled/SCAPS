@@ -1,5 +1,20 @@
 // Manejador de Audio para SCAPS (Música, Motores y Efectos Sintéticos)
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+export const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// Nodo Maestro de Control
+const masterGain = audioCtx.createGain();
+const masterLimiter = audioCtx.createDynamicsCompressor();
+
+// Configurar el limitador para evitar petardeos/clipping
+masterLimiter.threshold.setValueAtTime(-3, audioCtx.currentTime);
+masterLimiter.knee.setValueAtTime(40, audioCtx.currentTime);
+masterLimiter.ratio.setValueAtTime(12, audioCtx.currentTime);
+masterLimiter.attack.setValueAtTime(0, audioCtx.currentTime);
+masterLimiter.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+masterGain.connect(masterLimiter);
+masterLimiter.connect(audioCtx.destination);
+
 let musicAudio = null;
 let motorAudios = [];
 let isMusicMuted = false;
@@ -50,8 +65,15 @@ export function togglePlayPause() {
     }
 }
 
+export function setSFXVolume(vol) {
+    sfxVolume = vol;
+    window.sfxVolume = vol;
+    const sfxLabel = document.getElementById('settings-sfx-label');
+    if (sfxLabel) sfxLabel.innerText = Math.round(vol * 100) + "%";
+}
 export function setMusicVolume(vol) {
     musicVolume = vol;
+    window.musicVolume = vol;
     if (musicAudio) {
         musicAudio.volume = musicVolume;
     }
@@ -59,89 +81,139 @@ export function setMusicVolume(vol) {
     if (volLabel) volLabel.innerText = Math.round(vol * 100) + "%";
 }
 
-export function setSFXVolume(vol) {
-    sfxVolume = vol;
-    const sfxLabel = document.getElementById('settings-sfx-label');
-    if (sfxLabel) sfxLabel.innerText = Math.round(vol * 100) + "%";
-}
-
 export function initAudio(playerCar, allCars) {
     if (isInitialized) return;
     
-    // Iniciar contexto de audio si estaba suspendido (política de navegadores)
+    playerCarRef = playerCar;
+    
+    // Asegurar que el contexto está activo (gesto del usuario)
     if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+        audioCtx.resume().then(() => {
+            console.log("AudioContext resumed successfully.");
+        });
     }
     
-    playerCarRef = playerCar;
     isInitialized = true;
 
-    // 1. Música de fondo (Playlist secuencial)
     playPlaylist();
 
-    // 2. Motores para todos los coches
+    // Motores Sintéticos de Alta Fidelidad
+    motorAudios = [];
     allCars.forEach(car => {
-        const motor = new Audio('recursos/sound/motor.mp3');
-        motor.loop = true;
-        motor.volume = 0; 
-        motor.preservesPitch = false; // Permite cambiar el pitch con el playbackRate
-        motor.play().catch(e => console.log("Motor bloqueado:", e));
-        motorAudios.push({ car: car, audio: motor });
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = 'triangle';
+        osc.frequency.value = 40; 
+        
+        filter.type = 'lowpass';
+        filter.frequency.value = 400;
+
+        gain.gain.value = 0; 
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain); 
+        osc.start();
+
+        motorAudios.push({ car, osc, gain, filter });
     });
+}
+
+export function stopAllMotors() {
+    motorAudios.forEach(item => {
+        try {
+            item.gain.gain.cancelScheduledValues(audioCtx.currentTime);
+            item.gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            setTimeout(() => {
+                item.osc.stop();
+                item.osc.disconnect();
+            }, 150);
+        } catch(e) {}
+    });
+    motorAudios = [];
+    isInitialized = false;
+    playerCarRef = null;
+    console.log("Audio: Motores detenidos correctamente.");
 }
 
 export function updateAudio() {
-    if (!isInitialized || !playerCarRef) return;
+    // Si el contexto está suspendido, intentar resumir (pueden ser necesarios gestos)
+    if (audioCtx.state === 'suspended' && isInitialized) audioCtx.resume();
+
+    if (!isInitialized || !playerCarRef || motorAudios.length === 0) return;
     
+    const now = audioCtx.currentTime;
     motorAudios.forEach(item => {
         const car = item.car;
-        const audio = item.audio;
+        const speedPercent = Math.min(Math.abs(car.speed) / 3.2, 1.0);
         
-        // Calcular el pitch basado en la velocidad (de 0 a ~25)
-        const speedPercent = Math.min(Math.abs(car.speed) / 25, 1.0);
-        const pitch = 0.8 + (speedPercent * 1.5); // Rango de 0.8x a 2.3x pitch
+        // Frecuencia con suavizado mayor (0.15)
+        // Ralentí a 60Hz para que sea más audible
+        const targetFreq = 60 + (speedPercent * 120);
+        item.osc.frequency.setTargetAtTime(targetFreq, now, 0.15);
         
-        // Evitar errores con el playbackRate
-        if (isFinite(pitch)) {
-            audio.playbackRate = Math.max(0.5, Math.min(pitch, 3.0));
-        }
-        
-        // Calcular volumen basado en distancia y propiedad del coche
-        if (car === playerCarRef) {
-            audio.volume = 0.3 + (speedPercent * 0.2); // El jugador siempre se escucha
+        // Filtro más agresivo para evitar "clipping" de agudos
+        const targetFilter = 150 + (speedPercent * 600);
+        item.filter.frequency.setTargetAtTime(targetFilter, now, 0.15);
+
+        let finalVol = 0;
+        if (car.isExploded) {
+            finalVol = 0;
+        } else if (car === playerCarRef) {
+            // Ralentí a 0.15 para que se escuche bien antes de empezar
+            finalVol = 0.15 + (speedPercent * 0.1);
         } else {
             const dx = car.x - playerCarRef.x;
             const dy = car.y - playerCarRef.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const distSq = dx*dx + dy*dy;
+            const maxDistSq = 1800 * 1800; // Radio de audición
             
-            // Atenuación espacial (se deja de escuchar a los 1500px de distancia)
-            const maxDist = 1500;
-            let vol = 1.0 - (dist / maxDist);
-            if (vol < 0) vol = 0;
-            
-            audio.volume = vol * 0.2 * (0.5 + speedPercent * 0.5);
+            let spatialMult = Math.max(0, 1.0 - (distSq / maxDistSq));
+            // Los otros coches suenan mucho más bajo para evitar "bola de ruido"
+            finalVol = spatialMult * 0.04 * (0.5 + speedPercent * 0.5);
         }
+        item.gain.gain.setTargetAtTime(finalVol * sfxVolume, now, 0.15);
     });
 }
 
-// Efectos de Sonido Generados Dinámicamente (Web Audio API)
 export function playSound(type, intensity = 1.0) {
     if (!isInitialized || audioCtx.state !== 'running') return;
 
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-    
+    gainNode.connect(masterGain); 
     osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
     
     const now = audioCtx.currentTime;
 
     if (type === 'menu_click') {
         const clickSnd = new Audio('recursos/sound/Modern2.wav');
-        clickSnd.volume = 0.5 * sfxVolume;
+        clickSnd.volume = 0.4 * sfxVolume;
         clickSnd.play().catch(e => {});
         return;
     } 
+    if (type === 'boost_pickup') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+        gainNode.gain.setValueAtTime(0.15 * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+        return;
+    }
+    if (type === 'car_hit') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+        gainNode.gain.setValueAtTime(0.25 * intensity * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+        return;
+    }
     if (type === 'countdown') {
         const cdSnd = new Audio('recursos/sound/Countdown.mp3');
         cdSnd.volume = 0.6 * sfxVolume;
@@ -175,15 +247,10 @@ export function playSound(type, intensity = 1.0) {
         osc.stop(now + 0.15);
     }
     else if (type === 'goal') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(200, now);
-        osc.frequency.linearRampToValueAtTime(400, now + 0.5);
-        osc.frequency.linearRampToValueAtTime(150, now + 1.5);
-        gainNode.gain.setValueAtTime(0.4 * sfxVolume, now);
-        gainNode.gain.linearRampToValueAtTime(0.7 * sfxVolume, now + 0.2);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
-        osc.start(now);
-        osc.stop(now + 2.0);
+        const goalSnd = new Audio('recursos/sound/car-explosion.mp3');
+        goalSnd.volume = 0.8 * sfxVolume;
+        goalSnd.play().catch(e => console.log("Goal sound blocked:", e));
+        return;
     }
 }
 
@@ -272,6 +339,10 @@ function playPlaylist() {
     musicAudio.play().then(() => {
         showSongNotification();
         updateSettingsSongUI();
+        
+        // Sincronizar para pausa
+        const meta = songMetadata[currentSongIdx - 1];
+        window.currentTrack = { name: meta.title, artist: meta.artist };
     }).catch(e => console.log("Música bloqueada:", e));
 
     musicAudio.ontimeupdate = () => {

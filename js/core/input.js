@@ -10,6 +10,7 @@ export function setupInput(keysPressed, onCameraToggle, onScoreboardToggle) {
         
         if (e.code === 'Tab') {
             e.preventDefault();
+            e.stopPropagation();
             onScoreboardToggle(true);
         }
 
@@ -21,6 +22,7 @@ export function setupInput(keysPressed, onCameraToggle, onScoreboardToggle) {
         
         if (e.code === 'Tab') {
             e.preventDefault();
+            e.stopPropagation();
             onScoreboardToggle(false);
         }
     });

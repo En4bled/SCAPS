@@ -52,7 +52,7 @@ canvas {
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 200px;
+    font-size: 120px;
     font-weight: bold;
     color: gold;
     text-shadow: 0 0 25px black, 0 0 10px yellow;
@@ -60,6 +60,7 @@ canvas {
     z-index: 110;
     animation: goal-pulse 1s ease-out infinite alternate;
     font-family: 'Rajdhani', sans-serif;
+    text-align: center;
 }
 
 #camera-mode-overlay {
@@ -1659,4 +1660,63 @@ input[type="range"]::-moz-range-thumb {
 
 .custom-box-gallery {
     flex: 1;
+}/* --- REPLAY STINGER TRANSITION --- */
+#replay-transition {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    overflow: hidden;
+}
+#replay-transition.active {
+    display: flex;
+}
+.transition-bar {
+    width: 150%;
+    height: 33.34vh;
+    background: #5ad;
+    transform: translateX(-120%) skewX(-20deg);
+}
+.transition-logo {
+    width: 150%;
+    height: 33.34vh;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 80px;
+    letter-spacing: 20px;
+    font-weight: 900;
+    border-top: 5px solid #5ad;
+    border-bottom: 5px solid #5ad;
+    transform: translateX(120%) skewX(-20deg);
+    text-shadow: 0 0 20px #5ad;
+}
+#replay-transition.active .transition-bar:nth-child(1) {
+    animation: transition-slide-in-right 0.8s forwards cubic-bezier(0.7, 0, 0.3, 1);
+}
+#replay-transition.active .transition-logo {
+    animation: transition-slide-in-left 0.8s 0.05s forwards cubic-bezier(0.7, 0, 0.3, 1);
+}
+#replay-transition.active .transition-bar:nth-child(3) {
+    animation: transition-slide-in-right 0.8s 0.1s forwards cubic-bezier(0.7, 0, 0.3, 1);
+}
+@keyframes transition-slide-in-right {
+    0% { transform: translateX(-120%) skewX(-20deg); }
+    50% { transform: translateX(0%) skewX(-20deg); }
+    100% { transform: translateX(120%) skewX(-20deg); }
+}
+@keyframes transition-slide-in-left {
+    0% { transform: translateX(120%) skewX(-20deg); }
+    50% { transform: translateX(0%) skewX(-20deg); }
+    100% { transform: translateX(-120%) skewX(-20deg); }
 }

@@ -823,19 +823,55 @@
     <div id="pause-menu"
         style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 8500; flex-direction: column; justify-content: center; align-items: center;">
         <div class="pixel-border"
-            style="background: #050515; padding: 40px; width: 400px; display: flex; flex-direction: column; gap: 20px; border: 4px solid #5ad !important;">
+            style="background: #050515; padding: 30px; width: 420px; display: flex; flex-direction: column; gap: 15px; border: 4px solid #5ad !important;">
             <h2 class="pixel-title"
-                style="color: #5ad; font-size: 40px; text-shadow: 0 0 15px #5ad; margin: 0 0 10px; text-align: center;">
+                style="color: #5ad; font-size: 32px; text-shadow: 0 0 15px #5ad; margin: 0 0 5px; text-align: center;">
                 PAUSA</h2>
+            
             <button id="btn-pause-continue" class="menu-btn primary" style="width: 100%;">CONTINUAR</button>
-            <button id="btn-pause-exit" class="menu-btn" style="width: 100%; border-color: #f33; color: #f33;">SALIR AL
-                MENÚ</button>
+            <button id="btn-pause-restart" class="menu-btn" style="width: 100%; border-color: #f90; color: #f90;">REINICIAR PARTIDA</button>
+            
+            <!-- GADGET MP3 PAUSA -->
+            <div class="neon-container pixel-border" style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 2px solid #5ad !important; box-sizing: border-box;">
+                <span class="pixel-title" style="font-size: 10px; color: #5ad; text-align: center; letter-spacing: 2px;">SISTEMA DE AUDIO</span>
+                
+                <div style="background: #000; border: 1px solid #5ad; padding: 10px; display: flex; flex-direction: column; gap: 2px;">
+                    <div id="pause-song-name" style="color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">NOMBRE PISTA</div>
+                    <div id="pause-song-info" style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 10px; text-align: right;">00:00</div>
+                </div>
+
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button id="btn-pause-prev" class="menu-btn" style="flex: 1; padding: 5px; font-size: 14px; margin: 0;">⏮</button>
+                    <button id="btn-pause-play-pause" class="menu-btn" style="flex: 1.5; padding: 5px; font-size: 14px; margin: 0; border-color: #fff !important; color: #fff;">⏯</button>
+                    <button id="btn-pause-next" class="menu-btn" style="flex: 1; padding: 5px; font-size: 14px; margin: 0;">⏭</button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #5ad; width: 40px;">MUS</span>
+                        <input type="range" id="slider-pause-music" min="0" max="100" value="50" style="flex: 1; accent-color: #5ad;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #f90; width: 40px;">SFX</span>
+                        <input type="range" id="slider-pause-sfx" min="0" max="100" value="80" style="flex: 1; accent-color: #f90;">
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-pause-exit" class="menu-btn" style="width: 100%; border-color: #f33; color: #f33; margin-top: 5px;">SALIR AL MENÚ</button>
         </div>
     </div>
     </div>
 
+    <!-- Cortinilla de Transición Replay -->
+    <div id="replay-transition">
+        <div class="transition-bar"></div>
+        <div class="transition-logo">REPLAY</div>
+        <div class="transition-bar"></div>
+    </div>
+
     <!-- Scripts -->
-    <script type="module" src="js/main.js?v=115"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>

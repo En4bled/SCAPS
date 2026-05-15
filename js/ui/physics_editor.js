@@ -179,15 +179,26 @@ export function initPhysicsEditor(toggleCallback) {
         };
     }
 
-    // Escuchar la tecla º
+    // Escuchar la tecla º (Backquote), la tecla de encima de Tab o la tecla Escape como alternativa
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Backquote' || e.key === 'º' || e.key === '`') {
-            // Solo permitir abrir si estamos jugando o si el editor ya está abierto
+        // Códigos comunes para la tecla de consola (º en español, ~ en US, \ en otros)
+        const isConsoleKey = (e.code === 'Backquote' || e.key === 'º' || e.key === '`' || e.key === '\\' || e.key === '|' || e.keyCode === 192 || e.keyCode === 220 || e.keyCode === 167);
+        
+        if (isConsoleKey) {
+            console.log("SCAPS: Console key detected:", e.code, e.key);
+            e.preventDefault(); 
+            e.stopPropagation();
+
             if (!isEditorActive && typeof onToggleCallback === 'function') {
                 const canOpen = onToggleCallback(true);
-                if (canOpen) toggleEditor(true);
+                console.log("SCAPS: Requesting editor open. Permission:", canOpen);
+                if (canOpen) {
+                    toggleEditor(true);
+                }
             } else if (isEditorActive) {
+                console.log("SCAPS: Closing editor.");
                 toggleEditor(false);
+                if (typeof onToggleCallback === 'function') onToggleCallback(false);
             }
         }
     });
@@ -200,6 +211,7 @@ export function toggleEditor(show) {
         overlay.style.display = show ? 'flex' : 'none';
         
         if (show) {
+            overlay.classList.remove('hidden'); // Asegurar que no hay clases bloqueando el display
             // Sincronizar UI por si algo cambió externamente
             EDITABLE_PARAMS.forEach(param => {
                 const slider = document.getElementById(`slider-${param.key}`);

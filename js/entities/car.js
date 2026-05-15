@@ -32,6 +32,15 @@ export class Car {
         this.goals = 0;
         this.assists = 0;
         this.aiState = { role: 'attacker', targetBoostPad: null }; 
+        
+        // Efectos y Personalización
+        this.boostType = 'classic';
+        
+        // Estado de Supervivencia
+        this.isExploded = false;
+        this.respawnTimer = 0;
+        this.isSupersonic = false;
+        this.trailTimer = 0;
     }
 
     setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
@@ -49,9 +58,17 @@ export class Car {
     }
 
     draw(ctx) {
+        if (this.isExploded) return; // No dibujar si ha explotado
+
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
+
+        // Efecto visual Supersónico (Vibración/Brillo opcional aquí)
+        if (this.isSupersonic) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'white';
+        }
 
         if (this.img && this.img.complete) {
             // Aplicar tinte si es necesario
@@ -70,42 +87,49 @@ export class Car {
         ctx.restore();
     }
 
-    update(keys, gameState, particles, skidMarks) {
-        if (gameState === 'goalScored' || gameState === 'gameOver') {
-            this.speed *= CONST.CONFIG.CAR_FRICTION; 
-            this.vx *= CONST.CONFIG.CAR_FRICTION;
-            this.vy *= CONST.CONFIG.CAR_FRICTION;
-            return; 
+    update(keys, gameState, particles, skidMarks, timeScale = 1.0) {
+        // Manejo de Respawn
+        if (this.isExploded) {
+            this.respawnTimer--;
+            if (this.respawnTimer <= 0) {
+                this.isExploded = false;
+                // El posicionamiento real se hace en main.js o mediante un evento
+            }
+            return;
         }
 
         let isTurning = false; 
         let isAccelerating = false; 
 
-        this.isBoosting = keys[this.controls.boost] && this.boost > 0 && gameState === 'playing'; 
+        this.isBoosting = keys[this.controls.boost] && this.boost > 0 && (gameState === 'playing' || gameState === 'goalScored'); 
         this.isDrifting = keys[this.controls.drift] && !this.isBoosting && Math.abs(this.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.3 && (keys[this.controls.left] || keys[this.controls.right]);
         
+        if (gameState === 'goalScored' || gameState === 'gameOver') {
+            // Permitir movimiento limitado (sin boost o con aceleración reducida)
+            // No retornamos early para permitir que el jugador se mueva en la celebración
+        }
+
         let currentAccel = this.isBoosting ? CONST.CONFIG.CAR_BOOST_ACCEL : CONST.CONFIG.CAR_ACCEL;
         let maxSpeed = this.isBoosting ? CONST.CONFIG.CAR_MAX_BOOST_SPEED : CONST.CONFIG.CAR_MAX_SPEED;
 
         if (gameState === 'countdown') {
             if (keys[this.controls.up]) isAccelerating = true;
-            if (keys[this.controls.left]) { this.angle -= CONST.CONFIG.CAR_TURN_SPEED * 0.4; isTurning = true; }
-            if (keys[this.controls.right]) { this.angle += CONST.CONFIG.CAR_TURN_SPEED * 0.4; isTurning = true; }
+            // Bloqueamos la rotación en cuenta atrás (el coche debe estar en movimiento para girar)
             this.speed = 0; this.vx = 0; this.vy = 0;
             return;
         }
 
         if (keys[this.controls.up]) { 
-            this.speed += currentAccel; isAccelerating = true;
+            this.speed += currentAccel * timeScale; isAccelerating = true;
         } 
         else if (keys[this.controls.down]) { 
             if (this.speed > -maxSpeed / 2) {
-                this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL; 
+                this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL * timeScale; 
             }
         } 
         
         if (!isAccelerating && !keys[this.controls.down]) {
-            this.speed *= CONST.CONFIG.CAR_FRICTION; 
+            this.speed *= Math.pow(CONST.CONFIG.CAR_FRICTION, timeScale); 
         } else {
             if (isAccelerating && this.speed > maxSpeed) this.speed = maxSpeed; 
         }
@@ -144,6 +168,9 @@ export class Car {
             this.boost = Math.max(0, this.boost - CONST.CONFIG.CAR_BOOST_CONSUMPTION);
         }
 
+        // --- ESTADO SUPERSÓNICO ---
+        this.isSupersonic = (this.speed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.92);
+
         if (Math.abs(this.speed) < 0.01) this.speed = 0;
         this.vx = Math.sin(this.angle) * this.speed;
         this.vy = -Math.cos(this.angle) * this.speed;
@@ -157,13 +184,14 @@ export class Car {
                 if(this.skidMarkTimer <= 0) { this.spawnSkidMark(skidMarks); this.skidMarkTimer = 4; }
                 if(this.isDrifting) this.spawnDriftSmoke(particles);
             }
-            if (this.isBoosting) this.spawnParticles(5, 'boost', particles);
+            if (this.isBoosting) this.spawnParticles(5, this.boostType, particles);
             else if (Math.abs(this.speed) > 0.5 && isAccelerating) this.spawnParticles(1, 'smoke', particles);
         }
     }
 
-    move() { 
-        this.x += this.vx; this.y += this.vy; 
+    move(timeScale = 1.0) { 
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
         this.checkWallCollision(); 
     }
 

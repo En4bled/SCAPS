@@ -77,27 +77,30 @@ export class Ball {
         else { this.drawNormalBall(ctx); } 
     }
 
-    update(gameState, explosionParticles) {
+    update(gameState, explosionParticles, timeScale = 1.0) {
         if (this.isFireball && this.fireballTimer > 0) { 
-            this.fireballTimer--; 
+            this.fireballTimer -= timeScale; 
             this.spawnFireParticles(explosionParticles); 
             return; 
         }
         if (gameState === 'countdown') return; 
 
-        this.x += this.vx; this.y += this.vy; this.vx *= CONST.CONFIG.BALL_FRICTION; this.vy *= CONST.CONFIG.BALL_FRICTION;
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
+        this.vx *= Math.pow(CONST.CONFIG.BALL_FRICTION, timeScale); 
+        this.vy *= Math.pow(CONST.CONFIG.BALL_FRICTION, timeScale);
         const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         if (currentSpeed > CONST.CONFIG.BALL_MAX_SPEED) { 
             const factor = CONST.CONFIG.BALL_MAX_SPEED / currentSpeed; 
             this.vx *= factor; this.vy *= factor; 
         }
-        this.rotationAngle += this.vx * 0.05; 
+        this.rotationAngle += this.vx * 0.05 * timeScale; 
         if (this.onWallTimer > 0) { 
-            this.onWallTimer--; 
+            this.onWallTimer -= timeScale; 
         } else { 
             this.targetRadius = this.radius; 
         }
-        const easeFactor = 0.1; 
+        const easeFactor = 1.0 - Math.pow(0.9, timeScale); 
         this.visualRadius += (this.targetRadius - this.visualRadius) * easeFactor;
         
         // --- COLISIONES ---
