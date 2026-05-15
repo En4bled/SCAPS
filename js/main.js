@@ -38,7 +38,8 @@ const USER_CONFIG = {
     bannerType: 'gradient',
     bannerAngle: 90,
     bannerPattern: 'none',
-    bannerBorderStyle: 'simple'
+    bannerBorderStyle: 'simple',
+    bloomEnabled: true
 };
 
 // Exportar para acceso desde UI tras inicialización
@@ -68,6 +69,36 @@ function loadUserConfig() {
             USER_CONFIG.playerAvatarBg = e.target.value;
             saveUserConfig();
             updatePlayerBanner();
+        };
+    }
+    
+    // Sincronizar Checkboxes de Bloom
+    isBloomEnabled = USER_CONFIG.bloomEnabled !== undefined ? USER_CONFIG.bloomEnabled : true;
+    
+    const settingsBloomEl = document.getElementById('settings-toggle-bloom');
+    if (settingsBloomEl) {
+        settingsBloomEl.checked = isBloomEnabled;
+        settingsBloomEl.onchange = (e) => {
+            USER_CONFIG.bloomEnabled = e.target.checked;
+            isBloomEnabled = e.target.checked;
+            saveUserConfig();
+            applyBloomSetting();
+            const pauseBloomEl = document.getElementById('toggle-bloom');
+            if (pauseBloomEl) pauseBloomEl.checked = isBloomEnabled;
+        };
+    }
+    
+    const pauseBloomEl = document.getElementById('toggle-bloom');
+    if (pauseBloomEl) {
+        pauseBloomEl.checked = isBloomEnabled;
+        // Event listener para el de pausa ya está en la inicialización principal, 
+        // pero podemos sobreescribirlo aquí para que guarde en USER_CONFIG
+        pauseBloomEl.onchange = (e) => {
+            USER_CONFIG.bloomEnabled = e.target.checked;
+            isBloomEnabled = e.target.checked;
+            saveUserConfig();
+            applyBloomSetting();
+            if (settingsBloomEl) settingsBloomEl.checked = isBloomEnabled;
         };
     }
 
@@ -103,6 +134,18 @@ function loadUserConfig() {
     selectedCarP1 = USER_CONFIG.playerCar;
     setupTitleSelect(); // Activar títulos
     updatePlayerBanner();
+
+    applyBloomSetting();
+}
+
+export function applyBloomSetting() {
+    const wrapper = document.getElementById('game-wrapper');
+    if (!wrapper) return;
+    if (isBloomEnabled) {
+        wrapper.style.filter = `saturate(1.2) contrast(1.1) brightness(1.05) drop-shadow(0 0 10px rgba(100, 200, 255, 0.2))`;
+    } else {
+        wrapper.style.filter = 'none';
+    }
 }
 
 function updatePlayerBanner() {
@@ -234,6 +277,18 @@ function setupDraggableBanner() {
     window.addEventListener('mouseup', () => {
         if (isDragging) { isDragging = false; banner.style.transition = 'opacity 1s ease-in-out, transform 0.2s'; saveUserConfig(); }
     });
+}
+
+export let shakeMagnitude = 0;
+export let hitStopFrames = 0;
+export let isBloomEnabled = true;
+
+export function addScreenShake(magnitude) {
+    shakeMagnitude = Math.min(shakeMagnitude + magnitude, 25);
+}
+
+export function addHitStop(frames) {
+    hitStopFrames = Math.max(hitStopFrames, frames);
 }
 
 let canvas, ctx;
@@ -699,6 +754,7 @@ async function init() {
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
         player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'recursos/Car1.png');
+        player1.isPlayer = true;
         player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/Car2.png');
         player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/Car3.png');
         player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'recursos/Car4.png');
@@ -1023,6 +1079,14 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05); // Cap para evitar saltos enormes
     lastTime = timestamp;
 
+    // --- EFECTO JUICE: HIT-STOP ---
+    // Si hay un impacto masivo, congelamos el tiempo y el render para dar sensación de brutalidad
+    if (hitStopFrames > 0) {
+        hitStopFrames--;
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
     if (!isPaused) {
         if (gameState !== 'menu' && gameState !== 'gameOver') {
             updateAll(dt);
@@ -1077,10 +1141,29 @@ function renderFrame() {
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2 + currentVOffset);
+    
+    // --- EFECTO JUICE: SCREEN SHAKE ---
+    if (shakeMagnitude > 0.5) {
+        ctx.translate((Math.random() - 0.5) * shakeMagnitude, (Math.random() - 0.5) * shakeMagnitude);
+        shakeMagnitude *= 0.85; // Decaimiento suave
+    } else {
+        shakeMagnitude = 0;
+    }
+
     ctx.rotate(currentRotation);
 
-    // Aplicar Zoom Dinámico (Cinemática de inicio)
-    ctx.scale(currentZoom, currentZoom);
+    // --- EFECTO JUICE: FOV DINÁMICO ---
+    let extraFOV = 0;
+    if (gameState === 'playing' || gameState === 'goalScored') {
+        const speedRatio = Math.abs(player1.speed) / CONST.CONFIG.CAR_MAX_SPEED;
+        extraFOV = speedRatio * 0.15; 
+    }
+    
+    // Suavizado del FOV (Zoom out = escala menor)
+    if (typeof window.currentFOV === 'undefined') window.currentFOV = currentZoom;
+    window.currentFOV += ((currentZoom - extraFOV) - window.currentFOV) * 0.05;
+
+    ctx.scale(window.currentFOV, window.currentFOV);
 
     ctx.translate(-currentCamX, -currentCamY);
 
@@ -1169,7 +1252,12 @@ function updateAll(dt) {
         // Manejo de Respawn de coches explotados
         allCars.forEach((car, i) => {
             if (car.isExploded && car.respawnTimer <= 0) {
-                const sp = CONST.CONFIG.SPAWN_POINTS[i] || { x: 500, y: 500, a: 0 };
+                // El jugador reaparece en su punto exacto inicial, los bots aleatoriamente en su lado
+                let spIndex = i;
+                if (!car.isPlayer) {
+                    spIndex = (car.color === '#5ad') ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
+                }
+                const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
                 car.x = sp.x;
                 car.y = sp.y;
                 car.angle = sp.a || 0;
@@ -1257,6 +1345,10 @@ function triggerTransition() {
 function handleGoal(scorer) {
     if (scorer === 'blue') score.blue++; else score.orange++;
     gameState = 'goalScored';
+    
+    // Temblor de cámara inmenso y Hit-Stop brutal al marcar gol
+    addScreenShake(25);
+    addHitStop(6); // 100ms de pausa dramática
 
     // Atribuir gol y asistencia
     const teamColor = scorer === 'blue' ? '#5ad' : '#f90';
@@ -1424,8 +1516,8 @@ function drawAll() {
     skidMarks.forEach(s => s.draw(ctx));
     boostPads.forEach(pad => pad.draw(ctx));
     particles.forEach(p => p.draw(ctx));
-    ball.draw(ctx, animationFrameCounter);
     allCars.forEach(car => car.draw(ctx));
+    ball.draw(ctx, animationFrameCounter);
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; explosionParticles.forEach(ep => ep.draw(ctx)); ctx.restore();
     ctx.save(); confettiParticles.forEach(cp => cp.draw(ctx)); ctx.restore();
 

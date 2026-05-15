@@ -16,10 +16,10 @@ SCAPS es un motor de física 2D de alto rendimiento y un framework de juego insp
 - **Maniobrabilidad Dinámica**: Manejo avanzado del vehículo que incluye pérdida de tracción (derrape), dirección basada en torque y curvas de aceleración.
 - **Momento Elástico**: Transferencia de momento físicamente precisa entre entidades, evitando superposiciones y asegurando vectores de rebote consistentes.
 
-### 2. Inteligencia Autónoma (AI Striker V11 Experimental)
-- **Dirección Determinista**: Resolución angular corregida matemáticamente para eliminar la orbitación y asegurar vectores de orientación inmediata hacia el balón.
-- **Gating de Aceleración**: Gestión avanzada de la velocidad donde los bots frenan activamente en giros cerrados (>17°) para evitar pasarse de largo.
-- **Recuperación a Prueba de Fallos**: Lógica agresiva anti-bloqueo basada en el recuento de frames de baja velocidad para ejecutar maniobras de escape.
+### 2. Inteligencia Autónoma y Game Feel (v1.6.0)
+- **Motor AI Arcade 2D**: Resolución angular corregida matemáticamente y control dinámico con **Modo Pánico** para evitar atascos mediante maniobras de escape.
+- **Cinemática Activa ("Juice")**: Efectos de impacto súper masivos gracias a un sistema de **Hit-Stop** (micro-pausas), **Screen Shake**, y un **FOV Dinámico** que se aleja a velocidades supersónicas.
+- **Renderizado Post-Procesado**: Efecto **Bloom** global aplicado por hardware a toda la interfaz y partida en tiempo real.
 
 ### 3. Editor de Física en Tiempo Real
 - **Hot-Swapping**: Modifica la velocidad del vehículo, la tracción y las propiedades de colisión del balón instantáneamente durante el juego.

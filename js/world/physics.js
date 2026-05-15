@@ -1,7 +1,7 @@
 import * as CONST from '../core/constants.js';
 import { playSound } from '../fx/audio.js';
 import { ExplosionParticle } from '../fx/particles.js';
-import { addFeedMessage } from '../main.js';
+import { addFeedMessage, addScreenShake, addHitStop } from '../main.js';
 
 /**
  * MOTOR DE FÍSICAS SCAPS - CORE PRODUCTION V12
@@ -61,10 +61,16 @@ export function checkPolygonCollision(entity, polygon) {
             if (entity.onWallTimer !== undefined) {
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
+                // Añadir un pequeño bote en Z al chocar contra la pared
+                if (entity.vz !== undefined) {
+                    entity.vz += Math.abs(vNormalX * bounce + vNormalY * bounce) * 0.15 + 1.5;
+                }
+                if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
                 playSound('wall_hit', 0.5);
             } else if (entity.speed !== undefined) {
                 entity.speed = Math.sqrt(entity.vx**2 + entity.vy**2);
                 entity.angle = Math.atan2(entity.vx, -entity.vy);
+                if (Math.abs(dot) > 4) addScreenShake(Math.abs(dot) * 0.4);
                 playSound('wall_hit', 0.4);
             }
         }
@@ -143,27 +149,48 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             const dotFront = Math.cos(angle) * forwardX + Math.sin(angle) * forwardY;
             
             let hitForceMultiplier = 1.0;
-            if (dotFront > 0.7) { // Impacto frontal (~45º)
-                hitForceMultiplier = 1.35; // 35% más de fuerza
-                ball.targetRadius = ball.radius * 1.5;
+            let zLift = 0;
+            if (dotFront > 0.7) { // Impacto frontal puro (~45º)
+                hitForceMultiplier = 1.6; // Aumentado significativamente el impacto frontal
+                ball.targetRadius = ball.radius * 1.6;
+                zLift = 2.2; // Mayor elevación
+            } else if (dotFront > 0.3) { // Impacto diagonal
+                hitForceMultiplier = 1.25;
+                zLift = 1.0;
             }
 
             const carSpeedMag = Math.abs(car.speed);
-            let impulse = ((CONST.CONFIG.BALL_HIT_FORCE * hitForceMultiplier) + (-dotProduct * 0.8) + (carSpeedMag * 0.4)) * timeScale;
+            // Se ha aumentado la transferencia de momento por velocidad del coche (de 0.4 a 0.65)
+            let impulse = ((CONST.CONFIG.BALL_HIT_FORCE * hitForceMultiplier) + (-dotProduct * 0.8) + (carSpeedMag * 0.65)) * timeScale;
             
             // --- PINCH LOGIC ---
             if (ball.onWallTimer > 0) {
                 impulse *= 1.4; // Impulso extra si el balón está contra la pared o volando bajo
             }
 
+            if (impulse > 5 && car.isPlayer) addScreenShake(impulse * 0.4);
+            if (impulse > 8 && car.isPlayer) addHitStop(3); // Pausa dramática al golpear fortísimo el balón
+
             ball.vx += Math.cos(angle) * impulse;
             ball.vy += Math.sin(angle) * impulse;
+            
+            // ELEVACIÓN EJE Z (Efecto aéreo de balón pesado)
+            if (ball.vz !== undefined) {
+                ball.vz += impulse * 0.15 + (zLift * 0.7);
+                if (ball.vz > 7) ball.vz = 7; // Límite de altura más bajo y pesado (antes 12)
+            }
             
             // Guía direccional
             ball.vx += forwardX * (carSpeedMag * 0.3) * timeScale;
             ball.vy += forwardY * (carSpeedMag * 0.3) * timeScale;
+
+            // TRANSFERENCIA DE MASA: El coche pierde inercia al golpear el balón pesado
+            if (carSpeedMag > 0.5) {
+                // Si el impacto es muy frontal, el coche se frena un 60%, si es de refilón un 25%
+                car.speed *= (dotFront > 0.5) ? 0.4 : 0.75;
+            }
             
-            const maxBallSpeed = 22;
+            const maxBallSpeed = CONST.CONFIG.BALL_MAX_SPEED;
             const currentBallSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
             if (currentBallSpeed > maxBallSpeed) {
                 ball.vx = (ball.vx / currentBallSpeed) * maxBallSpeed;
@@ -195,11 +222,19 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
         if (carA.isSupersonic && !carB.isSupersonic && carA.color !== carB.color) {
             demolishCar(carB, explosionParticles);
             addFeedMessage('demolition', carA, carB); // Añadimos mensaje al feed
+            if (carA.isPlayer || carB.isPlayer) {
+                addScreenShake(15);
+                if (carA.isPlayer) addHitStop(4); // Hit-stop solo si yo exploto a alguien
+            }
             carA.speed *= 0.6;
             return;
         } else if (carB.isSupersonic && !carA.isSupersonic && carA.color !== carB.color) {
             demolishCar(carA, explosionParticles);
             addFeedMessage('demolition', carB, carA);
+            if (carA.isPlayer || carB.isPlayer) {
+                addScreenShake(15);
+                if (carB.isPlayer) addHitStop(4);
+            }
             carB.speed *= 0.6;
             return;
         }
@@ -223,15 +258,19 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
         const relSpeedNormal = relVx * nx + relVy * ny;
 
         if (relSpeedNormal > 0) {
-            // Factor de restitución (rebote) de 1.2 para que se sientan elásticos
-            const restitution = 1.2;
-            const impulse = -(restitution) * relSpeedNormal;
+            // Restitución elástica controlada
+            const restitution = 0.6; 
+            const impulse = -(1 + restitution) * relSpeedNormal;
             
-            // Aplicar el impulso a las velocidades
-            const nVAx = vAx + (impulse * 0.8) * nx; 
-            const nVAy = vAy + (impulse * 0.8) * ny;
-            const nVBx = vBx - (impulse * 0.8) * nx; 
-            const nVBy = vBy - (impulse * 0.8) * ny;
+            if (impulse > 3) addScreenShake(impulse * 0.8);
+
+            const j = impulse / 2;
+            
+            // CORRECCIÓN CRÍTICA: Los signos deben ser + para A y - para B para repelerlos
+            const nVAx = vAx + j * nx; 
+            const nVAy = vAy + j * ny;
+            const nVBx = vBx - j * nx; 
+            const nVBy = vBy - j * ny;
 
             carA.speed = Math.sqrt(nVAx**2 + nVAy**2);
             carA.angle = Math.atan2(nVAx, -nVAy);
@@ -297,167 +336,123 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
 
     if (gameState === 'countdown') return;
 
+    // --- 1. MÁQUINA DE ESTADOS ANTI-ATASCOS (Bomba Arcade) ---
+    // Si la velocidad es casi nula y no estamos desatascándonos, sumar contador
+    if (Math.abs(ai.speed) < 0.3 && !ai.isUnsticking) {
+        ai.stuckTimer = (ai.stuckTimer || 0) + 1;
+        if (ai.stuckTimer > 20) { // Si lleva ~0.3s parado
+            ai.isUnsticking = true;
+            ai.unstickFrames = 45; // Obligamos a hacer 45 frames ininterrumpidos de maniobra
+        }
+    } else if (Math.abs(ai.speed) >= 0.3 && !ai.isUnsticking) {
+        ai.stuckTimer = 0;
+    }
+
+    // Si está en Modo Pánico, ejecutamos maniobra evasiva ciega
+    if (ai.isUnsticking) {
+        ai.unstickFrames--;
+        keysPressed[controls.down] = true; // Marcha atrás a fondo
+        
+        // Girar para hacer un arco y salir de la trampa
+        // Usamos el ID del coche o un patrón para que no todos giren al mismo lado siempre
+        if ((ai.unstickFrames % 30) < 15) {
+            keysPressed[controls.left] = true;
+        } else {
+            keysPressed[controls.right] = true;
+        }
+
+        if (ai.unstickFrames <= 0) {
+            ai.isUnsticking = false;
+            ai.stuckTimer = 0;
+        }
+        return; // IGNORAR TODA LA IA MIENTRAS SE DESATASCA
+    }
+
+    // --- 2. OBJETIVOS Y ROLES (Arcade Style) ---
     const isBlue = ai.color === '#5ad';
     const myGoal = isBlue ? CONST.CONFIG.GOAL_TOP : CONST.CONFIG.GOAL_BOTTOM;
     const enemyGoal = isBlue ? CONST.CONFIG.GOAL_BOTTOM : CONST.CONFIG.GOAL_TOP;
 
-    const distToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
-    const ballSpeed = Math.hypot(ball.vx, ball.vy);
-    const ballDistToMyGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
-    const aiDistToMyGoal = Math.hypot(ai.x - myGoal.x, ai.y - myGoal.y);
-
-    // 1. PREDICCIÓN DINÁMICA DE TRAYECTORIA
-    // Calcula cuántos frames tardará el bot en llegar al balón
-    const interceptFrames = Math.min(60, distToBall / Math.max(1, Math.abs(ai.speed) + ballSpeed)); 
-    let predictedBallX = ball.x + ball.vx * interceptFrames;
-    let predictedBallY = ball.y + ball.vy * interceptFrames;
-
-    // 2. DEFINIR ROL Y TÁCTICA
+    let tx = ball.x + ball.vx * 15; // Predicción simple
+    let ty = ball.y + ball.vy * 15;
     let role = 'ATTACK';
+    
     const teammate = allCars.find(c => c.color === ai.color && c !== ai);
+    const distToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
+    const ballToMyGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
     
     if (teammate) {
-        const tDistToBall = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
-        
-        // Si el compañero está más cerca del balón, tomamos rol de apoyo/defensa
-        if (tDistToBall < distToBall - 50) {
-            role = (ballDistToMyGoal < 500) ? 'DEFEND' : 'SUPPORT';
+        const tDist = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
+        if (tDist < distToBall - 30 && ballToMyGoal > 800) {
+            role = 'SUPPORT';
         }
-    } else {
-        // Modo 1vs1: Defender si el balón está más cerca de nuestra portería que nosotros
-        if (ballDistToMyGoal < aiDistToMyGoal - 100) role = 'DEFEND';
+    }
+    if (ballToMyGoal < 700 && distToBall > 300) {
+        role = 'DEFEND';
     }
 
-    // 3. PRIORIDAD: GESTIÓN DE BOOST (Hambre de turbo)
-    let tx = predictedBallX;
-    let ty = predictedBallY;
-    let goingForBoost = false;
-
-    // Si tenemos poco boost y no hay peligro inminente, buscar turbo
-    if (ai.boost < 25 && ballDistToMyGoal > 400 && role !== 'ATTACK') {
-        const activePads = boostPads.filter(p => p.active);
-        if (activePads.length > 0) {
-            // Buscar el pad más cercano que esté delante de nosotros (no retroceder demasiado)
-            let bestPad = null;
-            let minScore = Infinity;
-            
-            activePads.forEach(pad => {
-                const distToPad = Math.hypot(pad.x - ai.x, pad.y - ai.y);
-                const padDistToGoal = Math.hypot(pad.x - myGoal.x, pad.y - myGoal.y);
-                // Preferimos pads que nos mantengan cerca de nuestra portería para defender
-                const score = distToPad + padDistToGoal * 0.5; 
-                if (score < minScore) {
-                    minScore = score;
-                    bestPad = pad;
-                }
-            });
-            
-            if (bestPad && minScore < 800) { // No ir por un pad en el quinto pino
-                tx = bestPad.x;
-                ty = bestPad.y;
-                goingForBoost = true;
+    // --- 3. COORDENADAS OBJETIVO ---
+    if (role === 'ATTACK') {
+        // Encarar siempre desde detrás del balón para empujar a portería
+        const dxGoal = enemyGoal.x - ball.x;
+        const dyGoal = enemyGoal.y - ball.y;
+        const dGoal = Math.max(1, Math.hypot(dxGoal, dyGoal));
+        tx = ball.x - (dxGoal / dGoal) * 80;
+        ty = ball.y - (dyGoal / dGoal) * 80;
+    } else if (role === 'DEFEND') {
+        // Ponerse en línea
+        tx = myGoal.x + (ball.x - myGoal.x) * 0.3;
+        ty = myGoal.y + (ball.y - myGoal.y) * 0.3;
+    } else if (role === 'SUPPORT') {
+        tx = (ball.x + myGoal.x) / 2;
+        ty = (ball.y + myGoal.y) / 2;
+        // Si hay poco boost, desviarse
+        if (ai.boost < 30) {
+            const activePads = boostPads.filter(p => p.active);
+            if (activePads.length > 0) {
+                let best = activePads[0];
+                let min = Infinity;
+                activePads.forEach(p => {
+                    const d = Math.hypot(p.x - ai.x, p.y - ai.y);
+                    if (d < min) { min = d; best = p; }
+                });
+                tx = best.x; ty = best.y;
             }
         }
     }
 
-    // 4. POSICIONAMIENTO SEGÚN ROL (Si no va a por boost)
-    if (!goingForBoost) {
-        if (role === 'ATTACK') {
-            // Tiro a portería: Apuntar detrás del balón en línea con la portería rival
-            const dirToEnemyGoalX = enemyGoal.x - predictedBallX;
-            const dirToEnemyGoalY = enemyGoal.y - predictedBallY;
-            const dirLen = Math.hypot(dirToEnemyGoalX, dirToEnemyGoalY);
-            
-            // Punto ideal de impacto (ligeramente detrás del balón)
-            const offset = ball.radius + ai.height * 0.5;
-            tx = predictedBallX - (dirToEnemyGoalX / dirLen) * offset;
-            ty = predictedBallY - (dirToEnemyGoalY / dirLen) * offset;
-
-        } else if (role === 'DEFEND') {
-            // Posicionarse entre el balón y la propia portería
-            const dirFromGoalX = ball.x - myGoal.x;
-            const dirFromGoalY = ball.y - myGoal.y;
-            const dirLen = Math.hypot(dirFromGoalX, dirFromGoalY);
-            
-            // Colocarse a unos 150px de la portería o más cerca si el balón apremia
-            const defenseRadius = Math.min(200, ballDistToMyGoal * 0.5);
-            tx = myGoal.x + (dirFromGoalX / dirLen) * defenseRadius;
-            ty = myGoal.y + (dirFromGoalY / dirLen) * defenseRadius;
-            
-        } else if (role === 'SUPPORT') {
-            // Posicionarse a medio camino entre nuestra portería y el balón
-            tx = (ball.x + myGoal.x) / 2;
-            ty = (ball.y + myGoal.y) / 2;
-            
-            // Si el balón está cerca de la banda izquierda, ponerse más al centro, etc.
-            tx += (CONST.CONFIG.WORLD_W / 2 - tx) * 0.3;
-        }
-    }
-
-    // 5. CÁLCULO DE MANIOBRA FÍSICA
+    // --- 4. CONDUCCIÓN IMPLACABLE ---
     const dx = tx - ai.x;
     const dy = ty - ai.y;
+    const distToTarget = Math.hypot(dx, dy);
     const targetAngle = Math.atan2(dy, dx);
-    const currentAngle = ai.angle - Math.PI / 2; // Offset interno del modelo de coche
+    const currentAngle = ai.angle - Math.PI / 2;
     
     let angleDiff = targetAngle - currentAngle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    
     const absDiff = Math.abs(angleDiff);
 
-    // 6. EJECUCIÓN DE CONTROLES
-    // Giro
-    if (absDiff > 0.1) {
-        if (angleDiff > 0) keysPressed[controls.right] = true;
-        else keysPressed[controls.left] = true;
-    }
+    // En Arcade, el botón de acelerar va pegado con cinta
+    keysPressed[controls.up] = true;
 
-    // Aceleración y Boost
-    const isFacingTarget = absDiff < 0.5;
-    const isTargetFar = Math.hypot(dx, dy) > 300;
-
-    if (isFacingTarget) {
-        keysPressed[controls.up] = true;
-        // Boost agresivo: alineado, lejos, o si va a chutar y tiene boost
-        if (absDiff < 0.2 && ai.boost > 5 && (isTargetFar || role === 'ATTACK')) {
-            keysPressed[controls.boost] = true;
-        }
-    } else {
-        // Maniobras evasivas / recuperaciones
-        if (absDiff > 2.0 && distToBall < 250 && !goingForBoost) {
-            // El balón está detrás y muy cerca, usar reversa es más rápido
-            keysPressed[controls.down] = true;
-            // Invertir dirección de giro al ir marcha atrás
-            keysPressed[controls.left] = !keysPressed[controls.left];
-            keysPressed[controls.right] = !keysPressed[controls.right];
+    // Si estamos lejos o muy desalineados, girar
+    if (absDiff > 0.15 && distToTarget > 30) {
+        if (angleDiff > 0) {
+            keysPressed[controls.right] = true;
         } else {
-            keysPressed[controls.up] = true;
-            // Usar freno de mano (drift) para giros cerrados a alta velocidad
-            if (absDiff > 1.2 && Math.abs(ai.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.6) {
-                keysPressed[controls.drift] = true;
-            }
+            keysPressed[controls.left] = true;
         }
     }
 
-    // 7. SISTEMA ANTI-ATASCOS (Mejorado)
-    if (Math.abs(ai.speed) < 0.5 && keysPressed[controls.up]) {
-        if (!ai.stuckTime) ai.stuckTime = 0;
-        ai.stuckTime++;
-        if (ai.stuckTime > 25) { // Atascado por ~0.4s
-            keysPressed[controls.up] = false;
-            keysPressed[controls.down] = true;
-            keysPressed[controls.drift] = false;
-            // Alternar izquierda/derecha para intentar desatascarse
-            if (Math.floor(ai.stuckTime / 15) % 2 === 0) {
-                keysPressed[controls.left] = true; keysPressed[controls.right] = false;
-            } else {
-                keysPressed[controls.right] = true; keysPressed[controls.left] = false;
-            }
-            if (ai.stuckTime > 80) ai.stuckTime = 0; // Resetear intento
-        }
-    } else {
-        ai.stuckTime = 0;
+    // Derrape mágico para hacer giros en U sin atascarse
+    if (absDiff > 1.2 && Math.abs(ai.speed) > 1.0) {
+        keysPressed[controls.drift] = true;
+    }
+
+    // Usar turbo a muerte si apuntamos al balón
+    if (absDiff < 0.3 && ai.boost > 0 && distToTarget > 150) {
+        keysPressed[controls.boost] = true;
     }
 }
 

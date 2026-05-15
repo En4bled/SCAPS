@@ -59,12 +59,12 @@ export const CONFIG = {
     CAR_WALL_BOUNCE: 0.8,
 
     // Físicas de Balón
-    BALL_BOUNCINESS: 1.3,
-    BALL_FRICTION: 0.995,
-    BALL_HIT_FORCE: 6.0,
-    BALL_MAX_SPEED: 8.5,
+    BALL_BOUNCINESS: 0.85, // 1.3 rompía las leyes de la termodinámica generando energía de la nada
+    BALL_FRICTION: 0.985, // Más fricción en el césped (el aire usará 0.998)
+    BALL_HIT_FORCE: 10.0, // Aumentado para tiros mucho más potentes (antes 7.5)
+    BALL_MAX_SPEED: 25.0, // Subido masivamente (antes 14) porque ahora tenemos red de seguridad anti-tunneling
     BALL_BASE_RADIUS: 55,
-    BALL_WALL_SLOWDOWN_FACTOR: 0.4,
+    BALL_WALL_SLOWDOWN_FACTOR: 0.8, // Las paredes no deben frenar tanto al balón
     BALL_WALL_VISUAL_MULTIPLIER: 1.6,
     BALL_WALL_DURATION: 60,
 

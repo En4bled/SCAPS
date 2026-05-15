@@ -1,5 +1,5 @@
 # Documentación Técnica de SCAPS
-**Versión Actual:** 1.5.0 - Diseñador de Banners Avanzado y Refinamiento de Perfil
+**Versión Actual:** 1.6.0 - Game Feel & Physics Update
 
 ## 1. Visión General de la Arquitectura
 SCAPS está diseñado como un motor de juego modular y orientado a eventos. La arquitectura está desacoplada en módulos especializados para renderizado, resolución de físicas, toma de decisiones de IA y gestión de estados.
@@ -29,7 +29,8 @@ El módulo de físicas maneja la partición espacial y la resolución de colisio
 - **Simulación de Eje Z (Mecánica de Rampas)**: El motor de físicas anula los algoritmos de colisión 2D cuando el balón golpea una pared, activando un `onWallTimer`. Durante este estado, el sprite del balón aumenta de tamaño (Zoom) y la colisión coche-balón se suspende temporalmente, simulando una trayectoria aérea sobre los vehículos.
 
 ### 2.3. Inteligencia Autónoma: Core Production
-El módulo de IA (`updateCarAI`) implementa un algoritmo de persecución determinante hiper-optimizado. Ver [IA_SCAPS_CORE.md](./IA_SCAPS_CORE.md) para más detalles.
+El módulo de IA (`updateCarAI`) implementa un algoritmo de conducción Arcade 2D. 
+En la v1.6.0 se ha eliminado el control estricto de rotación para evitar bloqueos oscilantes, y se ha introducido una máquina de estados "Modo Pánico", que detecta si la velocidad es mínima durante 45 fotogramas y fuerza una maniobra de escape (marcha atrás con giro). Ver [IA_SCAPS_CORE.md](./IA_SCAPS_CORE.md) para más detalles.
 
 ### 2.4. Editor de Físicas en Tiempo Real (`js/ui/physics_editor.js`)
 - Interfaz dinámica (Tecla º) para modificar `CONST.CONFIG` en tiempo real.
@@ -44,6 +45,12 @@ El módulo de IA (`updateCarAI`) implementa un algoritmo de persecución determi
 ### 2.6. Sistema de Escalado Adaptativo (v1.4.0)
 - **Independencia de Resolución**: Uso de unidades `vw` y `vh` para una interfaz fluida en 1080p y 2K.
 
+### 2.7. Game Feel y Post-Procesado ("Juice") (v1.6.0)
+- **Hit-Stop**: Implementación de interrupciones temporales en el motor (micro-pausas) durante demoliciones o cañonazos de balón, exclusivas para el jugador para maximizar el impacto cinético.
+- **Screen Shake**: Efecto de cámara vibratoria calculada dinámicamente según el impulso de la colisión.
+- **Bloom Global**: Sistema híbrido de post-procesado que inyecta filtros CSS (`drop-shadow`, `saturate`, `contrast`) al contenedor completo (`#game-wrapper`), aplicando resplandor a menús e interfaces sin afectar al rendimiento de `requestAnimationFrame`.
+- **FOV Dinámico**: Ajuste de cámara (zoom out) basado en la velocidad `supersónica` del jugador.
+
 ### 2.7. Definición de Entidades (`js/entities/`)
 - **Car.js**: Tracción, aceleración y torque.
 - **Ball.js**: Fricción y escalado de eje Z.
@@ -54,4 +61,4 @@ El módulo de IA (`updateCarAI`) implementa un algoritmo de persecución determi
 Las arenas se definen como objetos JSON. El sistema de guardado PHP garantiza transacciones limpias.
 
 ---
-*Documentación actualizada: Mayo 2026 (Ref: Actualización v1.5.0).*
+*Documentación actualizada: Mayo 2026 (Ref: Actualización v1.6.0).*

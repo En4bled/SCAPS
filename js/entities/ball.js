@@ -5,7 +5,9 @@ import { playSound } from '../fx/audio.js';
 
 export class Ball {
     constructor(x, y, imgPath = null) {
-        this.x = x; this.y = y; this.radius = CONST.CONFIG.BALL_BASE_RADIUS; this.vx = 0; this.vy = 0;
+        this.x = x; this.y = y; this.z = 0; 
+        this.radius = CONST.CONFIG.BALL_BASE_RADIUS; 
+        this.vx = 0; this.vy = 0; this.vz = 0;
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
         this.rotationAngle = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.img = null;
@@ -38,23 +40,40 @@ export class Ball {
     drawNormalBall(ctx) {
         ctx.save(); 
         ctx.translate(this.x, this.y); 
+        
+        // Dibujar Sombra Dinámica (Desplazada y más ajustada al volumen)
+        ctx.beginPath();
+        const shadowScale = Math.max(0.3, 1 - (this.z / 350));
+        ctx.scale(1, 0.5); // Sombra ovalada
+        // Añadimos un pequeño offset (x:8, y:15) para simular una luz en ángulo
+        // Y reducimos el tamaño base al 85% del radio para que no asome demasiado en reposo
+        ctx.arc(8, 15, this.radius * shadowScale * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * shadowScale})`;
+        ctx.fill();
+        ctx.scale(1, 2); // Restaurar escala
+        
+        // Trasladar en Y hacia arriba para simular la altura Z
+        ctx.translate(0, -this.z);
         ctx.rotate(this.rotationAngle); 
         
+        // El radio visual crece un poco al elevarse para dar efecto 3D
+        const renderRadius = this.visualRadius * (1 + this.z / 400);
+        
         if (this.img && this.img.complete) {
-            ctx.drawImage(this.img, -this.visualRadius, -this.visualRadius, this.visualRadius * 2, this.visualRadius * 2);
+            ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
         } else {
             ctx.beginPath();
-            ctx.arc(0, 0, this.visualRadius, 0, Math.PI * 2);
+            ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(0, 0, this.visualRadius * 0.9, 0, Math.PI * 2);
+            ctx.arc(0, 0, renderRadius * 0.9, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(0,0,0,0.1)';
             ctx.fill();
             ctx.fillStyle = '#222';
-            ctx.beginPath(); ctx.arc(0, -this.visualRadius / 2, this.visualRadius / 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(this.visualRadius / 2, this.visualRadius / 3, this.visualRadius / 3.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(-this.visualRadius / 2, this.visualRadius / 3, this.visualRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -renderRadius / 2, renderRadius / 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
         }
         ctx.restore(); 
     }
@@ -85,10 +104,28 @@ export class Ball {
         }
         if (gameState === 'countdown') return; 
 
+        // FÍSICAS DEL EJE Z (Gravedad y Rebote)
+        this.z += this.vz * timeScale;
+        this.vz -= 0.3 * timeScale; // Fuerza de gravedad
+        
+        if (this.z < 0) {
+            this.z = 0;
+            // Bote elástico en el suelo (Balón pesado, menos bote)
+            if (this.vz < -2) {
+                this.vz *= -0.45; // Factor de restitución vertical reducido (antes 0.65)
+                // Sonido suave proporcional al bote, para no saturar
+                playSound('ball_hit', Math.min(0.3, Math.abs(this.vz) * 0.05));
+            } else {
+                this.vz = 0;
+            }
+        }
+
+        // Fricción adaptativa (mucho menos en el aire)
+        const currentFriction = (this.z > 0) ? 0.998 : CONST.CONFIG.BALL_FRICTION;
         this.x += this.vx * timeScale; 
         this.y += this.vy * timeScale; 
-        this.vx *= Math.pow(CONST.CONFIG.BALL_FRICTION, timeScale); 
-        this.vy *= Math.pow(CONST.CONFIG.BALL_FRICTION, timeScale);
+        this.vx *= Math.pow(currentFriction, timeScale); 
+        this.vy *= Math.pow(currentFriction, timeScale);
         const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         if (currentSpeed > CONST.CONFIG.BALL_MAX_SPEED) { 
             const factor = CONST.CONFIG.BALL_MAX_SPEED / currentSpeed; 
@@ -108,9 +145,17 @@ export class Ball {
         // 1. Polígono del Campo
         checkPolygonCollision(this, CONST.CONFIG.FIELD_POLYGON);
 
-        // Límites del mundo como seguridad extrema (no deben activarse si el polígono funciona)
-        if (this.x < -500 || this.x > CONST.WORLD_W + 500) this.vx *= -1;
-        if (this.y < -500 || this.y > CONST.WORLD_H + 500) this.vy *= -1;
+        // Límites del mundo como seguridad extrema (teletransporte al centro si logra escapar por un glitch)
+        if (this.x < -1000 || this.x > CONST.CONFIG.WORLD_W + 1000 || 
+            this.y < -1000 || this.y > CONST.CONFIG.WORLD_H + 1000) {
+            this.x = CONST.CONFIG.WORLD_W / 2;
+            this.y = CONST.CONFIG.WORLD_H / 2;
+            this.vx = 0;
+            this.vy = 0;
+            this.z = 100;
+            this.vz = 0;
+            console.log("Balón rescatado del infinito.");
+        }
 
         // 3. Porterías (Detección para rebotes internos)
         const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < CONST.CONFIG.GOAL_TOP.w/2 && this.x < CONST.CONFIG.GOAL_TOP.x);

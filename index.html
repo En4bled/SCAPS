@@ -431,6 +431,14 @@
                             style="width: 140px; padding: 5px; font-size: 9px; margin: 0; border-color: #555; color: #888; cursor: default;">(PRÓXIMAMENTE)</button>
                     </div>
 
+                    <!-- Toggle de Bloom (Gráficos) -->
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 5px;">
+                        <span
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #fff; letter-spacing: 1px;">EFECTO BLOOM (POST-PROCESADO)</span>
+                        <input type="checkbox" id="settings-toggle-bloom" checked style="width: 20px; height: 20px; accent-color: #5ad; cursor: pointer;">
+                    </div>
+
                 </div>
 
 
@@ -524,7 +532,7 @@
             <!-- Marquesina de Cambios -->
             <div id="marquee-container">
                 <div class="marquee-content">
-                    ÚLTIMOS CAMBIOS: Implementado Diseñador de Banners Avanzado (v1.5.0) con personalización de degradados y patrones — Refinado panel de perfil con distribución de 2 columnas — Corrección de errores en menús y escalado de fuentes — Optimización de UI para resoluciones 2K.
+                    ÚLTIMOS CAMBIOS (v1.6.0 GAME FEEL & PHYSICS UPDATE): [1] Hit-Stop (micro-pausas dramáticas) para enfatizar colisiones masivas — [2] Añadido efecto Bloom (resplandor neón) a todo el juego y menús — [3] Opción de Bloom configurable en Ajustes y Pausa — [4] Ajustada masa del balón para evitar arrastre continuo — [5] Transferencia realista de inercia coche-balón — [6] Aumentada velocidad máxima y fuerza del balón — [7] Anti-tunneling activo para evitar que el balón atraviese paredes — [8] Sombra direccional dinámica del balón — [9] Nueva IA bot de conducción Arcade 2D — [10] Modo Pánico para IA (desbloqueo de atascos) — [11] Screen Shake vibratorio para impactos y goles — [12] Shake y Hit-Stop selectivo (solo se activa si impacta el jugador) — [13] FOV Dinámico que se aleja a velocidades supersónicas — [14] Respawn fijo para el jugador tras demolición — [15] Respawn táctico aleatorio para bots en su campo — [16] UI escalable 100% fluida (1080p/2K) — [17] Paginación ultra-rápida de 40 diseños de balones — [18] Corrección del backend PHP en guardado de mapas — [19] Diseñador de Banners avanzado (degradados/patrones) — [20] Reestructuración del layout de Perfil en doble columna.
                 </div>
             </div>
         </div>
@@ -830,6 +838,11 @@
             
             <button id="btn-pause-continue" class="menu-btn primary" style="width: 100%;">CONTINUAR</button>
             <button id="btn-pause-restart" class="menu-btn" style="width: 100%; border-color: #f90; color: #f90;">REINICIAR PARTIDA</button>
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5);">
+                <span style="font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #fff;">EFECTO BLOOM</span>
+                <input type="checkbox" id="toggle-bloom" checked style="width: 20px; height: 20px; accent-color: #5ad; cursor: pointer;">
+            </div>
             
             <!-- GADGET MP3 PAUSA -->
             <div class="neon-container pixel-border" style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 2px solid #5ad !important; box-sizing: border-box;">

@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-05-15 - *Game Feel & Physics Update*
+### Added
+- **Game Feel & Post-procesado (Juice)**:
+    - Implementación de **Hit-Stop (Micro-pausas)** para enfatizar colisiones destructivas y disparos supersónicos (exclusivo para el jugador 1).
+    - Añadido efecto de **Bloom (Resplandor CSS)** a nivel global (`#game-wrapper`) que afecta a UI, neones y juego in-game.
+    - Opciones de configuración de Bloom añadidas tanto en los **Ajustes del Menú Principal** como en el **Menú de Pausa**, persistiendo en `USER_CONFIG`.
+    - **FOV Dinámico**: La cámara se aleja sutilmente cuando el jugador alcanza velocidades supersónicas.
+    - **Screen Shake Inteligente**: Temblores de cámara aplicados al juego, discriminando impactos de bots para no molestar al jugador.
+- **Optimización de Físicas**:
+    - **Ajuste de Masas**: Incremento significativo de la masa del balón para evitar que los coches lo "arrastren"; ahora se transfiere inercia realista.
+    - Aumento de velocidad máxima del balón y fuerza de rebote para permitir tiros espectaculares.
+    - **Sistema Anti-Tunneling Activo**: Nueva rutina en `physics.js` para detectar colisiones a altísima velocidad y evitar que el coche o el balón atraviesen las paredes.
+    - Mejora en la sombra del balón con un offset dinámico para percibir correctamente su altura.
+- **Inteligencia Artificial (Bots 2.0)**:
+    - Migración a conducción **Arcade 2D**: se elimina la lógica de ángulo/dirección estricta para resolver giros erráticos.
+    - **Modo Pánico**: Implementada máquina de estados para detectar cuando un bot está atascado, forzándolo a retroceder y reorientarse.
+- **Lógica de Reaparición (Respawn)**:
+    - **Jugador**: Reaparece exactamente en su punto de inicio original para no desorientarse.
+    - **Bots**: Reaparecen en un punto aleatorio correspondiente a su propia mitad del campo.
+
 ## [1.5.0] - 2026-05-14 - *Diseñador de Banners Avanzado y Refinamiento de Perfil*
 ### Added
 - **Diseñador Dinámico de Banners**: 
