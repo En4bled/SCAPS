@@ -297,56 +297,108 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
 
     if (gameState === 'countdown') return;
 
-    // 1. PREDICCIÓN DE TRAYECTORIA (0.25s al futuro)
-    const lookAhead = 15; 
-    let tx = ball.x + ball.vx * lookAhead;
-    let ty = ball.y + ball.vy * lookAhead;
+    const isBlue = ai.color === '#5ad';
+    const myGoal = isBlue ? CONST.CONFIG.GOAL_TOP : CONST.CONFIG.GOAL_BOTTOM;
+    const enemyGoal = isBlue ? CONST.CONFIG.GOAL_BOTTOM : CONST.CONFIG.GOAL_TOP;
 
-    // 2. TÁCTICA DE EQUIPO Y ROLES
+    const distToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
+    const ballSpeed = Math.hypot(ball.vx, ball.vy);
+    const ballDistToMyGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
+    const aiDistToMyGoal = Math.hypot(ai.x - myGoal.x, ai.y - myGoal.y);
+
+    // 1. PREDICCIÓN DINÁMICA DE TRAYECTORIA
+    // Calcula cuántos frames tardará el bot en llegar al balón
+    const interceptFrames = Math.min(60, distToBall / Math.max(1, Math.abs(ai.speed) + ballSpeed)); 
+    let predictedBallX = ball.x + ball.vx * interceptFrames;
+    let predictedBallY = ball.y + ball.vy * interceptFrames;
+
+    // 2. DEFINIR ROL Y TÁCTICA
+    let role = 'ATTACK';
     const teammate = allCars.find(c => c.color === ai.color && c !== ai);
-    const distToBall = Math.sqrt((ball.x - ai.x)**2 + (ball.y - ai.y)**2);
-    const myGoal = (ai.color === '#5ad') ? CONST.CONFIG.GOAL_TOP : CONST.CONFIG.GOAL_BOTTOM;
-    const enemyGoal = (ai.color === '#5ad') ? CONST.CONFIG.GOAL_BOTTOM : CONST.CONFIG.GOAL_TOP;
-    
-    let role = 'ATTACK'; // ATTACK, DEFEND, SHADOW, SUPPORT
     
     if (teammate) {
-        const tDistToBall = Math.sqrt((ball.x - teammate.x)**2 + (ball.y - teammate.y)**2);
-        const ballNearMyGoal = (Math.abs(ball.x - myGoal.x) < 400);
-
+        const tDistToBall = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
+        
+        // Si el compañero está más cerca del balón, tomamos rol de apoyo/defensa
         if (tDistToBall < distToBall - 50) {
-            role = ballNearMyGoal ? 'DEFEND' : 'SHADOW';
-        } else if (ballNearMyGoal) {
-            role = 'ATTACK'; // Soy el más cercano, debo despejar
+            role = (ballDistToMyGoal < 500) ? 'DEFEND' : 'SUPPORT';
         }
+    } else {
+        // Modo 1vs1: Defender si el balón está más cerca de nuestra portería que nosotros
+        if (ballDistToMyGoal < aiDistToMyGoal - 100) role = 'DEFEND';
     }
 
-    // 3. LÓGICA SEGÚN ROL
-    if (role === 'DEFEND') {
-        // Posicionarse en la línea de gol, un poco adelantado
-        tx = myGoal.x + (ai.color === '#5ad' ? 100 : -100);
-        ty = ball.y; // Seguir la altura del balón
-        // Limitar ty al ancho de la portería
-        ty = Math.max(myGoal.y - myGoal.w/2, Math.min(myGoal.y + myGoal.w/2, ty));
-    } else if (role === 'SHADOW') {
-        // Mantenerse a media distancia del compañero y del balón
-        tx = (ball.x + myGoal.x) / 2;
-        ty = (ball.y + myGoal.y) / 2;
-        if (ai.boost < 30) { // Ir a por boost si hay sombra
-            const activePads = boostPads.filter(p => p.active);
-            if (activePads.length > 0) {
-                const nearest = activePads.reduce((p, c) => 
-                    Math.hypot(c.x-ai.x, c.y-ai.y) < Math.hypot(p.x-ai.x, p.y-ai.y) ? c : p);
-                tx = nearest.x; ty = nearest.y;
+    // 3. PRIORIDAD: GESTIÓN DE BOOST (Hambre de turbo)
+    let tx = predictedBallX;
+    let ty = predictedBallY;
+    let goingForBoost = false;
+
+    // Si tenemos poco boost y no hay peligro inminente, buscar turbo
+    if (ai.boost < 25 && ballDistToMyGoal > 400 && role !== 'ATTACK') {
+        const activePads = boostPads.filter(p => p.active);
+        if (activePads.length > 0) {
+            // Buscar el pad más cercano que esté delante de nosotros (no retroceder demasiado)
+            let bestPad = null;
+            let minScore = Infinity;
+            
+            activePads.forEach(pad => {
+                const distToPad = Math.hypot(pad.x - ai.x, pad.y - ai.y);
+                const padDistToGoal = Math.hypot(pad.x - myGoal.x, pad.y - myGoal.y);
+                // Preferimos pads que nos mantengan cerca de nuestra portería para defender
+                const score = distToPad + padDistToGoal * 0.5; 
+                if (score < minScore) {
+                    minScore = score;
+                    bestPad = pad;
+                }
+            });
+            
+            if (bestPad && minScore < 800) { // No ir por un pad en el quinto pino
+                tx = bestPad.x;
+                ty = bestPad.y;
+                goingForBoost = true;
             }
         }
     }
 
-    // 4. CÁLCULO DE MANIOBRA
+    // 4. POSICIONAMIENTO SEGÚN ROL (Si no va a por boost)
+    if (!goingForBoost) {
+        if (role === 'ATTACK') {
+            // Tiro a portería: Apuntar detrás del balón en línea con la portería rival
+            const dirToEnemyGoalX = enemyGoal.x - predictedBallX;
+            const dirToEnemyGoalY = enemyGoal.y - predictedBallY;
+            const dirLen = Math.hypot(dirToEnemyGoalX, dirToEnemyGoalY);
+            
+            // Punto ideal de impacto (ligeramente detrás del balón)
+            const offset = ball.radius + ai.height * 0.5;
+            tx = predictedBallX - (dirToEnemyGoalX / dirLen) * offset;
+            ty = predictedBallY - (dirToEnemyGoalY / dirLen) * offset;
+
+        } else if (role === 'DEFEND') {
+            // Posicionarse entre el balón y la propia portería
+            const dirFromGoalX = ball.x - myGoal.x;
+            const dirFromGoalY = ball.y - myGoal.y;
+            const dirLen = Math.hypot(dirFromGoalX, dirFromGoalY);
+            
+            // Colocarse a unos 150px de la portería o más cerca si el balón apremia
+            const defenseRadius = Math.min(200, ballDistToMyGoal * 0.5);
+            tx = myGoal.x + (dirFromGoalX / dirLen) * defenseRadius;
+            ty = myGoal.y + (dirFromGoalY / dirLen) * defenseRadius;
+            
+        } else if (role === 'SUPPORT') {
+            // Posicionarse a medio camino entre nuestra portería y el balón
+            tx = (ball.x + myGoal.x) / 2;
+            ty = (ball.y + myGoal.y) / 2;
+            
+            // Si el balón está cerca de la banda izquierda, ponerse más al centro, etc.
+            tx += (CONST.CONFIG.WORLD_W / 2 - tx) * 0.3;
+        }
+    }
+
+    // 5. CÁLCULO DE MANIOBRA FÍSICA
     const dx = tx - ai.x;
     const dy = ty - ai.y;
     const targetAngle = Math.atan2(dy, dx);
-    const currentAngle = ai.angle - Math.PI / 2;
+    const currentAngle = ai.angle - Math.PI / 2; // Offset interno del modelo de coche
     
     let angleDiff = targetAngle - currentAngle;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -354,38 +406,58 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
     
     const absDiff = Math.abs(angleDiff);
 
-    // 5. CONTROL DE ENTRADAS
+    // 6. EJECUCIÓN DE CONTROLES
+    // Giro
     if (absDiff > 0.1) {
         if (angleDiff > 0) keysPressed[controls.right] = true;
         else keysPressed[controls.left] = true;
     }
 
-    // Aceleración inteligente
-    if (absDiff < 0.5) {
+    // Aceleración y Boost
+    const isFacingTarget = absDiff < 0.5;
+    const isTargetFar = Math.hypot(dx, dy) > 300;
+
+    if (isFacingTarget) {
         keysPressed[controls.up] = true;
-        // Boost solo si estoy alineado y el balón está lejos o es ataque
-        if (absDiff < 0.15 && (distToBall > 300 || role === 'ATTACK') && ai.boost > 10) {
+        // Boost agresivo: alineado, lejos, o si va a chutar y tiene boost
+        if (absDiff < 0.2 && ai.boost > 5 && (isTargetFar || role === 'ATTACK')) {
             keysPressed[controls.boost] = true;
         }
-    } else if (absDiff > 1.8 && distToBall < 200) {
-        // Reversa si me he pasado el balón y está muy cerca
-        keysPressed[controls.down] = true;
     } else {
-        keysPressed[controls.up] = true;
-        if (absDiff > 1.0) keysPressed[controls.drift] = true; // Derrape para giros cerrados
+        // Maniobras evasivas / recuperaciones
+        if (absDiff > 2.0 && distToBall < 250 && !goingForBoost) {
+            // El balón está detrás y muy cerca, usar reversa es más rápido
+            keysPressed[controls.down] = true;
+            // Invertir dirección de giro al ir marcha atrás
+            keysPressed[controls.left] = !keysPressed[controls.left];
+            keysPressed[controls.right] = !keysPressed[controls.right];
+        } else {
+            keysPressed[controls.up] = true;
+            // Usar freno de mano (drift) para giros cerrados a alta velocidad
+            if (absDiff > 1.2 && Math.abs(ai.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.6) {
+                keysPressed[controls.drift] = true;
+            }
+        }
     }
 
-    // 6. EVITAR ATASCOS
-    if (Math.abs(ai.speed) < 0.2) {
+    // 7. SISTEMA ANTI-ATASCOS (Mejorado)
+    if (Math.abs(ai.speed) < 0.5 && keysPressed[controls.up]) {
         if (!ai.stuckTime) ai.stuckTime = 0;
         ai.stuckTime++;
-        if (ai.stuckTime > 30) {
+        if (ai.stuckTime > 25) { // Atascado por ~0.4s
             keysPressed[controls.up] = false;
             keysPressed[controls.down] = true;
-            keysPressed[controls.left] = (ai.x % 2 === 0);
-            if (ai.stuckTime > 60) ai.stuckTime = 0;
+            keysPressed[controls.drift] = false;
+            // Alternar izquierda/derecha para intentar desatascarse
+            if (Math.floor(ai.stuckTime / 15) % 2 === 0) {
+                keysPressed[controls.left] = true; keysPressed[controls.right] = false;
+            } else {
+                keysPressed[controls.right] = true; keysPressed[controls.left] = false;
+            }
+            if (ai.stuckTime > 80) ai.stuckTime = 0; // Resetear intento
         }
     } else {
         ai.stuckTime = 0;
     }
 }
+

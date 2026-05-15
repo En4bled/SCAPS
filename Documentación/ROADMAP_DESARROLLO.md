@@ -17,10 +17,10 @@ Este documento detalla las funcionalidades críticas, mejoras estéticas y corre
 ## 2. 🧠 Inteligencia Artificial Avanzada (Bots 2.0)
 **Objetivo:** Crear una experiencia competitiva desafiante para un solo jugador.
 
-- [ ] **Gestión de Boost:** Los bots deben detectar las cápsulas de turbo cercanas y desviarse para recogerlas si su nivel es bajo.
-- [ ] **Rotación Defensiva:** Lógica para que un bot regrese a portería si el balón está en su zona defensiva, en lugar de solo perseguirlo.
-- [ ] **Predicción de Trayectoria:** Mejorar el cálculo de intercepción para que el bot apunte a donde *estará* el balón, no a donde está ahora.
-- [ ] **Dificultad Escalar:** Ajustar parámetros de precisión y tiempo de reacción según el nivel seleccionado.
+- [x] **Gestión de Boost:** Los bots deben detectar las cápsulas de turbo cercanas y desviarse para recogerlas si su nivel es bajo.
+- [x] **Rotación Defensiva:** Lógica para que un bot regrese a portería si el balón está en su zona defensiva, en lugar de solo perseguirlo.
+- [x] **Predicción de Trayectoria:** Mejorar el cálculo de intercepción para que el bot apunte a donde *estará* el balón, no a donde está ahora.
+- [x] **Dificultad Escalar:** Ajustar parámetros de precisión y tiempo de reacción según el nivel seleccionado (Adaptado dinámicamente).
 
 ---
 
