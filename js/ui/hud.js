@@ -1,24 +1,24 @@
 import * as CONST from '../core/constants.js';
 
-export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode) {
+export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode = false) {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
     
     const minutes = Math.floor(gameTime / 60);
     const seconds = Math.floor(gameTime % 60);
-    const timeStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    const timeStr = isTrainingMode ? "ENTRENAMIENTO" : `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
     const centerX = canvas.width / 2;
     const topY = 0;
     const height = 70;
-    const centerW = 200;
+    const centerW = isTrainingMode ? 350 : 200;
     const sideW = 130;
     const slant = 25;
     const gap = 4;
 
     // --- MARCADOR SUPERIOR ---
     
-    // Caja Central (Tiempo)
+    // Caja Central (Tiempo / Modo)
     ctx.fillStyle = 'rgba(15, 20, 25, 0.9)';
     ctx.beginPath();
     ctx.moveTo(centerX - centerW/2, topY);
@@ -27,50 +27,52 @@ export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode) {
     ctx.lineTo(centerX - centerW/2 + slant, height);
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = isTrainingMode ? 'rgba(90, 173, 237, 0.6)' : 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 55px Rajdhani, sans-serif';
+    ctx.font = isTrainingMode ? 'bold 30px Rajdhani, sans-serif' : 'bold 55px Rajdhani, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
     ctx.shadowBlur = 5;
     ctx.fillText(timeStr, centerX, height / 2 + 5);
 
-    // Caja Azul
-    const blueGradient = ctx.createLinearGradient(centerX - centerW/2 - gap, topY, centerX - centerW/2 - gap - sideW, topY);
-    blueGradient.addColorStop(0, 'rgba(20, 50, 200, 0.9)');
-    blueGradient.addColorStop(1, 'rgba(50, 100, 255, 0.9)');
-    ctx.fillStyle = blueGradient;
-    ctx.beginPath();
-    ctx.moveTo(centerX - centerW/2 - gap, topY);
-    ctx.lineTo(centerX - centerW/2 - gap - sideW, topY);
-    ctx.quadraticCurveTo(centerX - centerW/2 - gap - sideW - 10, topY, centerX - centerW/2 - gap - sideW - 10, 10);
-    ctx.lineTo(centerX - centerW/2 - gap - sideW - 10 + slant, height - 10);
-    ctx.quadraticCurveTo(centerX - centerW/2 - gap - sideW - 10 + slant + 2, height, centerX - centerW/2 - gap - sideW + slant, height);
-    ctx.lineTo(centerX - centerW/2 - gap + slant, height);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 60px Rajdhani, sans-serif';
-    ctx.fillText(score.blue, centerX - centerW/2 - gap - sideW/2, height / 2 + 5);
+    if (!isTrainingMode) {
+        // Caja Azul
+        const blueGradient = ctx.createLinearGradient(centerX - centerW/2 - gap, topY, centerX - centerW/2 - gap - sideW, topY);
+        blueGradient.addColorStop(0, 'rgba(20, 50, 200, 0.9)');
+        blueGradient.addColorStop(1, 'rgba(50, 100, 255, 0.9)');
+        ctx.fillStyle = blueGradient;
+        ctx.beginPath();
+        ctx.moveTo(centerX - centerW/2 - gap, topY);
+        ctx.lineTo(centerX - centerW/2 - gap - sideW, topY);
+        ctx.quadraticCurveTo(centerX - centerW/2 - gap - sideW - 10, topY, centerX - centerW/2 - gap - sideW - 10, 10);
+        ctx.lineTo(centerX - centerW/2 - gap - sideW - 10 + slant, height - 10);
+        ctx.quadraticCurveTo(centerX - centerW/2 - gap - sideW - 10 + slant + 2, height, centerX - centerW/2 - gap - sideW + slant, height);
+        ctx.lineTo(centerX - centerW/2 - gap + slant, height);
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 60px Rajdhani, sans-serif';
+        ctx.fillText(score.blue, centerX - centerW/2 - gap - sideW/2, height / 2 + 5);
 
-    // Caja Naranja
-    const orangeGradient = ctx.createLinearGradient(centerX + centerW/2 + gap, topY, centerX + centerW/2 + gap + sideW, topY);
-    orangeGradient.addColorStop(0, 'rgba(200, 70, 0, 0.9)');
-    orangeGradient.addColorStop(1, 'rgba(255, 120, 30, 0.9)');
-    ctx.fillStyle = orangeGradient;
-    ctx.beginPath();
-    ctx.moveTo(centerX + centerW/2 + gap, topY);
-    ctx.lineTo(centerX + centerW/2 + gap + sideW, topY);
-    ctx.quadraticCurveTo(centerX + centerW/2 + gap + sideW + 10, topY, centerX + centerW/2 + gap + sideW + 10, 10);
-    ctx.lineTo(centerX + centerW/2 + gap + sideW + 10 - slant, height - 10);
-    ctx.quadraticCurveTo(centerX + centerW/2 + gap + sideW + 10 - slant - 2, height, centerX + centerW/2 + gap + sideW - slant, height);
-    ctx.lineTo(centerX + centerW/2 + gap - slant, height);
-    ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.fillText(score.orange, centerX + centerW/2 + gap + sideW/2, height / 2 + 5);
+        // Caja Naranja
+        const orangeGradient = ctx.createLinearGradient(centerX + centerW/2 + gap, topY, centerX + centerW/2 + gap + sideW, topY);
+        orangeGradient.addColorStop(0, 'rgba(200, 70, 0, 0.9)');
+        orangeGradient.addColorStop(1, 'rgba(255, 120, 30, 0.9)');
+        ctx.fillStyle = orangeGradient;
+        ctx.beginPath();
+        ctx.moveTo(centerX + centerW/2 + gap, topY);
+        ctx.lineTo(centerX + centerW/2 + gap + sideW, topY);
+        ctx.quadraticCurveTo(centerX + centerW/2 + gap + sideW + 10, topY, centerX + centerW/2 + gap + sideW + 10, 10);
+        ctx.lineTo(centerX + centerW/2 + gap + sideW + 10 - slant, height - 10);
+        ctx.quadraticCurveTo(centerX + centerW/2 + gap + sideW + 10 - slant - 2, height, centerX + centerW/2 + gap + sideW - slant, height);
+        ctx.lineTo(centerX + centerW/2 + gap - slant, height);
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.fillText(score.orange, centerX + centerW/2 + gap + sideW/2, height / 2 + 5);
+    }
 
     // --- ETIQUETA DE CÁMARA (Abajo Izquierda) ---
     ctx.textAlign = 'left';

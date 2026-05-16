@@ -403,6 +403,7 @@ let currentVOffset = 0;
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
+let isTrainingMode = false;
 let isPaused = false;
 let countdownTimer = 3;
 let gameTime = 60;
@@ -1082,6 +1083,25 @@ async function init() {
 
             if (e.code === 'Tab') { e.preventDefault(); e.stopPropagation(); }
             if (e.code === 'Escape' && gameState !== 'menu') { togglePause(); }
+
+            // Comandos de Entrenamiento
+            if (isTrainingMode && gameState === 'playing') {
+                if (e.code === 'KeyR') { // Resetear balón
+                    ball.x = CONST.CONFIG.WORLD_W / 2;
+                    ball.y = CONST.CONFIG.WORLD_H / 2;
+                    ball.vx = 0; ball.vy = 0;
+                    playSound('menu_click');
+                }
+                if (e.code === 'KeyF') { // Lanzar balón (Pass)
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 600;
+                    ball.x = player1.x + Math.cos(angle) * dist;
+                    ball.y = player1.y + Math.sin(angle) * dist;
+                    ball.vx = (player1.x - ball.x) * 0.04; 
+                    ball.vy = (player1.y - ball.y) * 0.04;
+                    playSound('menu_click');
+                }
+            }
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -1263,7 +1283,7 @@ function renderFrame() {
 
     // Solo dibujar nombres y HUD si estamos en partida
     drawCarNames(ctx, allCars, player1, cameraMode, gameState);
-    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode);
+    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode);
     drawFeed(ctx, canvas);
 
     ctx.restore();
@@ -1325,7 +1345,9 @@ function updateAll(dt) {
         allCars.forEach(car => {
             if (car !== player1) {
                 const aiKeys = {};
-                updateCarAI(car, ball, boostPads, gameState, aiKeys, allCars);
+                if (!isTrainingMode) {
+                    updateCarAI(car, ball, boostPads, gameState, aiKeys, allCars);
+                }
                 car.update(aiKeys, gameState, particles, skidMarks, timeScale);
                 applyTirePhysics(car, timeScale);
             }
@@ -1436,6 +1458,14 @@ function triggerTransition() {
 
 function handleGoal(scorer) {
     if (scorer === 'blue') score.blue++; else score.orange++;
+    
+    if (isTrainingMode) {
+        playSound('goal_explosion', 0.8);
+        addScreenShake(15);
+        resetAfterGoal();
+        return;
+    }
+
     gameState = 'goalScored';
     
     // Temblor de cámara inmenso y Hit-Stop brutal al marcar gol
@@ -1536,14 +1566,19 @@ function updateUI(dt) {
         }
     }
     if (gameState === 'playing') {
-        gameTime -= dt;
+        if (!isTrainingMode) {
+            gameTime -= dt;
+            if (gameTime <= 0) {
+                gameTime = 0;
+                showGameOver();
+            }
+        } else {
+            player1.boost = 100; // Turbo infinito en entrenamiento
+        }
+
         // Acumular tiempo de juego real
         if (USER_CONFIG.stats) {
             USER_CONFIG.stats.playTime = (USER_CONFIG.stats.playTime || 0) + dt;
-        }
-        if (gameTime <= 0) {
-            gameTime = 0;
-            showGameOver();
         }
     }
     if (gameState === 'countdown') {
@@ -1562,16 +1597,24 @@ function updateUI(dt) {
 
 function resetAfterGoal() {
     applySpawns();
-    allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = 33; });
+    allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = isTrainingMode ? 100 : 33; });
     ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
     ball.vx = 0; ball.vy = 0; ball.onWallTimer = 0;
     ball.isFireball = false; ball.fireballTimer = 0; ball.visualRadius = ball.radius; ball.targetRadius = ball.radius;
     skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
-    countdownTimer = 3; gameState = 'countdown';
-    targetZoom = 0.85; // Resetear zoom de cámara
-    if (countdownEl) countdownEl.style.display = 'block';
+    
+    if (isTrainingMode) {
+        gameState = 'playing';
+        if (countdownEl) countdownEl.style.display = 'none';
+    } else {
+        countdownTimer = 3; 
+        gameState = 'countdown';
+        if (countdownEl) countdownEl.style.display = 'block';
+        playSound('countdown');
+    }
+    
+    targetZoom = 0.85; 
     if (gameOverOverlay) gameOverOverlay.style.display = 'none';
-    playSound('countdown');
 }
 
 function showGameOver() {
@@ -2239,7 +2282,7 @@ function validateMatchSetup() {
 
     const validMaps = ['urban', 'atlantis', 'volcano', 'winter'];
     const isValidMap = validMaps.includes(currentMap);
-    const isValidMode = (currentMode === '2vs2');
+    const isValidMode = (currentMode === '2vs2' || currentMode === 'practica');
 
     console.log("Validando Setup:", { map: currentMap, mode: currentMode, isValid: (isValidMap && isValidMode) });
 
@@ -2365,6 +2408,7 @@ async function finalizeStartGame() {
                 currentRotation = 0;
 
                 gameState = 'zooming';
+                isTrainingMode = (selectedMode === 'practica');
                 allCars = [player1, player1_teammate, player2, player2_teammate];
                 initAudio(player1, allCars);
                 applySpawns();
