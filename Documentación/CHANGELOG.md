@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.1] - 2026-05-17 - *Estandarización de Recursos y XAMPP Compatibility*
+### Added
+- **Sanitización y Migración Automática de LocalStorage**: Nueva lógica en `loadUserConfig()` que intercepta configuraciones obsoletas almacenadas en el navegador (de versiones anteriores de SCAPS) y las migra de manera transparente a minúsculas y subcarpetas correctas. Esto previene de forma definitiva fallos visuales (estado *broken*) en usuarios recurrentes.
+
+### Changed
+- **Estandarización Integral de Recursos (`recursos/`)**:
+  - Todos los activos organizados rigurosamente en subcarpetas temáticas (`cars/`, `balls/`, `avatar/`, `ui/`, `stadiums/`, `editor/`, `music/`, `sound/`).
+  - Normalización al 100% de los nombres de archivos a minúsculas para compatibilidad absoluta con servidores basados en Linux case-sensitive (como InfinityFree).
+  - Eliminación de archivos redundantes y conflictos de mayúsculas (como la necesidad anterior de mantener `Car2.png` y `car2.png` al mismo tiempo).
+  - Corrección del typo físico y de código de `car-selecctor-tab.gif` a `car-selector-tab.gif`.
+- **Rutas de Avatares y Fondos**: Sincronizadas las rutas en todo el código y hojas de estilo para apuntar a sus carpetas físicas definitivas (`recursos/avatar/` y `recursos/ui/fondo_menu.png`).
+
+### Fixed
+- **Ineficiencia de Red y Bucle de Recarga en Preview**: Solucionada la inundación masiva de peticiones de red redundantes (más de 300 solicitudes por segundo) para el sprite del coche seleccionado en la vista previa del menú. Ahora utiliza una comparación inteligente basada en `.endsWith()` que funciona correctamente independientemente de si el juego se ejecuta en una subcarpeta (ej: `/SCAPS/` bajo XAMPP) o en la raíz.
+- **Rutas de Avatares**: Corregidas las rutas del generador y previsualizador en `index.html` y `main.js` para apuntar a la carpeta física correcta `recursos/avatar/` en lugar de `recursos/ui/avatar/`.
+
 ## [1.6.0] - 2026-05-15 - *Game Feel & Physics Update*
 ### Added
 - **Game Feel & Post-procesado (Juice)**:

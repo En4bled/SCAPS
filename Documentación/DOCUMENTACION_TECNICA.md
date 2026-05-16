@@ -61,4 +61,22 @@ En la v1.6.0 se ha eliminado el control estricto de rotación para evitar bloque
 Las arenas se definen como objetos JSON. El sistema de guardado PHP garantiza transacciones limpias.
 
 ---
-*Documentación actualizada: Mayo 2026 (Ref: Actualización v1.6.0).*
+
+## 4. Estructura de Recursos y Compatibilidad Multiplataforma (v1.6.1)
+SCAPS implementa una política estricta de organización de recursos para asegurar compatibilidad total en servidores Linux case-sensitive y despliegues locales (XAMPP).
+
+### 4.1. Catálogo Estandarizado de Carpetas (`recursos/`):
+- **`/cars/`**: Contiene los sprites de los vehículos (`car1.png` a `car10.png` en minúsculas).
+- **`/balls/`**: Catálogo de 40 balones normalizados (`ball_1.png` a `ball_40.png`).
+- **`/avatar/`**: Avatares de perfil numerados en minúsculas (`avatar_1.png` a `avatar_100.png`).
+- **`/ui/`**: Logotipos, animaciones de pestañas, porterías físicas y fondos del menú.
+- **`/stadiums/`**: Texturas y estadios por defecto (`estadio1.png`).
+- **`/editor/`**: Gráficos exclusivos para las entidades del editor de niveles.
+- **`/music/`** y **`/sound/`**: Efectos y banda sonora en formatos optimizados (.mp3 / .wav).
+
+### 4.2. Compatibilidad de Servidor y Sanitización Activa:
+- **Case-Insensitive Fallback**: Para mitigar errores de tipo *broken image* heredados de configuraciones antiguas en navegadores de usuarios recurrentes, la función `loadUserConfig()` intercepta los datos de `localStorage` al iniciar el juego y sanitiza dinámicamente las rutas a su variante en minúsculas y subdirectorio actual.
+- **Detección Dinámica de Contexto**: Las comparaciones de recursos en tiempo de ejecución (como la carga de texturas a 60 FPS en el previsualizador) utilizan métodos de comparación relativa (`.endsWith()`) para evitar que el juego intente recargar el recurso infinitamente al ejecutarse en subcarpetas del servidor (como `http://localhost/SCAPS/`).
+
+---
+*Documentación actualizada: Mayo 2026 (Ref: Actualización v1.6.1).*
