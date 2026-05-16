@@ -1,0 +1,141 @@
+/* --- BASE & VARIABLES GLOBALES --- */
+body {
+    background-color: #000;
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    image-rendering: pixelated;
+}
+
+#game-wrapper {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    --wrapper-w: min(100vw - 40px, (100vh - 40px) * 16 / 9);
+    width: var(--wrapper-w);
+    /* Definimos una unidad base estable: 1em = 1% del ancho del juego */
+    font-size: calc(var(--wrapper-w) / 100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+canvas {
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+    width: 100%;
+    height: 100%;
+}
+
+/* --- ANIMACIONES GLOBALES & TEXTOS --- */
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.2;
+    }
+}
+
+.blink-text {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #fff;
+    animation: blink 2.5s ease-in-out infinite;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+.pixel-border {
+    border: 8px solid #5ad !important;
+    border-radius: 0 !important;
+    position: relative;
+    background-color: rgba(5, 5, 15, 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow:
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19,
+        0 0 40px rgba(90, 173, 237, 0.2);
+    animation: pixel-neon-cycle 5s infinite alternate ease-in-out;
+}
+
+.pixel-title {
+    font-family: 'Share Tech Mono', monospace !important;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-align: center;
+}
+
+@keyframes pixel-neon-cycle {
+    0% {
+        border-color: #5ad !important;
+        box-shadow:
+            0 -8px 0 -4px #0a0a19,
+            0 8px 0 -4px #0a0a19,
+            -8px 0 0 -4px #0a0a19,
+            8px 0 0 -4px #0a0a19,
+            0 0 40px rgba(90, 173, 237, 0.3);
+    }
+    100% {
+        border-color: #f90 !important;
+        box-shadow:
+            0 -8px 0 -4px #0a0a19,
+            0 8px 0 -4px #0a0a19,
+            -8px 0 0 -4px #0a0a19,
+            8px 0 0 -4px #0a0a19,
+            0 0 40px rgba(255, 153, 0, 0.3);
+    }
+}
+
+.neon-title {
+    animation: text-neon-cycle 5s infinite alternate ease-in-out;
+    font-family: 'Share Tech Mono', monospace !important;
+}
+
+@keyframes text-neon-cycle {
+    0% {
+        color: #5ad;
+        text-shadow: 0 0 10px #5ad;
+    }
+    100% {
+        color: #f90;
+        text-shadow: 0 0 10px #f90;
+    }
+}
+
+/* --- ESTILIZACIÓN DE SCROLLBARS (SCAPS THEME) --- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #5ad; /* Azul SCAPS */
+    border-radius: 0px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #f90; /* Naranja SCAPS */
+    box-shadow: 0 0 15px #f90;
+}
+
+/* Scrollbar específico para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #5ad rgba(0, 0, 0, 0.4);
+}

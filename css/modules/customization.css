@@ -1,0 +1,937 @@
+/* --- SISTEMA DE PERSONALIZACIÓN Y PERFIL DE USUARIO --- */
+.subtab-btn {
+    border-radius: 4px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(90, 173, 237, 0.3) !important;
+    color: #5ad !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+}
+
+.subtab-btn.active {
+    background: #5ad !important;
+    color: #fff !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 15px rgba(90, 173, 237, 0.5);
+    transform: translateY(-2px);
+}
+
+.subtab-btn:hover:not(.active) {
+    background: rgba(90, 173, 237, 0.2) !important;
+    border-color: #5ad !important;
+}
+
+/* Banner de Perfil Estilo Rocket League */
+#player-banner, .banner-preview-sync {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    height: 70px;
+    min-width: 320px;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: relative;
+    overflow: visible;
+}
+
+#player-banner {
+    position: absolute;
+    bottom: 30px;
+    left: 12px;
+    z-index: 1000;
+    transform: scale(0.8);
+    transform-origin: bottom left;
+}
+
+.banner-preview-sync {
+    position: relative !important;
+    z-index: 10 !important;
+    transform-origin: center;
+    margin: 10px 0;
+}
+
+#player-banner-avatar-frame, #custom-banner-avatar-frame {
+    width: 65px;
+    height: 65px;
+    background: #000;
+    border: 3px solid #fff !important;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+#player-banner-avatar-frame::before, #custom-banner-avatar-frame::before,
+#player-banner-avatar-frame::after, #custom-banner-avatar-frame::after {
+    content: '';
+    position: absolute;
+    background: #00f0ff;
+    box-shadow: 0 0 8px #00f0ff;
+    z-index: -1;
+}
+
+#player-banner-avatar-frame::before, #custom-banner-avatar-frame::before {
+    top: -8px;
+    left: 15%;
+    right: 15%;
+    height: 6px;
+    clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+}
+
+#player-banner-avatar-frame::after, #custom-banner-avatar-frame::after {
+    bottom: -8px;
+    left: 15%;
+    right: 15%;
+    height: 6px;
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+}
+
+.player-banner-info {
+    flex: 1;
+    height: 48px;
+    margin-left: -10px;
+    padding: 5px 15px 5px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(0, 20, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+    position: relative;
+    z-index: 5;
+}
+
+#player-banner-title, #custom-banner-title {
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: -2px;
+    margin-bottom: 5px;
+    display: block;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+#player-banner-avatar, #custom-banner-avatar {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+}
+
+/* Clases de Estilos de Banner */
+.banner-style-default, .banner-style-default .player-banner-info { background: #2d6096 !important; border-color: #fff !important; }
+.banner-style-heat, .banner-style-heat .player-banner-info { background: linear-gradient(90deg, #600, #f33) !important; border-color: #f90 !important; }
+.banner-style-toxic, .banner-style-toxic .player-banner-info { background: linear-gradient(90deg, #040, #0f0) !important; border-color: #fff !important; }
+.banner-style-royal, .banner-style-royal .player-banner-info { background: linear-gradient(90deg, #860, #f90) !important; border-color: #fff !important; }
+.banner-style-cyber, .banner-style-cyber .player-banner-info { background: linear-gradient(90deg, #606, #f0f) !important; border-color: #0ff !important; }
+.banner-style-deep, .banner-style-deep .player-banner-info { background: linear-gradient(90deg, #004, #50f) !important; border-color: #fff !important; }
+.banner-style-carbon, .banner-style-carbon .player-banner-info { background: #111 !important; border-color: #444 !important; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 4px 4px; }
+.banner-style-ocean, .banner-style-ocean .player-banner-info { background: linear-gradient(90deg, #044, #0ff) !important; border-color: #fff !important; }
+.banner-style-sunset, .banner-style-sunset .player-banner-info { background: linear-gradient(90deg, #b40, #f09) !important; border-color: #fff !important; }
+.banner-style-diamond, .banner-style-diamond .player-banner-info { background: linear-gradient(90deg, #777, #fff) !important; border-color: #5ad !important; }
+.banner-style-nebula, .banner-style-nebula .player-banner-info { background: linear-gradient(45deg, #408, #f0f, #08f) !important; border-color: #fff !important; }
+.banner-style-forest, .banner-style-forest .player-banner-info { background: linear-gradient(90deg, #020, #060) !important; border-color: #ad0 !important; }
+.banner-style-gold, .banner-style-gold .player-banner-info { background: linear-gradient(90deg, #430, #ff0, #430) !important; border-color: #fff !important; }
+.banner-style-glitch, .banner-style-glitch .player-banner-info { background: repeating-linear-gradient(0deg, #000, #000 2px, #111 2px, #111 4px) !important; border-color: #f0f !important; }
+.banner-style-inferno, .banner-style-inferno .player-banner-info { background: radial-gradient(circle, #f00, #f90, #200) !important; border-color: #f00 !important; }
+.banner-style-ice, .banner-style-ice .player-banner-info { background: linear-gradient(135deg, #fff, #8df) !important; border-color: #fff !important; }
+.banner-style-toxic-waste, .banner-style-toxic-waste .player-banner-info { background: #adff2f !important; border-color: #000 !important; }
+.banner-style-midnight, .banner-style-midnight .player-banner-info { background: #000510 !important; border-color: #1a1a4a !important; }
+.banner-style-prism, .banner-style-prism .player-banner-info { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f) !important; border-color: #fff !important; }
+.banner-style-steel, .banner-style-steel .player-banner-info { background: linear-gradient(90deg, #333, #777, #333) !important; border-color: #aaa !important; }
+
+#player-banner-name, #custom-banner-name {
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+    text-transform: none;
+}
+
+.player-banner-exp-bar {
+    width: 84%;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.player-banner-exp-fill {
+    width: 65%;
+    height: 100%;
+    background: #f90;
+    box-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+}
+
+.player-banner-level {
+    position: absolute;
+    bottom: 6px;
+    left: 207px;
+    background: #fdf5c0;
+    color: #444;
+    width: 28px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* --- MAQUETADO DE LA VENTANA --- */
+.personalization-wrapper {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    z-index: 6000;
+}
+
+.personalization-menu {
+    display: flex;
+    width: 70em !important;
+    height: 38em !important;
+    background: rgba(5, 5, 15, 0.97);
+    border: 0.3em solid #5ad !important;
+    position: relative;
+    padding: 2em 3em !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    box-sizing: border-box;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2);
+}
+
+.personalization-banner {
+    font-size: 3em !important;
+    color: #ff9900;
+    font-family: 'Rajdhani', sans-serif !important;
+    text-transform: uppercase;
+    pointer-events: none;
+    margin: 0 0 0.2em 0 !important;
+    letter-spacing: 2px;
+    font-weight: 900;
+    -webkit-text-stroke: 2px #552200;
+    text-shadow: 
+        4px 4px 0px rgba(0, 0, 0, 0.9),
+        0 0 20px rgba(255, 153, 0, 0.4);
+}
+
+.custom-tabs-container {
+    width: 70em;
+    display: flex;
+    justify-content: flex-start;
+    gap: 1.2em;
+    margin-bottom: 0.8em;
+    position: relative;
+    z-index: 10;
+    padding: 0 1.5em;
+    box-sizing: border-box;
+}
+
+.custom-tab-btn {
+    flex: 0 0 6.5em;
+    height: 6.5em;
+    margin-top: 1px;
+    background: #0a0a19;
+    border: 0.15em solid rgba(90, 173, 237, 0.5);
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9em;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2vh;
+    transition: all 0.3s ease;
+}
+
+.custom-tab-btn i, .tab-icon-gif {
+    font-size: 2.5vw;
+    font-style: normal;
+    width: 3vw;
+    height: 3vw;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+}
+
+.custom-tab-btn.active {
+    background: #1a3a5a;
+    border-color: #5ad;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(90, 173, 237, 0.4);
+    transform: translateY(-5px);
+}
+
+.btn-close-custom {
+    flex: 0 0 auto !important;
+    min-width: 6.5em;
+    padding: 0 2em;
+    margin-left: auto !important;
+    border-color: #2fb !important;
+    color: #2fb !important;
+    background: #0a2a1a !important;
+    box-shadow: 0 0 15px rgba(34, 255, 187, 0.2);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.btn-close-custom:hover {
+    transform: scale(1.05) skewX(-3deg) !important;
+    background: #0d3a24 !important;
+    box-shadow: 0 0 25px rgba(34, 255, 187, 0.5) !important;
+}
+
+.btn-close-custom:active {
+    transform: scale(0.95) skewX(0deg) !important;
+    background: #2fb !important;
+}
+
+.btn-close-custom:active i, .btn-close-custom:active span {
+    color: #000 !important;
+    text-shadow: none !important;
+}
+
+.btn-close-custom i, .btn-close-custom span {
+    color: #2fb !important;
+    text-shadow: 0 0 10px #2fb;
+}
+
+.custom-panes-container {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.custom-pane {
+    display: none;
+    width: 100%;
+    height: 100%;
+    animation: pane-fade-in 0.3s ease-out;
+}
+
+.custom-pane.active {
+    display: flex;
+    flex-direction: row;
+    gap: 1.25em;
+    width: 100% !important;
+    flex: 1;
+}
+
+#pane-balon.active {
+    flex-direction: column;
+}
+
+@keyframes pane-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cuadros de Contenido */
+.custom-box-profile,
+.custom-box-gallery,
+.custom-box-garage,
+.custom-box-controls,
+.custom-box-ball {
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    background: rgba(0, 0, 0, 0.3);
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    height: 100% !important;
+    box-sizing: border-box;
+}
+
+.custom-box-profile,
+.custom-box-controls,
+.custom-box-gallery,
+.custom-box-garage {
+    flex: 0 0 calc(50% - 0.6em) !important;
+    max-width: calc(50% - 0.6em) !important;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.banner-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 5px !important;
+}
+
+.banner-item-preview {
+    width: 100%;
+    height: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.banner-item-preview.selected {
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+
+.custom-select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #111 !important;
+    color: #fff !important;
+    border: 2px solid #5ad !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235ad' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+    line-height: 1.2;
+    padding-top: 4px;
+}
+
+.custom-select option {
+    background: #222;
+    color: #fff;
+}
+
+#pane-balon .neon-container,
+#pane-boost .neon-container,
+#pane-explosion .neon-container {
+    width: 100% !important;
+    flex: 1;
+}
+
+.custom-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    margin-bottom: 1.2em;
+}
+
+.custom-label {
+    color: #5ad;
+    font-size: 0.95em;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.custom-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.1em solid #5ad;
+    color: #fff;
+    padding: 0.5em 0.6em;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1em;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1;
+}
+
+/* Sliders de Tinte */
+.tint-control {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.8em;
+    border: 0.05em solid rgba(90, 173, 237, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+}
+
+.slider-label {
+    font-size: 0.6em;
+    color: #5ad;
+    font-weight: bold;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.tint-slider {
+    width: 100%;
+    height: 0.5em;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    border-radius: 0.2em;
+}
+
+.tint-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.2em;
+    height: 1.2em;
+    background: #fff;
+    border: 0.1em solid #5ad;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.btn-reset-small {
+    background: none;
+    border: 0.05em solid rgba(90, 173, 237, 0.3);
+    color: #5ad;
+    cursor: pointer;
+    padding: 0.1em 0.5em;
+    font-size: 0.9em;
+}
+
+/* Rejillas de Items */
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7em;
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5em;
+}
+
+.ball-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    overflow: hidden !important;
+    max-height: none !important;
+    gap: 0.6em;
+    padding: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+.ball-grid .selectable-item {
+    max-width: 7.5em !important;
+}
+
+.custom-box-ball {
+    width: 100% !important;
+    flex: 1;
+}
+
+.custom-box-garage .item-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    overflow: hidden !important;
+    max-height: none !important;
+    gap: 0.4em;
+    padding: 0.5em 30% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+.custom-box-garage .item-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.custom-box-garage .selectable-item {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 5.5em !important;
+    height: auto !important;
+}
+
+.avatar-grid-3x3 {
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    overflow: hidden !important;
+    max-height: none !important;
+    gap: 0.3em;
+    padding: 0.5em 10% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+.avatar-grid-3x3 .selectable-item {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 5.5em !important;
+    height: auto !important;
+}
+
+.boost-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    padding: 0.5em 5% !important;
+    width: 100% !important;
+    max-width: 30em;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    scrollbar-width: none;
+}
+
+.boost-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.boost-grid .selectable-item {
+    max-width: 6em !important;
+    aspect-ratio: 1 / 1;
+}
+
+.custom-box-boost,
+.custom-box-explosion {
+    flex: 0 0 calc(50% - 0.6em) !important;
+    max-width: calc(50% - 0.6em) !important;
+}
+
+.custom-box-preview-boost,
+.custom-box-preview-explosion {
+    flex: 0 0 calc(50% - 1.5em) !important;
+    max-width: calc(50% - 1.5em) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 1.25em !important;
+}
+
+.explosion-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    padding: 1em 8% !important;
+    width: 100% !important;
+    max-width: 30em;
+    margin: 0 auto !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    scrollbar-width: none;
+}
+
+.explosion-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.explosion-preview-frame {
+    width: 88%;
+    aspect-ratio: 1 / 1;
+    background: radial-gradient(circle, rgba(40, 20, 20, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
+    border: 0.1em solid rgba(255, 153, 0, 0.3);
+    position: relative;
+    border-radius: 0.5em;
+    overflow: hidden;
+    margin-top: 1em;
+    margin-bottom: 1.5em;
+}
+
+.explosion-title {
+    margin-top: 1.5em !important;
+    margin-bottom: 0em !important;
+    text-align: center;
+    font-size: 1.2em !important;
+}
+
+.boost-preview-frame {
+    width: 100%;
+    height: 12em;
+    background: radial-gradient(circle, rgba(20, 20, 40, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
+    border: 0.1em solid rgba(90, 173, 237, 0.3);
+    position: relative;
+    border-radius: 0.5em;
+    overflow: hidden;
+    margin-bottom: 1em;
+}
+
+#canvas-boost-preview {
+    width: 100%;
+    height: 100%;
+}
+
+.preview-tag-name {
+    position: absolute;
+    bottom: 0.5em;
+    right: 0.5em;
+    background: rgba(90, 173, 237, 0.2);
+    color: #5ad;
+    padding: 0.2em 0.8em;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    font-size: 0.8em;
+    border: 1px solid #5ad;
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.boost-description {
+    width: 100%;
+    padding: 1em;
+    background: rgba(10, 10, 25, 0.8);
+    border-left: 0.2em solid #5ad;
+    color: #fff;
+    font-size: 0.7em;
+    font-family: 'Share Tech Mono', monospace;
+    line-height: 1.4;
+    min-height: 4em;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    margin-bottom: 1em;
+    text-align: left;
+}
+
+.gallery-title {
+    text-align: center !important;
+    width: 100%;
+    margin-bottom: 0.8em !important;
+    color: #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+.garage-title, .ball-title, .boost-title, .explosion-title {
+    margin-bottom: 0.8em !important;
+    color: #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+.avatar-preview-box {
+    width: 8em;
+    height: 8em;
+    margin: 1em auto;
+    border: 3px solid #5ad !important;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(90, 173, 237, 0.3);
+}
+
+.avatar-preview-box img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+}
+
+.boost-title {
+    text-align: center;
+    margin-bottom: 0.8em !important;
+}
+
+.ball-title {
+    margin-top: 0 !important;
+    margin-bottom: 0.2em !important;
+    text-align: center;
+    font-size: 1.2em !important;
+}
+
+.selectable-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.05em solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.avatar-grid-3x3 .selectable-item {
+    border-radius: 0 !important;
+}
+
+.selectable-item img {
+    max-width: 70%;
+    max-height: 70%;
+    object-fit: contain;
+}
+
+.selectable-item.selected {
+    border-color: #5ad;
+    background: rgba(90, 173, 237, 0.2);
+    box-shadow: inset 0 0 15px rgba(90, 173, 237, 0.4);
+}
+
+/* Vista Previa Coche */
+.car-preview-frame {
+    width: 15em;
+    height: 15em;
+    max-width: none;
+    max-height: none;
+    margin: 1em auto;
+    background: radial-gradient(circle, rgba(90, 173, 237, 0.15) 0%, rgba(0, 0, 0, 0.8) 100%);
+    border: 0.15em solid rgba(90, 173, 237, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 0.8em;
+    overflow: hidden;
+}
+
+.car-preview-img {
+    width: 35% !important;
+    height: auto !important;
+    filter: drop-shadow(0 0 1.5em rgba(90, 173, 237, 0.6));
+    animation: car-preview-rotation 20s linear infinite !important;
+    z-index: 1;
+}
+
+.preview-tag {
+    position: absolute;
+    bottom: 10%;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.1em 0.5em;
+    font-size: 0.6em;
+    font-family: 'Share Tech Mono', monospace;
+    color: #5ad;
+    border: 0.05em solid #5ad;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes car-preview-rotation {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Botón Guardar */
+.btn-save-custom {
+    width: fit-content !important;
+    min-width: 12em;
+    padding: 0.6em 3em !important;
+    font-size: 1em !important;
+    border-color: #5ad !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-family: 'Share Tech Mono', monospace;
+    display: block;
+}
+
+/* Controles de Paginación Compactos */
+.custom-pagination-compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5em;
+    margin-top: auto;
+    padding: 0.5em 0;
+    width: 100%;
+}
+
+.btn-nav-compact {
+    width: 2em !important;
+    height: 2em !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    font-size: 0.8em !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.05em solid rgba(90, 173, 237, 0.4) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.btn-nav-compact:hover {
+    background: rgba(90, 173, 237, 0.2) !important;
+    border-color: #5ad !important;
+}
+
+.page-info {
+    font-size: 0.9em;
+    color: #5ad;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    min-width: 4em;
+    text-align: center;
+}
+
+/* Estilos Compactos para el Editor de Banners */
+.custom-label-tiny {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.custom-color-picker-small {
+    width: 100%;
+    height: 20px;
+    background: #111;
+    border: 1px solid #444;
+    cursor: pointer;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.custom-select-small {
+    width: 100%;
+    height: 24px;
+    background: #111;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+.custom-input-small {
+    width: 100%;
+    height: 24px;
+    background: #111;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 10px;
+    padding: 0 5px;
+    font-family: 'Share Tech Mono', monospace;
+    box-sizing: border-box;
+}
+
+.custom-box-profile {
+    width: 440px !important;
+    max-width: 440px !important;
+    display: flex;
+    flex-direction: column;
+    padding: 12px !important;
+    height: auto;
+    overflow: visible !important;
+}
+
+.custom-box-gallery {
+    flex: 1;
+}
