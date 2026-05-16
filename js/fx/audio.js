@@ -28,6 +28,8 @@ let motorAudios = [];
 let isMusicMuted = false;
 let musicVolume = 0.5;
 let sfxVolume = 0.8;
+let activeSynthVoicesCount = 0;
+const MAX_SYNTH_VOICES = 6;
 const TOTAL_SONGS = 8;
 const songMetadata = [
     { title: "NEON VELOCITY", artist: "SYNTHWAVE PRO" },
@@ -164,21 +166,26 @@ export function updateAudio() {
         const car = item.car;
         const speedPercent = Math.min(Math.abs(car.speed) / 3.2, 1.0);
         
+        // Rugido del motor: Multiplicar tono por boost o velocidad supersónica
+        let boostFactor = car.isBoosting ? 1.5 : 1.0;
+        if (car.isSupersonic) boostFactor = 1.8;
+
         // Frecuencia con suavizado mayor (0.15)
         // Ralentí a 60Hz para que sea más audible
-        const targetFreq = 60 + (speedPercent * 120);
+        const targetFreq = (60 + (speedPercent * 120)) * boostFactor;
         item.osc.frequency.setTargetAtTime(targetFreq, now, 0.15);
         
-        // Filtro más agresivo para evitar "clipping" de agudos
-        const targetFilter = 150 + (speedPercent * 600);
+        // Filtro más agresivo para evitar "clipping" de agudos, se abre con el boost
+        const targetFilter = (150 + (speedPercent * 600)) * boostFactor;
         item.filter.frequency.setTargetAtTime(targetFilter, now, 0.15);
 
         let finalVol = 0;
         if (car.isExploded) {
             finalVol = 0;
         } else if (car === playerCarRef) {
-            // Ralentí a 0.15 para que se escuche bien antes de empezar
-            finalVol = 0.15 + (speedPercent * 0.1);
+            // Ralentí a 0.15 para que se escuche bien antes de empezar, incrementado en boost
+            const baseVol = 0.15 + (speedPercent * 0.1);
+            finalVol = car.isBoosting ? baseVol * 1.4 : baseVol;
         } else {
             const dx = car.x - playerCarRef.x;
             const dy = car.y - playerCarRef.y;
@@ -187,7 +194,8 @@ export function updateAudio() {
             
             let spatialMult = Math.max(0, 1.0 - (distSq / maxDistSq));
             // Los otros coches suenan mucho más bajo para evitar "bola de ruido"
-            finalVol = spatialMult * 0.04 * (0.5 + speedPercent * 0.5);
+            const baseVol = spatialMult * 0.04 * (0.5 + speedPercent * 0.5);
+            finalVol = car.isBoosting ? baseVol * 1.4 : baseVol;
         }
         item.gain.gain.setTargetAtTime(finalVol * sfxVolume, now, 0.15);
     });
@@ -196,12 +204,28 @@ export function updateAudio() {
 export function playSound(type, intensity = 1.0) {
     if (!isInitialized || audioCtx.state !== 'running') return;
 
+    // Límite de voces y sistema de prioridades de audio sintético
+    const isSynthetic = ['boost_pickup', 'car_hit', 'ball_hit', 'wall_hit'].includes(type);
+    if (isSynthetic) {
+        if (activeSynthVoicesCount >= MAX_SYNTH_VOICES) {
+            // Si hay saturación, descartar sonidos suaves/menores (baja prioridad)
+            if (intensity < 0.3) return;
+        }
+    }
+
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
     gainNode.connect(masterGain); 
     osc.connect(gainNode);
     
     const now = audioCtx.currentTime;
+
+    if (isSynthetic) {
+        activeSynthVoicesCount++;
+        osc.onended = () => {
+            activeSynthVoicesCount = Math.max(0, activeSynthVoicesCount - 1);
+        };
+    }
 
     if (type === 'menu_click') {
         const clickSnd = new Audio('recursos/sound/modern2.wav');

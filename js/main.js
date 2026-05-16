@@ -441,6 +441,8 @@ let isPaused = false;
 let countdownTimer = 3;
 let gameTime = 60;
 let lastTime = 0;
+let fps = 60;
+window.SCAPS_LOD_LEVEL = 1.0;
 let keysPressed = {};
 let animationFrameCounter = 0;
 let cameraMode = 'fixed';
@@ -1566,6 +1568,16 @@ function gameLoop(timestamp) {
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05); // Cap para evitar saltos enormes
     lastTime = timestamp;
 
+    // Calcular FPS y ajustar dinámicamente el nivel de detalle (LOD) técnico
+    if (dt > 0) {
+        fps = fps * 0.95 + (1 / dt) * 0.05; // Suavizado exponencial
+        if (fps < 54) {
+            window.SCAPS_LOD_LEVEL = Math.max(0.25, window.SCAPS_LOD_LEVEL - 0.015);
+        } else if (fps > 58) {
+            window.SCAPS_LOD_LEVEL = Math.min(1.0, window.SCAPS_LOD_LEVEL + 0.015);
+        }
+    }
+
     // Actualizar estado del mando (Gamepad)
     pollGamepad(keysPressed, gameState, introPhase);
 
@@ -1779,15 +1791,32 @@ function updateAll(dt) {
         replaySystem.record(ball, allCars);
     }
 
-    [particles, explosionParticles, confettiParticles, skidMarks].forEach(arr => {
+    // Actualizar objetos de partículas y skidmarks con LOD Dinámico
+    const lodMultiplier = window.SCAPS_LOD_LEVEL || 1.0;
+    [particles, explosionParticles, confettiParticles, skidMarks].forEach((arr, arrIdx) => {
+        const isPerformanceIntensive = arrIdx < 3; // partículas (boost, explosión y confeti)
         for (let i = arr.length - 1; i >= 0; i--) {
             const obj = arr[i];
             if (obj && typeof obj.update === 'function') {
                 obj.update();
+                // Si el nivel de detalle (LOD) es bajo, aceleramos el decaimiento de las partículas
+                if (isPerformanceIntensive && lodMultiplier < 0.95) {
+                    obj.lifespan -= (1.0 - lodMultiplier) * 2;
+                }
             }
             if (obj.lifespan <= 0) arr.splice(i, 1);
         }
     });
+
+    // Pruning reactivo: Forzar límites máximos en arrays de partículas según el LOD
+    const maxParticles = Math.round(250 * lodMultiplier);
+    if (particles.length > maxParticles) particles.splice(0, particles.length - maxParticles);
+    
+    const maxExplosions = Math.round(150 * lodMultiplier);
+    if (explosionParticles.length > maxExplosions) explosionParticles.splice(0, explosionParticles.length - maxExplosions);
+    
+    const maxConfetti = Math.round(200 * lodMultiplier);
+    if (confettiParticles.length > maxConfetti) confettiParticles.splice(0, confettiParticles.length - maxConfetti);
 
     animationFrameCounter++;
     updateAudio();

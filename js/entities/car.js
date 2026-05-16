@@ -252,10 +252,16 @@ export class Car {
     spawnParticles(amount, type, particles) {
         let angleBehind = this.angle + Math.PI;
         let spawnX = this.x + Math.sin(angleBehind) * (this.height / 2), spawnY = this.y - Math.cos(angleBehind) * (this.height / 2);
-        for (let i = 0; i < amount; i++) particles.push(new Particle(spawnX, spawnY, type));
+        
+        // Aplicar nivel de detalle (LOD) basado en los FPS globales
+        const lodAmount = Math.max(1, Math.round(amount * (window.SCAPS_LOD_LEVEL || 1.0)));
+        for (let i = 0; i < lodAmount; i++) particles.push(new Particle(spawnX, spawnY, type));
     }
 
     spawnDriftSmoke(particles) {
+        // En modo de bajo rendimiento (LOD bajo), omitir humo de derrape probabilísticamente
+        if ((window.SCAPS_LOD_LEVEL || 1.0) < 0.5 && Math.random() > 0.5) return;
+
         let angleBehind = this.angle + Math.PI;
         let rearX = this.x + Math.sin(angleBehind) * (this.height / 2.5), rearY = this.y - Math.cos(angleBehind) * (this.height / 2.5);
         let s = Math.sin(this.angle + Math.PI/2) * (this.width / 2.2), c = Math.cos(this.angle + Math.PI/2) * (this.width / 2.2);

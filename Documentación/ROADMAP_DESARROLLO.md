@@ -49,22 +49,22 @@ Este documento detalla las funcionalidades críticas, mejoras estéticas y corre
 ## 5. 🏟️ Modo Entrenamiento (Free Play)
 **Objetivo:** Permitir al jugador dominar las mecánicas de vuelo y conducción sin presión.
 
-- [ ] **Escena de Práctica:** Un entorno sin límite de tiempo ni marcador.
-- [ ] **Comandos de Entrenamiento:** Teclas rápidas para:
-    - [ ] Resetear balón al centro.
-    - [ ] "Lanzarse" el balón a uno mismo para practicar recepciones.
-    - [ ] Turbo infinito habilitado por defecto.
+- [x] **Escena de Práctica:** Un entorno sin límite de tiempo ni marcador.
+- [x] **Comandos de Entrenamiento:** Teclas rápidas para:
+    - [x] Resetear balón al centro.
+    - [x] "Lanzarse" el balón a uno mismo para practicar recepciones.
+    - [x] Turbo infinito habilitado por defecto.
 
 ---
 
 ## 6. 🔧 Optimización Técnica y Audio
 **Objetivo:** Garantizar estabilidad y calidad sonora en cualquier navegador.
 
-- [ ] **Motor de Audio Pro:** 
-    - [ ] Sincronización de *pitch* del motor del coche con la velocidad actual.
-    - [ ] Sistema de prioridades para evitar que sonidos de partículas silencien el sonido del motor.
+- [x] **Motor de Audio Pro:** 
+    - [x] Sincronización de *pitch* del motor del coche con la velocidad actual (rugido por boost y velocidad supersónica).
+    - [x] Sistema de prioridades y límites de voces para evitar saturar el canal o apagar los motores.
 - [ ] **Depuración de Colisiones:** Optimizar los límites de los mapas del editor para evitar saltos en las uniones de las mallas de colisión.
-- [ ] **LOD (Level of Detail):** Optimizar el sistema de partículas para que baje la densidad si los FPS caen.
+- [x] **LOD (Level of Detail):** Optimizar el sistema de partículas para que baje la densidad si los FPS caen.
 
 ---
 
