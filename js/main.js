@@ -1,5 +1,6 @@
 import * as CONST from './core/constants.js';
 import { getAssetPath } from './core/constants.js';
+import { assetsManager } from './core/assets.js';
 import { Car } from './entities/car.js';
 import { Ball } from './entities/ball.js';
 import { BoostPad } from './entities/boost.js';
@@ -2182,7 +2183,7 @@ function applySpawns() {
     confettiParticles = [];
 }
 
-function startIntro() {
+async function startIntro() {
     introPhase = 1;
     const slide1 = document.getElementById('intro-slide-1');
     const introScreen = document.getElementById('intro-screen');
@@ -2194,10 +2195,57 @@ function startIntro() {
         if (slide1) slide1.classList.add('active');
     }, 100);
 
-    // Tras 3 segundos, iniciamos el Fade Out de la Escena 1 y pasamos a la 2
-    setTimeout(() => {
-        if (introPhase === 1) transitionToPhase(2);
-    }, 3500);
+    // Configurar manejador de progreso en la barra de carga premium
+    assetsManager.onProgress = (loaded, total, path) => {
+        const percentage = Math.round((loaded / total) * 100);
+        const textEl = document.getElementById('intro-loading-text');
+        const fillEl = document.getElementById('intro-loading-bar-fill');
+        if (textEl) textEl.innerText = `PREPARANDO RECURSOS (${percentage}%)`;
+        if (fillEl) fillEl.style.width = `${percentage}%`;
+    };
+
+    // Crear lista de recursos a precargar
+    const coreAssets = [
+        'recursos/stadiums/estadio1.png',
+        ...Array.from({ length: 10 }, (_, i) => `recursos/cars/car${i + 1}.png`),
+        ...Array.from({ length: 12 }, (_, i) => `recursos/balls/ball_${i + 1}.png`),
+        ...Array.from({ length: 14 }, (_, i) => `recursos/avatar/avatar_${i + 1}.png`),
+        'recursos/sound/modern2.wav',
+        'recursos/sound/countdown.mp3',
+        'recursos/sound/minimalist8.wav',
+        'recursos/sound/car-explosion.mp3'
+    ];
+
+    try {
+        // Precargar todos los recursos en paralelo
+        const preloadPromises = coreAssets.map(path => {
+            if (path.endsWith('.wav') || path.endsWith('.mp3')) {
+                return assetsManager.preloadAudio(path);
+            } else {
+                return assetsManager.preloadImage(path);
+            }
+        });
+
+        // Asegurar una duración visual mínima de la pantalla del logo de 2.2 segundos para fluidez
+        const minDurationPromise = new Promise(resolve => setTimeout(resolve, 2200));
+
+        await Promise.all([...preloadPromises, minDurationPromise]);
+
+        const textEl = document.getElementById('intro-loading-text');
+        if (textEl) textEl.innerText = '¡RECURSOS COMPLETADOS!';
+        
+        // Retraso de cortesía para mostrar la barra llena
+        setTimeout(() => {
+            if (introPhase === 1) transitionToPhase(2);
+        }, 800);
+
+    } catch (e) {
+        console.warn("Error en la precarga de assets:", e);
+        // Si falla algo, continuar de todos modos para que el juego arranque
+        setTimeout(() => {
+            if (introPhase === 1) transitionToPhase(2);
+        }, 1000);
+    }
 }
 
 async function transitionToPhase(newPhase) {
