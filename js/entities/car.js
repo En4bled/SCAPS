@@ -19,6 +19,7 @@ export class Car {
         this.boost = 33; 
         this.hue = hue;
         this.saturate = saturate;
+        this.type = 'car';
         
         this.img = null;
         if (imgPath) {

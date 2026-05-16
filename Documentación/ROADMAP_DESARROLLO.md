@@ -27,22 +27,22 @@ Este documento detalla las funcionalidades críticas, mejoras estéticas y corre
 ## 3. ✨ "Game Feel" y Pulido Visual (Juice)
 **Objetivo:** Hacer que el juego se sienta "vivo", pesado y reactivo.
 
-- [ ] **Cámara Dinámica:**
-    - [ ] *Field of View (FOV) dinámico:* Aumentar el FOV ligeramente al usar turbo.
-    - [ ] *Screen Shake:* Vibración de cámara proporcional a la fuerza de los impactos o explosiones.
-- [ ] **Post-procesado (WebGL/CSS):** 
-    - [ ] Implementar un efecto de *Bloom* (resplandor) para elementos neón y partículas.
+- [x] **Cámara Dinámica:**
+    - [x] *Field of View (FOV) dinámico:* Aumentar el FOV ligeramente al usar turbo.
+    - [x] *Screen Shake:* Vibración de cámara proporcional a la fuerza de los impactos o explosiones.
+- [x] **Post-procesado (WebGL/CSS):** 
+    - [x] Implementar un efecto de *Bloom* (resplandor) para elementos neón y partículas.
     - [ ] Motion blur sutil durante el desplazamiento a alta velocidad.
-- [ ] **Impactos Físicos:** Añadir un pequeño "stop-frame" (pausa de milisegundos) en colisiones súper masivas para enfatizar la fuerza.
+- [x] **Impactos Físicos:** Añadir un pequeño "stop-frame" (pausa de milisegundos) en colisiones súper masivas para enfatizar la fuerza.
 
 ---
 
 ## 4. 💾 Persistencia y Perfil del Jugador
 **Objetivo:** Fomentar la retención del jugador mediante el guardado de progresos.
 
-- [ ] **Sistema de Perfiles:** Guardar la configuración seleccionada (Coche, Balón, Explosión, Boost) en `localStorage`.
-- [ ] **Estadísticas Globales:** Contador persistente de goles totales, partidos ganados y tiempo jugado.
-- [ ] **Sistema de Desbloqueos (Opcional):** Lógica para marcar ítems como "bloqueados" hasta cumplir ciertos requisitos (ej. ganar 5 partidos).
+- [x] **Sistema de Perfiles:** Guardar la configuración seleccionada (Coche, Balón, Explosión, Boost) en `localStorage`.
+- [x] **Estadísticas Globales:** Contador persistente de goles totales, partidos ganados y tiempo jugado.
+- [x] **Sistema de Desbloqueos (Opcional):** Lógica para marcar ítems como "bloqueados" hasta cumplir ciertos requisitos (ej. ganar 5 partidos).
 
 ---
 

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCAPS - Laboratorio de Efectos y Editor</title>
+    <style>
+        body { background-color: #05050a; color: #fff; font-family: 'Consolas', monospace; margin: 0; padding: 20px; overflow-x: hidden; }
+        h1 { text-align: center; color: #5ad; text-shadow: 0 0 10px #5ad; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        p.subtitle { text-align: center; color: #888; margin-top: 0; margin-bottom: 20px; font-size: 14px; }
+        
+        .controls-container { text-align: center; background: #0a0a14; padding: 15px; border-radius: 5px; border: 1px solid #5ad; margin: 0 auto 20px auto; max-width: 800px; box-shadow: 0 0 15px rgba(90, 173, 237, 0.1); }
+        .speed-control { margin-bottom: 15px; border-bottom: 1px solid #223; padding-bottom: 15px; }
+        .speed-control label { font-size: 16px; color: #5ad; font-weight: bold; }
+        .speed-control input[type=range] { width: 60%; margin-top: 10px; accent-color: #f90; cursor: pointer; }
+        
+        .tabs { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .tab-btn { background: #112; color: #88a; border: 1px solid #334; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s; font-family: 'Consolas', monospace; }
+        .tab-btn:hover { background: #224; color: #fff; }
+        .tab-btn.active { background: #5ad; color: #000; border-color: #fff; box-shadow: 0 0 10px #5ad; }
+        
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-width: 100%; margin: 0 auto; }
+        .effect-cell { background: #0a0a14; border: 1px solid #223; border-radius: 4px; position: relative; aspect-ratio: 1 / 1; overflow: hidden; transition: all 0.2s; cursor: pointer; }
+        .effect-cell:hover { border-color: #f90; box-shadow: 0 0 15px rgba(255, 153, 0, 0.4); transform: scale(1.15); z-index: 10; border-radius: 8px; }
+        .effect-cell canvas { display: block; width: 100%; height: 100%; }
+        .effect-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.85); color: #aaa; font-size: 9px; text-align: center; padding: 4px 0; pointer-events: none; border-top: 1px solid #223; font-weight: bold; }
+        
+        /* Modal del Editor */
+        #editorModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #0a0a14; border: 1px solid #5ad; border-radius: 8px; display: flex; width: 80%; max-width: 900px; height: 500px; box-shadow: 0 0 30px rgba(90, 173, 237, 0.3); }
+        .modal-left { flex: 1; border-right: 1px solid #334; position: relative; background: #000; border-radius: 8px 0 0 8px; }
+        .modal-left canvas { width: 100%; height: 100%; border-radius: 8px 0 0 8px; }
+        .modal-right { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .modal-right h2 { margin: 0 0 10px 0; color: #f90; }
+        
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { color: #88a; font-size: 12px; font-weight: bold; }
+        .form-group select, .form-group input { background: #112; color: #fff; border: 1px solid #334; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; }
+        .form-group input[type="range"] { accent-color: #5ad; }
+        
+        .btn-row { display: flex; gap: 10px; margin-top: auto; }
+        .btn { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; font-family: 'Consolas', monospace; transition: 0.2s; }
+        .btn-primary { background: #f90; color: #000; }
+        .btn-primary:hover { background: #ffaa33; box-shadow: 0 0 10px #f90; }
+        .btn-secondary { background: #334; color: #fff; }
+        .btn-secondary:hover { background: #445; }
+        
+        #codeOutput { display: none; margin-top: 10px; background: #000; border: 1px solid #5ad; padding: 10px; border-radius: 4px; color: #5ad; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+    <h1>Laboratorio de Efectos y Editor</h1>
+    <p class="subtitle">Haz click en cualquier efecto para editarlo y extraer su código</p>
+
+    <div class="controls-container">
+        <div class="speed-control">
+            <label for="speedSlider">⚡ VELOCIDAD GLOBAL: <span id="speedValue">1.0</span>x ⚡</label><br>
+            <input type="range" id="speedSlider" min="0.0" max="4.0" step="0.1" value="1.0">
+        </div>
+        <div class="tabs" id="tabsContainer"></div>
+    </div>
+
+    <div class="grid-container" id="grid"></div>
+
+    <!-- Modal de Edición -->
+    <div id="editorModal">
+        <div class="modal-content">
+            <div class="modal-left">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+            <div class="modal-right">
+                <h2>Editando: <span id="editName">Efecto</span></h2>
+                
+                <div class="form-group">
+                    <label>COMPORTAMIENTO FÍSICO</label>
+                    <select id="editBehavior"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label>PALETA DE COLORES</label>
+                    <select id="editPalette"></select>
+                </div>
+                
+                <div class="form-group">
+                    <label>MODO DE FUSIÓN (Blend Mode)</label>
+                    <select id="editBlendMode">
+                        <option value="source-over">Normal (Source-Over)</option>
+                        <option value="lighter">Lighter (Aditivo Brillo)</option>
+                        <option value="screen">Screen (Pantalla)</option>
+                        <option value="add">Add</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>NÚCLEO CENTRAL</label>
+                    <select id="editCenterShape">
+                        <option value="none">Ninguno</option>
+                        <option value="solid">Sólido</option>
+                        <option value="glow">Glow (Difuminado)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>TAMAÑO DEL NÚCLEO: <span id="valCenterSize">40</span></label>
+                    <input type="range" id="editCenterSize" min="0" max="200" step="5" value="40">
+                </div>
+
+                <div class="form-group">
+                    <label>CANTIDAD DE PARTÍCULAS: <span id="valParticles">50</span></label>
+                    <input type="range" id="editParticles" min="10" max="200" step="5" value="50">
+                </div>
+
+                <div class="form-group">
+                    <label>RASTRO (Trail Opacity): <span id="valTrail">0.8</span></label>
+                    <input type="range" id="editTrail" min="0.0" max="1.0" step="0.05" value="0.8">
+                </div>
+
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="editBloom" style="width: 20px; height: 20px;">
+                    <label>Activar Bloom (Brillo en partículas)</label>
+                </div>
+
+                <div id="codeOutput"></div>
+
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="closeBtn">Cerrar</button>
+                    <button class="btn btn-primary" id="copyBtn">Copiar Código JS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let globalSpeed = 1.0;
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            globalSpeed = parseFloat(e.target.value);
+            document.getElementById('speedValue').innerText = globalSpeed.toFixed(1);
+        });
+
+        const TOTAL_EFFECTS = 300;
+        const EFFECTS_PER_PAGE = 50;
+        const NUM_PAGES = Math.ceil(TOTAL_EFFECTS / EFFECTS_PER_PAGE);
+        const CELL_SIZE = 130;
+        const PREVIEW_SIZE = 400;
+        
+        let currentPage = 0;
+        let isEditing = false;
+        let previewSystem = null;
+
+        const PALETTES = [
+            { name: 'FIRE', colors: ['#ff3300', '#ff9900', '#ffff00', '#550000'] },
+            { name: 'ELECTRIC', colors: ['#00aaff', '#00ffff', '#ffffff', '#002255'] },
+            { name: 'PLASMA', colors: ['#ff00ff', '#aa00ff', '#ffffff', '#330055'] },
+            { name: 'ACID', colors: ['#00ff00', '#aaff00', '#ffffff', '#003300'] },
+            { name: 'SMOKE', colors: ['#aaaaaa', '#666666', '#333333', '#111111'] },
+            { name: 'COSMIC', colors: ['#ff3366', '#33ccff', '#ffff66', '#ffffff'] },
+            { name: 'GOLD', colors: ['#ffcc00', '#ffaa00', '#ffee88', '#442200'] },
+            { name: 'BLOOD', colors: ['#ff0000', '#990000', '#440000', '#110000'] },
+            { name: 'ICE', colors: ['#ccffff', '#99ccff', '#ffffff', '#0055aa'] },
+            { name: 'MATRIX', colors: ['#00ff44', '#00aa22', '#ffffff', '#003311'] },
+            { name: 'CYBERPUNK', colors: ['#ff0055', '#00ffcc', '#ffff00', '#110022'] },
+            { name: 'VOID', colors: ['#220044', '#440088', '#000000', '#111111'] },
+            { name: 'SUN', colors: ['#ffffff', '#ffeeaa', '#ffcc00', '#ff5500'] },
+            { name: 'TOXIC', colors: ['#88ff00', '#aa00ff', '#000000', '#44ff00'] },
+            { name: 'NEON', colors: ['#ff00ff', '#00ffff', '#ff00ff', '#000022'] }
+        ];
+
+        const BEHAVIORS = [
+            'EXPLOSION', 'FOUNTAIN', 'VORTEX', 'ORBIT', 'IMPLOSION', 
+            'RAIN', 'PULSE', 'SWIRL', 'CHAOS', 'LASER',
+            'BOUNCE', 'FIREWORK', 'SPIRAL_OUT', 'SPIRAL_IN', 'WAVES',
+            'GLITCH', 'DNA', 'BLACK_HOLE', 'SHOCKWAVE', 'SPARKLE'
+        ];
+
+        const rand = (min, max) => Math.random() * (max - min) + min;
+
+        class Particle {
+            constructor(x, y, palette, behavior, configId, config) {
+                this.ox = x; this.oy = y;
+                this.x = x; this.y = y;
+                this.behavior = behavior;
+                this.color = palette.colors[Math.floor(Math.random() * palette.colors.length)];
+                this.life = 1.0;
+                this.decay = rand(0.01, 0.04);
+                this.size = rand(1, configId % 3 === 0 ? 5 : 3);
+                this.vx = 0; this.vy = 0;
+                this.angle = rand(0, Math.PI * 2);
+                this.speed = rand(1, 6);
+                this.configId = configId;
+                this.config = config; // Referencia a la conf global del sistema
+                this.init();
+            }
+
+            init() {
+                switch(this.behavior) {
+                    case 'EXPLOSION': case 'SHOCKWAVE':
+                        this.vx = Math.cos(this.angle) * this.speed * 2;
+                        this.vy = Math.sin(this.angle) * this.speed * 2;
+                        this.decay = rand(0.02, 0.08);
+                        if(this.behavior === 'SHOCKWAVE') { this.size = 1; this.speed *= 2; }
+                        break;
+                    case 'FOUNTAIN':
+                        this.vx = rand(-1.5, 1.5); this.vy = rand(-7, -3);
+                        break;
+                    case 'BOUNCE':
+                        this.vx = rand(-4, 4); this.vy = rand(-4, 4);
+                        break;
+                    case 'VORTEX': case 'ORBIT': case 'SPIRAL_IN': case 'SPIRAL_OUT':
+                        this.dist = (this.behavior === 'SPIRAL_IN') ? 80 : rand(5, 60);
+                        this.angularSpeed = rand(0.05, 0.15) * (Math.random() > 0.5 ? 1 : -1);
+                        break;
+                    case 'IMPLOSION': case 'BLACK_HOLE':
+                        this.dist = 70;
+                        this.x = this.ox + Math.cos(this.angle) * this.dist;
+                        this.y = this.oy + Math.sin(this.angle) * this.dist;
+                        this.vx = -Math.cos(this.angle) * this.speed;
+                        this.vy = -Math.sin(this.angle) * this.speed;
+                        if(this.behavior === 'BLACK_HOLE') { this.decay = 0.01; this.speed = 0; }
+                        break;
+                    case 'RAIN':
+                        this.x = rand(0, this.ox*2); this.y = rand(-20, 0);
+                        this.vx = rand(-0.2, 0.2); this.vy = rand(4, 8);
+                        break;
+                    case 'FIREWORK':
+                        this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+                        this.vy -= 3;
+                        break;
+                    case 'PULSE':
+                        this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+                        this.life = 0; this.decay = -rand(0.02, 0.06); 
+                        break;
+                    case 'WAVES':
+                        this.x = 0; this.y = this.oy + rand(-30, 30);
+                        this.vx = rand(2, 4); this.vy = 0; this.startY = this.y;
+                        break;
+                    case 'SWIRL': case 'DNA':
+                        this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+                        this.offsetAngle = rand(0, Math.PI*2);
+                        break;
+                    case 'CHAOS':
+                        this.vx = rand(-3, 3); this.vy = rand(-3, 3);
+                        break;
+                    case 'LASER':
+                        this.angle = Math.floor(rand(0, 8)) * (Math.PI/4); 
+                        this.vx = Math.cos(this.angle) * 12; this.vy = Math.sin(this.angle) * 12;
+                        this.size = rand(1, 2); this.decay = rand(0.05, 0.1);
+                        break;
+                    case 'GLITCH':
+                        this.x = rand(0, this.ox*2); this.y = rand(0, this.oy*2);
+                        break;
+                    case 'SPARKLE':
+                        this.x = rand(0, this.ox*2); this.y = rand(0, this.oy*2);
+                        this.life = rand(0, 1);
+                        this.decay = rand(0.02, 0.1) * (Math.random() > 0.5 ? 1 : -1);
+                        break;
+                }
+                if (this.configId % 3 === 0) this.size *= 1.5;
+                if (this.configId % 7 === 0) this.color = '#ffffff';
+            }
+
+            update(time, limitSize) {
+                const spd = globalSpeed; 
+                if (spd === 0) return;
+
+                switch(this.behavior) {
+                    case 'EXPLOSION': case 'SHOCKWAVE':
+                        this.vx *= Math.pow(0.92, spd); this.vy *= Math.pow(0.92, spd);
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        if(this.behavior === 'SHOCKWAVE') this.size += 0.5 * spd;
+                        break;
+                    case 'FOUNTAIN':
+                        this.vy += 0.3 * spd; this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'BOUNCE':
+                        this.vy += 0.1 * spd; this.x += this.vx * spd; this.y += this.vy * spd;
+                        if(this.x <= 0 || this.x >= limitSize) this.vx *= -1;
+                        if(this.y >= limitSize) { this.y = limitSize; this.vy *= -0.8; }
+                        break;
+                    case 'VORTEX':
+                        this.dist -= 1 * spd; this.angle += this.angularSpeed * spd;
+                        this.x = this.ox + Math.cos(this.angle) * this.dist; this.y = this.oy + Math.sin(this.angle) * this.dist;
+                        break;
+                    case 'SPIRAL_IN':
+                        this.dist -= 2 * spd; this.angle += this.angularSpeed * spd;
+                        this.x = this.ox + Math.cos(this.angle) * this.dist; this.y = this.oy + Math.sin(this.angle) * this.dist;
+                        break;
+                    case 'SPIRAL_OUT':
+                        this.dist += 2 * spd; this.angle += this.angularSpeed * spd;
+                        this.x = this.ox + Math.cos(this.angle) * this.dist; this.y = this.oy + Math.sin(this.angle) * this.dist;
+                        break;
+                    case 'ORBIT':
+                        this.angle += this.angularSpeed * spd;
+                        this.x = this.ox + Math.cos(this.angle) * this.dist; this.y = this.oy + Math.sin(this.angle) * this.dist;
+                        break;
+                    case 'IMPLOSION':
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'BLACK_HOLE':
+                        const dx = this.ox - this.x; const dy = this.oy - this.y;
+                        this.vx += (dx * 0.01) * spd; this.vy += (dy * 0.01) * spd;
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'RAIN':
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        if (this.y > limitSize) this.life = 0;
+                        break;
+                    case 'FIREWORK':
+                        this.vy += 0.1 * spd; this.x += this.vx * spd; this.y += this.vy * spd;
+                        this.vx *= Math.pow(0.96, spd); 
+                        break;
+                    case 'PULSE':
+                        if (this.life > 1) { this.life = 1; this.decay = rand(0.02, 0.05); } 
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'WAVES':
+                        this.x += this.vx * spd;
+                        this.y = this.startY + Math.sin(this.x * 0.05) * 20;
+                        break;
+                    case 'SWIRL':
+                        this.angle += Math.sin(time*spd + this.x * 0.01) * 0.2;
+                        this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'DNA':
+                        this.y += 2 * spd;
+                        this.x = this.ox + Math.sin(this.y * 0.05 + this.offsetAngle) * 30;
+                        break;
+                    case 'CHAOS':
+                        this.vx += rand(-1, 1); this.vy += rand(-1, 1);
+                        this.vx *= Math.pow(0.95, spd); this.vy *= Math.pow(0.95, spd);
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'LASER':
+                        this.x += this.vx * spd; this.y += this.vy * spd;
+                        break;
+                    case 'GLITCH':
+                        if(Math.random() < 0.1 * spd) { this.x += rand(-10,10); this.y += rand(-10,10); }
+                        break;
+                    case 'SPARKLE':
+                        if(this.life > 1) this.decay = Math.abs(this.decay);
+                        if(this.life < 0) this.decay = -Math.abs(this.decay);
+                        break;
+                }
+
+                if(this.behavior !== 'SPARKLE') {
+                    this.life -= this.decay * spd;
+                } else {
+                    this.life -= this.decay * spd;
+                    if(this.life > 1.2) this.life = 1.2;
+                }
+            }
+
+            draw(ctx) {
+                if (this.life <= 0 || this.life > 1) return;
+                ctx.globalAlpha = Math.max(0, Math.min(1, this.life));
+                ctx.fillStyle = this.color;
+                
+                ctx.beginPath();
+                if (this.configId % 4 === 0) {
+                    ctx.rect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                } else if (this.configId % 9 === 0) {
+                    ctx.moveTo(this.x, this.y); ctx.lineTo(this.x - this.vx*1.5, this.y - this.vy*1.5);
+                    ctx.strokeStyle = this.color; ctx.lineWidth = this.size; ctx.stroke(); return;
+                } else if (this.configId % 11 === 0) {
+                    ctx.fillRect(this.x-this.size, this.y-this.size/4, this.size*2, this.size/2);
+                    ctx.fillRect(this.x-this.size/4, this.y-this.size, this.size/2, this.size*2);
+                    return;
+                } else {
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                }
+                ctx.fill();
+                
+                if (this.config.bloom && this.life > 0.4) {
+                    ctx.shadowBlur = this.size * 3;
+                    ctx.shadowColor = this.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        class EffectSystem {
+            constructor(id, customConfig = null) {
+                this.id = id;
+                if (customConfig) {
+                    this.config = customConfig;
+                } else {
+                    // Generación procedural
+                    this.config = {
+                        paletteName: PALETTES[id % PALETTES.length].name,
+                        behavior: BEHAVIORS[Math.floor(id / PALETTES.length) % BEHAVIORS.length],
+                        maxParticles: 20 + (id % 30),
+                        blendMode: ['source-over', 'lighter', 'screen', 'add'][id % 4],
+                        bloom: (id % 5 === 0),
+                        centerShape: (id % 4 === 0) ? 'glow' : 'none',
+                        centerSize: 40,
+                        trailAlpha: (id % 6 === 0) ? 0.2 : ((id % 3 === 0) ? 0.4 : 0.85)
+                    };
+                }
+                this.applyConfig();
+            }
+
+            applyConfig() {
+                this.palette = PALETTES.find(p => p.name === this.config.paletteName) || PALETTES[0];
+                this.behavior = this.config.behavior;
+                this.particles = [];
+                this.name = `#${this.id}: ${this.palette.name} / ${this.behavior}`;
+            }
+
+            update(time, limitSize = CELL_SIZE) {
+                this.centerX = limitSize / 2;
+                this.centerY = limitSize / 2;
+
+                const isBurst = ['EXPLOSION', 'PULSE', 'SHOCKWAVE', 'FIREWORK'].includes(this.behavior);
+                if (isBurst) {
+                    if (Math.random() < 0.015 * globalSpeed || this.particles.length === 0) {
+                        for(let i=0; i<this.config.maxParticles/1.5; i++) {
+                            this.particles.push(new Particle(this.centerX, this.centerY, this.palette, this.behavior, this.id, this.config));
+                        }
+                    }
+                } else {
+                    if (this.particles.length < this.config.maxParticles && Math.random() < 0.4 * globalSpeed) {
+                        this.particles.push(new Particle(this.centerX, this.centerY, this.palette, this.behavior, this.id, this.config));
+                    }
+                }
+
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.update(time, limitSize);
+                    if ((p.life <= 0 && p.decay > 0) || p.x < -100 || p.x > limitSize+100 || p.y < -100 || p.y > limitSize+100) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            draw(ctx, limitSize = CELL_SIZE) {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = this.config.trailAlpha;
+                ctx.fillStyle = '#05050a';
+                ctx.fillRect(0, 0, limitSize, limitSize);
+                
+                ctx.globalCompositeOperation = this.config.blendMode === 'add' ? 'lighter' : this.config.blendMode;
+                
+                
+                const sizeScale = limitSize / CELL_SIZE; // Factor para adaptar al tamaño del canvas (grid vs preview)
+
+                if (this.config.centerShape === 'glow') {
+                    const glowBase = (this.config.centerSize || 40) * sizeScale;
+                    const glowRad = Math.max(1, glowBase + Math.sin(Date.now()*0.005 + this.id)*5);
+                    const grad = ctx.createRadialGradient(this.centerX, this.centerY, 0, this.centerX, this.centerY, glowRad);
+                    grad.addColorStop(0, this.palette.colors[0].replace('rgb', 'rgba') + '22'); 
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, limitSize, limitSize);
+                } else if (this.config.centerShape === 'solid') {
+                    ctx.fillStyle = this.palette.colors[0];
+                    ctx.beginPath(); 
+                    const solidRad = Math.max(1, (this.config.centerSize || 40) * 0.3 * sizeScale);
+                    ctx.arc(this.centerX, this.centerY, solidRad, 0, Math.PI*2); 
+                    ctx.fill();
+                }
+
+                for (let i = 0; i < this.particles.length; i++) {
+                    this.particles[i].draw(ctx);
+                }
+            }
+        }
+
+        // --- INICIALIZACIÓN ---
+        const logicalSystems = [];
+        for (let i = 0; i < TOTAL_EFFECTS; i++) {
+            logicalSystems.push(new EffectSystem(i));
+        }
+
+        const physicalNodes = [];
+        const fragment = document.createDocumentFragment();
+        
+        for (let i = 0; i < EFFECTS_PER_PAGE; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'effect-cell';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = CELL_SIZE; canvas.height = CELL_SIZE;
+            cell.appendChild(canvas);
+            
+            const label = document.createElement('div');
+            label.className = 'effect-label';
+            cell.appendChild(label);
+            
+            fragment.appendChild(cell);
+            
+            const ctx = canvas.getContext('2d', { alpha: false });
+            physicalNodes.push({ cell, canvas, ctx, label });
+            
+            // Evento Click para abrir el Editor
+            cell.onclick = () => openEditor(currentPage * EFFECTS_PER_PAGE + i);
+        }
+        grid.appendChild(fragment);
+
+        const tabsContainer = document.getElementById('tabsContainer');
+        for (let p = 0; p < NUM_PAGES; p++) {
+            const btn = document.createElement('button');
+            btn.className = `tab-btn ${p === 0 ? 'active' : ''}`;
+            btn.innerText = `Pág ${p + 1}`;
+            btn.onclick = () => changePage(p);
+            tabsContainer.appendChild(btn);
+        }
+
+        function changePage(pageIndex) {
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                btn.className = `tab-btn ${idx === pageIndex ? 'active' : ''}`;
+            });
+            currentPage = pageIndex;
+            const startIndex = currentPage * EFFECTS_PER_PAGE;
+            
+            for (let i = 0; i < EFFECTS_PER_PAGE; i++) {
+                const globalIndex = startIndex + i;
+                const node = physicalNodes[i];
+                if (globalIndex < TOTAL_EFFECTS) {
+                    node.cell.style.display = 'block';
+                    node.label.innerText = logicalSystems[globalIndex].name;
+                    logicalSystems[globalIndex].particles = [];
+                } else {
+                    node.cell.style.display = 'none';
+                }
+            }
+        }
+        changePage(0);
+
+        // --- LÓGICA DEL EDITOR ---
+        const modal = document.getElementById('editorModal');
+        const previewCanvas = document.getElementById('previewCanvas');
+        previewCanvas.width = PREVIEW_SIZE; previewCanvas.height = PREVIEW_SIZE;
+        const previewCtx = previewCanvas.getContext('2d', { alpha: false });
+        
+        // Rellenar Dropdowns
+        const bSelect = document.getElementById('editBehavior');
+        BEHAVIORS.forEach(b => { const opt = document.createElement('option'); opt.value = b; opt.innerText = b; bSelect.appendChild(opt); });
+        
+        const pSelect = document.getElementById('editPalette');
+        PALETTES.forEach(p => { const opt = document.createElement('option'); opt.value = p.name; opt.innerText = p.name; pSelect.appendChild(opt); });
+
+        function openEditor(sysIndex) {
+            isEditing = true;
+            modal.style.display = 'flex';
+            const sys = logicalSystems[sysIndex];
+            
+            // Clonamos el sistema para la previsualización a gran escala
+            previewSystem = new EffectSystem(sys.id, JSON.parse(JSON.stringify(sys.config)));
+            
+            document.getElementById('editName').innerText = sys.name;
+            document.getElementById('editBehavior').value = previewSystem.config.behavior;
+            document.getElementById('editPalette').value = previewSystem.config.paletteName;
+            document.getElementById('editBlendMode').value = previewSystem.config.blendMode;
+            document.getElementById('editCenterShape').value = previewSystem.config.centerShape;
+            
+            const currentSize = previewSystem.config.centerSize || 40;
+            document.getElementById('editCenterSize').value = currentSize;
+            document.getElementById('valCenterSize').innerText = currentSize;
+            
+            document.getElementById('editParticles').value = previewSystem.config.maxParticles;
+            document.getElementById('valParticles').innerText = previewSystem.config.maxParticles;
+            document.getElementById('editTrail').value = previewSystem.config.trailAlpha;
+            document.getElementById('valTrail').innerText = previewSystem.config.trailAlpha;
+            document.getElementById('editBloom').checked = previewSystem.config.bloom;
+            document.getElementById('codeOutput').style.display = 'none';
+        }
+
+        // Listeners del Editor
+        document.getElementById('closeBtn').onclick = () => { isEditing = false; modal.style.display = 'none'; };
+        
+        document.getElementById('editParticles').oninput = (e) => {
+            document.getElementById('valParticles').innerText = e.target.value;
+            previewSystem.config.maxParticles = parseInt(e.target.value);
+        };
+        document.getElementById('editTrail').oninput = (e) => {
+            document.getElementById('valTrail').innerText = e.target.value;
+            previewSystem.config.trailAlpha = parseFloat(e.target.value);
+        };
+        document.getElementById('editCenterSize').oninput = (e) => {
+            document.getElementById('valCenterSize').innerText = e.target.value;
+            previewSystem.config.centerSize = parseInt(e.target.value);
+        };
+        
+        const updateConfig = () => {
+            previewSystem.config.behavior = document.getElementById('editBehavior').value;
+            previewSystem.config.paletteName = document.getElementById('editPalette').value;
+            previewSystem.config.blendMode = document.getElementById('editBlendMode').value;
+            previewSystem.config.centerShape = document.getElementById('editCenterShape').value;
+            previewSystem.config.bloom = document.getElementById('editBloom').checked;
+            previewSystem.applyConfig(); // Re-aplicar cambios
+        };
+
+        document.getElementById('editBehavior').onchange = updateConfig;
+        document.getElementById('editPalette').onchange = updateConfig;
+        document.getElementById('editBlendMode').onchange = updateConfig;
+        document.getElementById('editCenterShape').onchange = updateConfig;
+        document.getElementById('editBloom').onchange = updateConfig;
+
+        // Copiar Código
+        document.getElementById('copyBtn').onclick = () => {
+            const codeObj = {
+                id: previewSystem.id,
+                config: previewSystem.config
+            };
+            const codeStr = JSON.stringify(codeObj, null, 2);
+            const out = document.getElementById('codeOutput');
+            out.style.display = 'block';
+            out.innerText = codeStr;
+            navigator.clipboard.writeText(codeStr).then(() => {
+                alert("Código de configuración copiado al portapapeles.");
+            });
+        };
+
+        // --- BUCLE PRINCIPAL ---
+        function animate() {
+            const time = Date.now() / 1000;
+            
+            // Actualizar grid de fondo (opcional: podrías pausarlo si isEditing es true)
+            const startIndex = currentPage * EFFECTS_PER_PAGE;
+            for (let i = 0; i < EFFECTS_PER_PAGE; i++) {
+                const globalIndex = startIndex + i;
+                if (globalIndex < TOTAL_EFFECTS) {
+                    logicalSystems[globalIndex].update(time, CELL_SIZE);
+                    logicalSystems[globalIndex].draw(physicalNodes[i].ctx, CELL_SIZE);
+                }
+            }
+
+            // Actualizar canvas del editor
+            if (isEditing && previewSystem) {
+                previewSystem.update(time, PREVIEW_SIZE);
+                previewSystem.draw(previewCtx, PREVIEW_SIZE);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

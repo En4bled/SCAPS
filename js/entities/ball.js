@@ -10,6 +10,7 @@ export class Ball {
         this.vx = 0; this.vy = 0; this.vz = 0;
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
         this.rotationAngle = 0; this.isFireball = false; this.fireballTimer = 0; 
+        this.type = 'ball';
         this.img = null;
         if (imgPath) {
             this.setAppearance(imgPath);

@@ -13,6 +13,7 @@ import { initPhysicsEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
 import { ReplaySystem } from './core/replay.js';
+import { drawDynamicShadows, drawAmbientLighting, updateLights, drawWallShadows } from './ui/lighting.js';
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
@@ -39,7 +40,16 @@ const USER_CONFIG = {
     bannerAngle: 90,
     bannerPattern: 'none',
     bannerBorderStyle: 'simple',
-    bloomEnabled: true
+    bloomEnabled: true,
+    stats: {
+        totalGoals: 0,
+        matchesWon: 0,
+        matchesLost: 0,
+        totalMatches: 0,
+        playTime: 0, // Segundos
+        xp: 0,
+        level: 1
+    }
 };
 
 // Exportar para acceso desde UI tras inicialización
@@ -50,10 +60,31 @@ function saveUserConfig() {
     localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
 }
 
+// Función global para cerrar el menú de personalización y guardar cambios
+window.closeCustomization = () => {
+    console.log("SCAPS: Guardando y cerrando personalización...");
+    const inputName = document.getElementById('input-player-name');
+    if (inputName) {
+        USER_CONFIG.playerName = inputName.value;
+    }
+    saveUserConfig();
+    if (typeof showMenuScreen === 'function') {
+        showMenuScreen('initial');
+    }
+    playSound('menu_click');
+};
+
 function loadUserConfig() {
     const saved = localStorage.getItem('SCAPS_USER_CONFIG');
     if (saved) {
-        try { Object.assign(USER_CONFIG, JSON.parse(saved)); } catch (e) { }
+        try { 
+            const parsed = JSON.parse(saved);
+            Object.assign(USER_CONFIG, parsed); 
+            // Asegurar que stats existe (merge profundo simple para stats)
+            if (parsed.stats) {
+                USER_CONFIG.stats = { ...USER_CONFIG.stats, ...parsed.stats };
+            }
+        } catch (e) { console.error("Error cargando configuración:", e); }
     }
     setMusicVolume(USER_CONFIG.musicVolume / 100);
     setSFXVolume(USER_CONFIG.sfxVolume / 100);
@@ -163,15 +194,22 @@ function updatePlayerBanner() {
     const infoBox = banner.querySelector('.player-banner-info');
 
     // Sincronizar Avatar y Textos
+    const applyTextEffect = (el) => {
+        if (!el) return;
+        el.style.color = USER_CONFIG.bannerTextColor;
+        el.style.setProperty('text-shadow', '1px 1px 2px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000', 'important');
+        el.style.fontWeight = 'bold';
+    };
+
     if (avatarImg) avatarImg.src = USER_CONFIG.playerAvatar;
     if (avatarFrame) avatarFrame.style.background = USER_CONFIG.playerAvatarBg;
     if (nameSpan) {
         nameSpan.innerText = USER_CONFIG.playerName;
-        nameSpan.style.color = USER_CONFIG.bannerTextColor;
+        applyTextEffect(nameSpan);
     }
     if (titleSpan) {
         titleSpan.innerText = USER_CONFIG.playerTitle || '';
-        titleSpan.style.color = USER_CONFIG.bannerTextColor;
+        applyTextEffect(titleSpan);
     }
 
     // Vista previa dentro del menú de personalización
@@ -186,58 +224,76 @@ function updatePlayerBanner() {
     if (previewFrame) previewFrame.style.background = USER_CONFIG.playerAvatarBg;
     if (previewName) {
         previewName.innerText = USER_CONFIG.playerName;
-        previewName.style.color = USER_CONFIG.bannerTextColor;
+        applyTextEffect(previewName);
     }
     if (previewTitle) {
         previewTitle.innerText = USER_CONFIG.playerTitle || '';
-        previewTitle.style.color = USER_CONFIG.bannerTextColor;
+        applyTextEffect(previewTitle);
     }
 
     // APLICAR ESTILO DINÁMICO
     const applyStyle = (el) => {
         if (!el) return;
 
-        // Fondo
+        // Reset previo
+        el.style.backgroundSize = 'auto';
+        el.style.backgroundRepeat = 'repeat';
+
+        // Fondo (Relleno) Simplificado
+        let fillCSS = '';
         if (USER_CONFIG.bannerType === 'gradient') {
-            el.style.background = `linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})`;
+            fillCSS = `linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})`;
+        } else if (USER_CONFIG.bannerType === 'radial') {
+            fillCSS = `radial-gradient(circle at center, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})`;
         } else {
-            el.style.background = USER_CONFIG.bannerBgColor1;
+            fillCSS = `linear-gradient(0deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor1})`;
         }
 
-        // Patrón (Superpuesto al fondo)
+        // Patrón (Superpuesto al fondo) Minimalista
         let patternCSS = '';
-        if (USER_CONFIG.bannerPattern === 'carbon') {
-            patternCSS = `radial-gradient(${USER_CONFIG.bannerBgColor1} 1px, transparent 1px)`;
-            el.style.backgroundSize = '4px 4px, 100% 100%';
+        let patternSize = 'auto';
+
+        if (USER_CONFIG.bannerPattern === 'grid') {
+            patternCSS = `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`;
+            patternSize = '20px 20px';
+        } else if (USER_CONFIG.bannerPattern === 'diagonal') {
+            patternCSS = `linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 75%, transparent 75%, transparent)`;
+            patternSize = '10px 10px';
         } else if (USER_CONFIG.bannerPattern === 'dots') {
             patternCSS = `radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)`;
-            el.style.backgroundSize = '10px 10px, 100% 100%';
-        } else if (USER_CONFIG.bannerPattern === 'tech') {
-            patternCSS = `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`;
-            el.style.backgroundSize = '20px 20px, 20px 20px, 100% 100%';
+            patternSize = '15px 15px';
+        } else if (USER_CONFIG.bannerPattern === 'cross') {
+            patternCSS = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v16H7zM0 7h16v2H0z' fill='white' fill-opacity='0.05'/%3E%3C/svg%3E")`;
+            patternSize = '16px 16px';
+        } else if (USER_CONFIG.bannerPattern === 'chevron') {
+            patternCSS = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Cpath d='M0 0 L20 10 L40 0' fill='none' stroke='white' stroke-opacity='0.05' stroke-width='2'/%3E%3C/svg%3E")`;
+            patternSize = '40px 20px';
         }
 
+        // Aplicar con prioridad
         if (patternCSS) {
-            el.style.backgroundImage = patternCSS + (USER_CONFIG.bannerType === 'gradient' ?
-                `, linear-gradient(${USER_CONFIG.bannerAngle}deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor2})` :
-                `, linear-gradient(0deg, ${USER_CONFIG.bannerBgColor1}, ${USER_CONFIG.bannerBgColor1})`);
+            el.style.setProperty('background-image', `${patternCSS}, ${fillCSS}`, 'important');
+            el.style.setProperty('background-size', `${patternSize}, auto`, 'important');
         } else {
-            el.style.backgroundImage = 'none';
+            el.style.setProperty('background-image', fillCSS, 'important');
+            el.style.setProperty('background-size', '100% 100%', 'important');
         }
+        
+        el.style.setProperty('background-color', USER_CONFIG.bannerBgColor1, 'important');
 
         // Borde
-        el.style.borderColor = USER_CONFIG.bannerBorderColor;
+        el.style.setProperty('border-color', USER_CONFIG.bannerBorderColor, 'important');
 
         // Estilo de Borde
         if (USER_CONFIG.bannerBorderStyle === 'neon') {
-            el.style.boxShadow = `0 0 15px ${USER_CONFIG.bannerBorderColor}66`;
-            el.style.borderWidth = '1px';
+            el.style.setProperty('box-shadow', `0 0 15px ${USER_CONFIG.bannerBorderColor}66`, 'important');
+            el.style.setProperty('border-width', '1px', 'important');
         } else if (USER_CONFIG.bannerBorderStyle === 'double') {
-            el.style.boxShadow = `inset 0 0 0 2px rgba(0,0,0,0.3)`;
-            el.style.borderWidth = '4px';
+            el.style.setProperty('box-shadow', `inset 0 0 0 2px rgba(0,0,0,0.3)`, 'important');
+            el.style.setProperty('border-width', '4px', 'important');
         } else {
-            el.style.boxShadow = 'none';
-            el.style.borderWidth = '1px';
+            el.style.setProperty('box-shadow', 'none', 'important');
+            el.style.setProperty('border-width', '1px', 'important');
         }
     };
 
@@ -248,6 +304,38 @@ function updatePlayerBanner() {
     const isMainInitial = (menuInitial && menuInitial.style.display !== 'none');
     banner.style.display = (gameState === 'menu' && isMainInitial) ? 'flex' : 'none';
     banner.style.opacity = (gameState === 'menu' && isMainInitial) ? '1' : '0';
+
+    updateStatsUI();
+}
+
+export function updateStatsUI() {
+    const getEl = (id) => document.getElementById(id);
+    if (!getEl('stat-total-goals')) return;
+
+    getEl('stat-total-goals').innerText = USER_CONFIG.stats.totalGoals;
+    getEl('stat-matches-won').innerText = USER_CONFIG.stats.matchesWon;
+    getEl('stat-matches-lost').innerText = USER_CONFIG.stats.matchesLost;
+    getEl('stat-total-matches').innerText = USER_CONFIG.stats.totalMatches;
+    
+    const minutes = Math.floor(USER_CONFIG.stats.playTime / 60);
+    getEl('stat-play-time').innerText = minutes + 'm';
+
+    // Nivel y XP
+    const level = USER_CONFIG.stats.level || 1;
+    const xp = USER_CONFIG.stats.xp || 0;
+    const xpToNext = level * 1000;
+    const progress = (xp / xpToNext) * 100;
+
+    getEl('stat-level').innerText = level;
+    getEl('stat-xp-info').innerText = `${xp} / ${xpToNext} XP`;
+    getEl('stat-xp-fill').style.width = progress + '%';
+
+    // Actualizar también el nivel en el banner principal
+    const bannerLevel = document.querySelector('#player-banner .player-banner-level span');
+    if (bannerLevel) bannerLevel.innerText = level;
+    
+    const bannerExpFill = document.querySelector('#player-banner .player-banner-exp-fill');
+    if (bannerExpFill) bannerExpFill.style.width = progress + '%';
 }
 
 
@@ -1449,6 +1537,10 @@ function updateUI(dt) {
     }
     if (gameState === 'playing') {
         gameTime -= dt;
+        // Acumular tiempo de juego real
+        if (USER_CONFIG.stats) {
+            USER_CONFIG.stats.playTime = (USER_CONFIG.stats.playTime || 0) + dt;
+        }
         if (gameTime <= 0) {
             gameTime = 0;
             showGameOver();
@@ -1507,6 +1599,37 @@ function showGameOver() {
             gameOverWinner.style.textShadow = `0 0 15px ${winnerColor}`;
         }
 
+        // --- ACTUALIZAR ESTADÍSTICAS PERSISTENTES ---
+        if (USER_CONFIG.stats) {
+            const stats = USER_CONFIG.stats;
+            stats.totalMatches = (stats.totalMatches || 0) + 1;
+            stats.totalGoals = (stats.totalGoals || 0) + player1.goals;
+
+            let earnedXP = 500; // Base por partido terminado
+            earnedXP += player1.goals * 100;
+            earnedXP += player1.assists * 50;
+
+            if (score.blue > score.orange) {
+                stats.matchesWon = (stats.matchesWon || 0) + 1;
+                earnedXP += 250; // Bonus victoria
+            } else if (score.orange > score.blue) {
+                stats.matchesLost = (stats.matchesLost || 0) + 1;
+            }
+
+            // Sistema de Nivel (XP)
+            stats.xp = (stats.xp || 0) + earnedXP;
+            const xpToNext = stats.level * 1000;
+            if (stats.xp >= xpToNext) {
+                stats.xp -= xpToNext;
+                stats.level = (stats.level || 1) + 1;
+                console.log("¡LEVEL UP! Ahora eres nivel " + stats.level);
+                // Aquí se podría disparar una notificación visual de Level Up
+            }
+
+            saveUserConfig();
+            updateStatsUI();
+        }
+
         playSound('goal'); // Reutilizamos el sonido de gol para el final
     }
 }
@@ -1517,6 +1640,16 @@ function drawAll() {
     // Si estamos en el menú o intro, solo dibujamos el campo como fondo
     if (gameState === 'menu' || gameState === 'intro') return;
 
+    // 0. Actualizar animaciones de luces
+    updateLights(CONST.CONFIG.LIGHT_SOURCES, Date.now());
+
+    // 0.1 Sombras de Muros y Porterías (Profundidad del estadio)
+    drawWallShadows(ctx, CONST.CONFIG.FIELD_POLYGON, {top: CONST.CONFIG.GOAL_TOP, bottom: CONST.CONFIG.GOAL_BOTTOM}, CONST.CONFIG.LIGHT_SOURCES);
+
+    // 1. Dibujar Sombras Dinámicas (antes que las entidades)
+
+    drawDynamicShadows(ctx, [...allCars, ball], CONST.CONFIG.LIGHT_SOURCES);
+
     skidMarks.forEach(s => s.draw(ctx));
     boostPads.forEach(pad => pad.draw(ctx));
     particles.forEach(p => p.draw(ctx));
@@ -1524,6 +1657,9 @@ function drawAll() {
     ball.draw(ctx, animationFrameCounter);
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; explosionParticles.forEach(ep => ep.draw(ctx)); ctx.restore();
     ctx.save(); confettiParticles.forEach(cp => cp.draw(ctx)); ctx.restore();
+
+    // 2. Aplicar Iluminación Ambiental y Halos (Post-entidades para oscurecerlas)
+    drawAmbientLighting(ctx, CONST.CONFIG.WORLD_W, CONST.CONFIG.WORLD_H, CONST.CONFIG.LIGHT_SOURCES);
 
     // Dibujar las redes por encima de todo para el efecto de profundidad
     drawGoalNets(ctx);
@@ -1665,6 +1801,9 @@ function setupCustomizationMenu() {
     // Manejo de Pestañas
     const tabBtns = document.querySelectorAll('.custom-tab-btn');
     tabBtns.forEach(btn => {
+        // Ignorar el botón de cerrar/guardar de la lógica de pestañas
+        if (btn.classList.contains('btn-close-custom')) return;
+
         btn.onclick = () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -1763,6 +1902,22 @@ function setupCustomizationMenu() {
     const btnBallNext = document.getElementById('btn-ball-next');
     if (btnBallPrev) btnBallPrev.onclick = () => { if (currentBallPage > 1) { currentBallPage--; renderBallSelection(); playSound('menu_click'); } };
     if (btnBallNext) btnBallNext.onclick = () => { if (currentBallPage < 4) { currentBallPage++; renderBallSelection(); playSound('menu_click'); } };
+
+    // Sub-Pestañas de Perfil (Piloto vs Estadísticas)
+    const subtabBtns = document.querySelectorAll('.subtab-btn');
+    subtabBtns.forEach(btn => {
+        btn.onclick = () => {
+            subtabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const target = btn.dataset.sub;
+            document.querySelectorAll('.profile-subcontent').forEach(p => p.style.display = 'none');
+            document.getElementById('subpane-' + target).style.display = 'flex';
+            playSound('menu_click');
+            
+            if (target === 'stats') updateStatsUI();
+        };
+    });
 }
 
 function renderAvatars() {
@@ -1815,19 +1970,37 @@ function renderCarSelection() {
 
     list.innerHTML = '';
 
-    // Renderizar los 10 coches reales
-    carImages.forEach(img => {
+    // Renderizar los 10 coches reales con lógica de desbloqueo
+    carImages.forEach((img, index) => {
+        const carIndex = index + 1;
         const item = document.createElement('div');
-        item.className = 'selectable-item' + (USER_CONFIG.playerCar === img ? ' selected' : '');
-        item.innerHTML = `<img src="${img}">`;
-        item.onclick = () => {
-            USER_CONFIG.playerCar = img;
-            selectedCarP1 = img;
-            if (previewImg) previewImg.src = img;
-            saveUserConfig();
-            renderCarSelection();
-            playSound('menu_click');
+        
+        // Niveles de desbloqueo (Ejemplo progresivo)
+        const unlockLevels = {
+            5: 2, 6: 4, 7: 6, 8: 10, 9: 15, 10: 25
         };
+        const requiredLevel = unlockLevels[carIndex] || 1;
+        const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
+
+        item.className = 'selectable-item' + (USER_CONFIG.playerCar === img ? ' selected' : '');
+        if (isLocked) {
+            item.classList.add('locked-item');
+            item.innerHTML = `<img src="${img}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.onclick = () => {
+                showInGameNotification(`ESTE VEHÍCULO SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
+                playSound('menu_error');
+            };
+        } else {
+            item.innerHTML = `<img src="${img}">`;
+            item.onclick = () => {
+                USER_CONFIG.playerCar = img;
+                selectedCarP1 = img;
+                if (previewImg) previewImg.src = img;
+                saveUserConfig();
+                renderCarSelection();
+                playSound('menu_click');
+            };
+        }
         list.appendChild(item);
     });
 
@@ -1918,6 +2091,12 @@ function setupTitleSelect() {
 
 
 function showMenuScreen(screenId) {
+    // Asegurar que el contenedor principal esté visible
+    if (mainMenuEl) {
+        mainMenuEl.style.display = 'flex';
+        mainMenuEl.classList.remove('hidden');
+    }
+
     [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
 
     const logo = document.getElementById('menu-logo');
@@ -1927,12 +2106,22 @@ function showMenuScreen(screenId) {
     if (btnCredits) btnCredits.style.display = (screenId === 'initial') ? 'block' : 'none';
     if (btnMapEditor) btnMapEditor.style.display = (screenId === 'initial') ? 'block' : 'none';
 
-    if (screenId === 'initial' && menuInitial) menuInitial.style.display = 'flex';
+    if (screenId === 'initial' && menuInitial) {
+        menuInitial.style.display = 'flex';
+        // Asegurar que el fondo de vídeo sea visible en el menú inicial
+        const videoBg = document.getElementById('menu-video-bg');
+        if (videoBg) videoBg.style.opacity = '1';
+    }
     else if (screenId === 'credits' && menuCredits) menuCredits.style.display = 'flex';
     else if (screenId === 'custom' && menuCustom) {
         menuCustom.style.display = 'flex';
-        // Reset a la primera pestaña
-        document.querySelector('.custom-tab-btn[data-tab="perfil"]').click();
+        updateStatsUI();
+        // Reset a la primera pestaña y sub-pestaña
+        const profileTab = document.querySelector('.custom-tab-btn[data-tab="perfil"]');
+        if (profileTab) profileTab.click();
+        
+        const dataSubTab = document.querySelector('.subtab-btn[data-sub="datos"]');
+        if (dataSubTab) dataSubTab.click();
     }
     else if (screenId === 'settings' && menuSettings) menuSettings.style.display = 'flex';
 

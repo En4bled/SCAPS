@@ -262,6 +262,51 @@ canvas {
     letter-spacing: 2px;
 }
 
+.locked-item {
+    position: relative;
+    cursor: default !important;
+}
+
+.lock-icon {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #f33;
+    font-size: 0.6em;
+    padding: 2px 8px;
+    border: 1px solid #f33;
+    white-space: nowrap;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+}
+
+/* Sub-Pestañas Perfil */
+.subtab-btn {
+    border-radius: 4px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(90, 173, 237, 0.3) !important;
+    color: #5ad !important;
+    font-family: 'Share Tech Mono', monospace !important;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+}
+
+.subtab-btn.active {
+    background: #5ad !important;
+    color: #fff !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 15px rgba(90, 173, 237, 0.5);
+    transform: translateY(-2px);
+}
+
+.subtab-btn:hover:not(.active) {
+    background: rgba(90, 173, 237, 0.2) !important;
+    border-color: #5ad !important;
+}
+
+/* --- HUD DE NOTIFICACIÓN GLOBAL --- */
 /* --- MENÚ PRINCIPAL --- */
 #main-menu {
     position: absolute;
@@ -903,8 +948,8 @@ input[type="range"]::-moz-range-thumb {
 
 .personalization-menu {
     display: flex;
-    width: 80em !important; /* Más ancho */
-    height: 45em !important; /* Un poco más alto */
+    width: 70em !important; /* Ancho reducido de 80em a 70em */
+    height: 38em !important;
     background: rgba(5, 5, 15, 0.97);
     border: 0.3em solid #5ad !important;
     position: relative;
@@ -936,22 +981,27 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .custom-tabs-container {
-    width: 100%;
+    width: 70em; /* Alineado con el nuevo ancho de la ventana */
     display: flex;
-    justify-content: space-between;
-    gap: 0.8em;
-    margin-bottom: 1.5em;
+    justify-content: flex-start;
+    gap: 1.2em; /* Espaciado ajustado */
+    margin-bottom: 0.8em; /* Reducido el margen con la ventana */
+    position: relative;
+    z-index: 10;
+    padding: 0 1.5em; /* Padding para alejar los botones de los bordes y centrarlos más */
+    box-sizing: border-box;
+    /* Eliminada la animación tabs-float */
 }
 
 .custom-tab-btn {
-    flex: 1;
+    flex: 0 0 6.5em; /* Ancho fijo para 1:1 */
+    height: 6.5em;   /* Alto fijo para 1:1 */
     margin-top: 1px;
-    height: 5.5em; /* Más alto */
-    background: rgba(255, 255, 255, 0.05);
-    border: 0.15em solid rgba(90, 173, 237, 0.2);
+    background: #0a0a19; /* Fondo sólido oscuro */
+    border: 0.15em solid rgba(90, 173, 237, 0.5); /* Borde más visible */
     color: rgba(255, 255, 255, 0.5);
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1em; /* Más grande */
+    font-size: 0.9em; /* Reducido un poco para que quepa el texto */
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
@@ -973,11 +1023,46 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .custom-tab-btn.active {
-    background: #5ad;
-    border-color: #fff;
+    background: #1a3a5a; /* Azul oscuro sólido */
+    border-color: #5ad;
     color: #fff;
     box-shadow: 0 0 20px rgba(90, 173, 237, 0.4);
-    transform: scale(1.05);
+    transform: translateY(-5px);
+}
+
+/* Estilo específico para el botón de cerrar/guardar */
+.btn-close-custom {
+    flex: 0 0 auto !important; /* Ancho automático para el texto largo */
+    min-width: 6.5em;
+    padding: 0 2em;
+    margin-left: auto !important; /* Empuja al final */
+    border-color: #2fb !important; /* Verde Neón */
+    color: #2fb !important;
+    background: #0a2a1a !important; /* Fondo verde muy oscuro */
+    box-shadow: 0 0 15px rgba(34, 255, 187, 0.2);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.btn-close-custom:hover {
+    transform: scale(1.05) skewX(-3deg) !important;
+    background: #0d3a24 !important;
+    box-shadow: 0 0 25px rgba(34, 255, 187, 0.5) !important;
+}
+
+.btn-close-custom:active {
+    transform: scale(0.95) skewX(0deg) !important;
+    background: #2fb !important;
+}
+
+.btn-close-custom:active i, .btn-close-custom:active span {
+    color: #000 !important;
+    text-shadow: none !important;
+}
+
+.btn-close-custom i, .btn-close-custom span {
+    color: #2fb !important;
+    text-shadow: 0 0 10px #2fb;
+}
 }
 
 .custom-panes-container {

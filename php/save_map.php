@@ -1,7 +1,7 @@
 <?php
-// Evitar que PHP envíe cualquier error como HTML
+// Suprimir absolutamente todos los errores/warnings para que no corrompan el JSON
+error_reporting(0);
 ini_set('display_errors', 0);
-error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 $json = file_get_contents('php://input');

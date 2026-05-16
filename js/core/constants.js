@@ -5,6 +5,14 @@
 
 export const CONFIG = {
     VERSION: '1.6.0 - STABLE',
+    // Iluminación Dinámica
+    AMBIENT_LIGHT: 0.4, // 0.0 (total oscuridad) a 1.0 (día total)
+    LIGHT_SOURCES: [
+        { x: 500, y: 500, intensity: 0.8, radius: 1500, color: 'rgba(255, 255, 255, 0.15)' },
+        { x: 3500, y: 500, intensity: 0.8, radius: 1500, color: 'rgba(255, 255, 255, 0.15)' },
+        { x: 500, y: 2500, intensity: 0.8, radius: 1500, color: 'rgba(255, 255, 255, 0.15)' },
+        { x: 3500, y: 2500, intensity: 0.8, radius: 1500, color: 'rgba(255, 255, 255, 0.15)' }
+    ],
     // Dimensiones del Mundo
     WORLD_W: 4000,
     WORLD_H: 3000,
@@ -99,4 +107,6 @@ export function applyExternalConfig(data) {
     if (data.boosts) {
         CONFIG.BOOST_POSITIONS = data.boosts.map(b => ({ x: b.x, y: b.y, isBig: b.big }));
     }
+    if (data.ambientLight !== undefined) CONFIG.AMBIENT_LIGHT = data.ambientLight;
+    if (data.lights) CONFIG.LIGHT_SOURCES = data.lights;
 }
