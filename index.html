@@ -1068,6 +1068,10 @@
     </datalist>
 
     <script type="module" src="js/main.js"></script>
+    <script type="module">
+        import { getAssetPath } from './js/core/constants.js';
+        window.getAssetPath = getAssetPath;
+    </script>
 </body>
 
 </html>
