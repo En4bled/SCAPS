@@ -22,13 +22,16 @@
     border-color: #5ad !important;
 }
 
-/* Banner de Perfil Estilo Rocket League */
+/* Banner de Perfil Estilo Rocket League (Diseño 100% Responsivo) */
 #player-banner, .banner-preview-sync {
     display: flex;
     align-items: center;
     padding: 0;
-    height: 70px;
-    min-width: 320px;
+    height: 4.8vw; /* Proporcional a la pantalla */
+    min-height: 65px;
+    max-height: 85px;
+    min-width: 22vw; /* Proporcional a la pantalla */
+    width: 22vw;
     background: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -38,10 +41,9 @@
 
 #player-banner {
     position: absolute;
-    bottom: 30px;
-    left: 12px;
+    bottom: 4vh; /* Proporcional */
+    left: 2vw; /* Proporcional */
     z-index: 1000;
-    transform: scale(0.8);
     transform-origin: bottom left;
 }
 
@@ -53,8 +55,12 @@
 }
 
 #player-banner-avatar-frame, #custom-banner-avatar-frame {
-    width: 65px;
-    height: 65px;
+    width: 4.5vw;
+    height: 4.5vw;
+    min-width: 58px;
+    min-height: 58px;
+    max-width: 78px;
+    max-height: 78px;
     background: #000;
     border: 3px solid #fff !important;
     position: relative;
@@ -92,9 +98,11 @@
 
 .player-banner-info {
     flex: 1;
-    height: 48px;
-    margin-left: -10px;
-    padding: 5px 15px 5px 25px;
+    height: 3.2vw;
+    min-height: 44px;
+    max-height: 58px;
+    margin-left: -0.8vw;
+    padding: 0.3vw 1vw 0.3vw 1.8vw;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -106,7 +114,8 @@
 }
 
 #player-banner-title, #custom-banner-title {
-    font-size: 10px;
+    font-size: 0.65vw;
+    font-size: clamp(8px, 0.65vw, 12px);
     font-family: 'Share Tech Mono', monospace;
     color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
@@ -148,7 +157,8 @@
 #player-banner-name, #custom-banner-name {
     color: #fff;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 24px;
+    font-size: 1.4vw;
+    font-size: clamp(16px, 1.4vw, 26px);
     font-weight: 400;
     letter-spacing: 1px;
     margin-bottom: 2px;
@@ -157,7 +167,9 @@
 
 .player-banner-exp-bar {
     width: 84%;
-    height: 4px;
+    height: 0.3vw;
+    min-height: 3px;
+    max-height: 5px;
     background: rgba(0, 0, 0, 0.4);
     border-radius: 0;
     overflow: hidden;
@@ -174,18 +186,23 @@
 
 .player-banner-level {
     position: absolute;
-    bottom: 6px;
-    left: 207px;
+    bottom: 0.4vw;
+    right: 1.5vw;
     background: #fdf5c0;
     color: #444;
-    width: 28px;
-    height: 18px;
+    width: 2vw;
+    min-width: 24px;
+    max-width: 32px;
+    height: 1.2vw;
+    min-height: 16px;
+    max-height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Share Tech Mono', monospace;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 0.8vw;
+    font-size: clamp(9px, 0.8vw, 13px);
 }
 
 /* --- MAQUETADO DE LA VENTANA --- */
