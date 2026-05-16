@@ -1,4 +1,5 @@
 import * as CONST from '../core/constants.js';
+import { getAssetPath } from '../core/constants.js';
 import { ExplosionParticle } from '../fx/particles.js';
 import { checkPolygonCollision } from '../world/physics.js';
 import { playSound } from '../fx/audio.js';
@@ -18,9 +19,12 @@ export class Ball {
     }
 
     setAppearance(imgPath) {
-        if (!this.img || (typeof imgPath === 'string' && !this.img.src.includes(imgPath))) {
-            this.img = new Image();
-            this.img.src = imgPath;
+        if (typeof imgPath === 'string') {
+            const resolvedPath = getAssetPath(imgPath);
+            if (!this.img || !this.img.src.includes(resolvedPath)) {
+                this.img = new Image();
+                this.img.src = resolvedPath;
+            }
         }
     }
 

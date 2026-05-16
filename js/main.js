@@ -1,4 +1,5 @@
 import * as CONST from './core/constants.js';
+import { getAssetPath } from './core/constants.js';
 import { Car } from './entities/car.js';
 import { Ball } from './entities/ball.js';
 import { BoostPad } from './entities/boost.js';
@@ -231,7 +232,7 @@ function updatePlayerBanner() {
         el.style.fontWeight = 'bold';
     };
 
-    if (avatarImg) avatarImg.src = USER_CONFIG.playerAvatar;
+    if (avatarImg) avatarImg.src = getAssetPath(USER_CONFIG.playerAvatar);
     if (avatarFrame) avatarFrame.style.background = USER_CONFIG.playerAvatarBg;
     if (nameSpan) {
         nameSpan.innerText = USER_CONFIG.playerName;
@@ -250,7 +251,7 @@ function updatePlayerBanner() {
     const previewTitle = document.getElementById('custom-banner-title');
     const previewInfo = previewBanner ? previewBanner.querySelector('.player-banner-info') : null;
 
-    if (previewAvatar) previewAvatar.src = USER_CONFIG.playerAvatar;
+    if (previewAvatar) previewAvatar.src = getAssetPath(USER_CONFIG.playerAvatar);
     if (previewFrame) previewFrame.style.background = USER_CONFIG.playerAvatarBg;
     if (previewName) {
         previewName.innerText = USER_CONFIG.playerName;
@@ -778,8 +779,9 @@ const boostPreviewManager = {
         });
         ctx.restore();
 
-        if (!this.carImg.src.endsWith(USER_CONFIG.playerCar)) {
-            this.carImg.src = USER_CONFIG.playerCar;
+        const resolvedCarSrc = getAssetPath(USER_CONFIG.playerCar);
+        if (!this.carImg.src.includes(resolvedCarSrc)) {
+            this.carImg.src = resolvedCarSrc;
         }
 
         ctx.save();
@@ -2447,7 +2449,7 @@ function renderCarSelection() {
             item.onclick = () => {
                 USER_CONFIG.playerCar = img;
                 selectedCarP1 = img;
-                if (previewImg) previewImg.src = img;
+                if (previewImg) previewImg.src = getAssetPath(img);
                 saveUserConfig();
                 renderCarSelection();
                 playSound('menu_click');
@@ -2473,7 +2475,7 @@ function renderCarSelection() {
     if (hueSlider) hueSlider.value = USER_CONFIG.playerCarHue;
     if (satSlider) satSlider.value = USER_CONFIG.playerCarSaturate;
     if (previewImg) {
-        previewImg.src = USER_CONFIG.playerCar;
+        previewImg.src = getAssetPath(USER_CONFIG.playerCar);
         previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
     }
 }
@@ -2935,7 +2937,7 @@ async function finalizeStartGame() {
                     resolve();
                 };
                 img.onerror = () => { console.warn("Failed to load asset", src); resolve(); };
-                img.src = src;
+                img.src = getAssetPath(src);
             });
         });
 

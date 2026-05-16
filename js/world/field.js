@@ -1,4 +1,5 @@
 import * as CONST from '../core/constants.js';
+import { getAssetPath } from '../core/constants.js';
 
 let bgImage = new Image();
 let currentBgSrc = '';
@@ -6,19 +7,19 @@ let netImageTop = new Image(), netImageBottom = new Image();
 let currentNetSrcT = '', currentNetSrcB = '';
 
 function ensureAssets() {
-    const src = CONST.CONFIG.BG_IMG_PATH;
+    const src = getAssetPath(CONST.CONFIG.BG_IMG_PATH);
     if (src !== currentBgSrc) {
         currentBgSrc = src;
         bgImage = new Image();
         bgImage.src = src;
     }
-    const srcT = CONST.CONFIG.GOAL_TOP.img;
+    const srcT = CONST.CONFIG.GOAL_TOP.img ? getAssetPath(CONST.CONFIG.GOAL_TOP.img) : null;
     if (srcT && srcT !== currentNetSrcT) {
         currentNetSrcT = srcT;
         netImageTop = new Image();
         netImageTop.src = srcT;
     }
-    const srcB = CONST.CONFIG.GOAL_BOTTOM.img;
+    const srcB = CONST.CONFIG.GOAL_BOTTOM.img ? getAssetPath(CONST.CONFIG.GOAL_BOTTOM.img) : null;
     if (srcB && srcB !== currentNetSrcB) {
         currentNetSrcB = srcB;
         netImageBottom = new Image();

@@ -1,4 +1,6 @@
 // Manejador de Audio para SCAPS (Música, Motores y Efectos Sintéticos)
+import { getAssetPath } from '../core/constants.js';
+
 export const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 // Nodo Maestro de Control
@@ -228,7 +230,7 @@ export function playSound(type, intensity = 1.0) {
     }
 
     if (type === 'menu_click') {
-        const clickSnd = new Audio('recursos/sound/modern2.wav');
+        const clickSnd = new Audio(getAssetPath('recursos/sound/modern2.wav'));
         clickSnd.volume = 0.4 * sfxVolume;
         clickSnd.play().catch(e => {});
         return;
@@ -254,13 +256,13 @@ export function playSound(type, intensity = 1.0) {
         return;
     }
     if (type === 'countdown') {
-        const cdSnd = new Audio('recursos/sound/countdown.mp3');
+        const cdSnd = new Audio(getAssetPath('recursos/sound/countdown.mp3'));
         cdSnd.volume = 0.6 * sfxVolume;
         cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
         return;
     }
     if (type === 'menu_hover') {
-        const hoverSnd = new Audio('recursos/sound/minimalist8.wav');
+        const hoverSnd = new Audio(getAssetPath('recursos/sound/minimalist8.wav'));
         hoverSnd.volume = 0.3 * sfxVolume;
         hoverSnd.play().catch(e => {});
         return;
@@ -286,7 +288,7 @@ export function playSound(type, intensity = 1.0) {
         osc.stop(now + 0.15);
     }
     else if (type === 'goal') {
-        const goalSnd = new Audio('recursos/sound/car-explosion.mp3');
+        const goalSnd = new Audio(getAssetPath('recursos/sound/car-explosion.mp3'));
         goalSnd.volume = 0.8 * sfxVolume;
         goalSnd.play().catch(e => console.log("Goal sound blocked:", e));
         return;
@@ -371,7 +373,7 @@ function playPlaylist() {
     }
 
     currentSongIdx = playlistOrder[playlistPointer];
-    musicAudio = new Audio(`recursos/music/song${currentSongIdx}.mp3`);
+    musicAudio = new Audio(getAssetPath(`recursos/music/song${currentSongIdx}.mp3`));
     musicAudio.volume = musicVolume;
     musicAudio.muted = isMusicMuted;
 

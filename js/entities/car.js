@@ -1,4 +1,5 @@
 import * as CONST from '../core/constants.js';
+import { getAssetPath } from '../core/constants.js';
 import { Particle, SkidMark } from '../fx/particles.js';
 import { checkPolygonCollision } from '../world/physics.js';
 
@@ -47,9 +48,12 @@ export class Car {
     setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
         this.hue = hue;
         this.saturate = saturate;
-        if (!this.img || (typeof imgPath === 'string' && !this.img.src.includes(imgPath))) {
-            this.img = new Image();
-            this.img.src = imgPath;
+        if (typeof imgPath === 'string') {
+            const resolvedPath = getAssetPath(imgPath);
+            if (!this.img || !this.img.src.includes(resolvedPath)) {
+                this.img = new Image();
+                this.img.src = resolvedPath;
+            }
         }
     }
 

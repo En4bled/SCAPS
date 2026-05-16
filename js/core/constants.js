@@ -110,3 +110,32 @@ export function applyExternalConfig(data) {
     if (data.ambientLight !== undefined) CONFIG.AMBIENT_LIGHT = data.ambientLight;
     if (data.lights) CONFIG.LIGHT_SOURCES = data.lights;
 }
+
+/**
+ * Helper dinámico para resolver rutas absolutas a recursos en XAMPP o servidores raíz.
+ * Convierte automáticamente todas las rutas a minúsculas para compatibilidad absoluta
+ * con servidores Linux case-sensitive y despliegues locales.
+ */
+export function getAssetPath(relativePath) {
+    if (!relativePath) return '';
+    
+    // Ignorar si ya es una ruta absoluta o una cadena base64 de datos
+    if (relativePath.startsWith('http://') || relativePath.startsWith('https://') || relativePath.startsWith('data:')) {
+        return relativePath;
+    }
+
+    // Normalizar la ruta a minúsculas
+    let cleanPath = relativePath.toLowerCase();
+
+    // Eliminar barra inicial si la tiene
+    if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.substring(1);
+    }
+
+    // Calcular la ruta base dinámica a partir del pathname actual
+    const pathSegments = window.location.pathname.split('/');
+    pathSegments.pop(); // Elimina index.html u otro archivo de la URL
+    const basePath = pathSegments.join('/') + '/';
+
+    return window.location.origin + basePath + cleanPath;
+}
