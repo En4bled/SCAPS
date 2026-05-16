@@ -332,7 +332,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
 
 <div id="sidebar">
   <h1 style="line-height: 1.0; margin-top: 2px; text-align: center; margin-bottom: 5px;">
-    <img src="recursos/LOGO.png" alt="SCAPS" style="height: 70px; width: auto; margin-bottom: 0;">
+    <img src="recursos/ui/logo.png" alt="SCAPS" style="height: 70px; width: auto; margin-bottom: 0;">
     <br>
     <span style="font-size: 0.5em; color: #5ad; letter-spacing: 4px; -webkit-text-fill-color: #5ad; font-weight: 800; text-transform: uppercase;">EDITOR DE MAPAS</span>
   </h1>
@@ -353,7 +353,7 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
         <div class="row">
             <label>Imagen Estadio</label>
             <div class="file-input-wrapper">
-                <input type="text" id="bgUrl" value="" placeholder="recursos/Estadio1.png" style="flex:1">
+                <input type="text" id="bgUrl" value="" placeholder="recursos/stadiums/estadio1.png" style="flex:1">
                 <input type="file" id="bgFile" accept="image/*" style="display:none">
                 <button onclick="document.getElementById('bgFile').click()" style="width:40px">📁</button>
             </div>
@@ -536,10 +536,10 @@ button.danger:hover { background:#411; border-color:#f44; color:#fff; }
     <div class="section">
         <h3>🚗 Spawns de Jugadores</h3>
         <div id="spawn-list" style="margin-bottom:10px;">
-            <div class="item selected" data-idx="0"><img src="recursos/blue-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 1</div>
-            <div class="item" data-idx="1"><img src="recursos/blue-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 2</div>
-            <div class="item" data-idx="2"><img src="recursos/orange-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 3</div>
-            <div class="item" data-idx="3"><img src="recursos/orange-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 4</div>
+            <div class="item selected" data-idx="0"><img src="recursos/editor/blue-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 1</div>
+            <div class="item" data-idx="1"><img src="recursos/editor/blue-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 2</div>
+            <div class="item" data-idx="2"><img src="recursos/editor/orange-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 3</div>
+            <div class="item" data-idx="3"><img src="recursos/editor/orange-car-editor.png" style="width:20px; vertical-align:middle; margin-right:5px;"> Jugador 4</div>
         </div>
 
         <div class="row"><label>Ángulo</label><input type="number" id="spawnA" step="0.1"><input type="range" id="spawnAR" min="0" max="6.28" step="0.01"></div>
@@ -681,7 +681,7 @@ import { drawDynamicShadows, drawAmbientLighting, updateLights, drawWallShadows 
 
 
 const DEFAULTS = {
-    bgUrl: 'recursos/Estadio1.png', bgScale: 1.638, bgOX: 0, bgOY: 0,
+    bgUrl: 'recursos/stadiums/estadio1.png', bgScale: 1.638, bgOX: 0, bgOY: 0,
     worldW: 4000, worldH: 3000,
     previewAll: true,
     lights: [
@@ -757,11 +757,11 @@ const wrap = document.getElementById('canvas-wrap');
 const infoBar = document.getElementById('info-bar');
 const overlay = document.getElementById('editor-overlay');
 const bgImg = new Image();
-const ballImg = new Image(); ballImg.src = 'recursos/Ball1.png';
+const ballImg = new Image(); ballImg.src = 'recursos/balls/ball_1.png';
 const netImgT = new Image();
 const netImgB = new Image();
-const carImgBlue = new Image(); carImgBlue.src = 'recursos/blue-car-editor.png';
-const carImgOrange = new Image(); carImgOrange.src = 'recursos/orange-car-editor.png';
+const carImgBlue = new Image(); carImgBlue.src = 'recursos/editor/blue-car-editor.png';
+const carImgOrange = new Image(); carImgOrange.src = 'recursos/editor/orange-car-editor.png';
 
 
 window.resetVal = (key) => {

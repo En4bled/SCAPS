@@ -88,11 +88,15 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         15: 'ArrowRight'
     };
 
-    if (gameState === 'menu') {
+    if (gameState === 'menu' || gameState === 'settings') {
         mapping[0] = 'Enter';
         mapping[1] = 'Escape';
         mapping[2] = 'KeyX';
         mapping[3] = 'KeyY';
+        mapping[4] = 'KeyL';       // LB -> Pista Anterior
+        mapping[5] = 'KeyR';       // RB -> Pista Siguiente
+        mapping[6] = 'KeyQ';       // LT -> Mapa Anterior (En menú)
+        mapping[7] = 'KeyE';       // RT -> Mapa Siguiente (En menú)
         mapping[8] = 'KeyC';
         mapping[9] = 'Space';
     } else {

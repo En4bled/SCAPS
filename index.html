@@ -7,7 +7,7 @@
     <title>SCAPS - Rocket League 2D</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="recursos/LOGO.png">
+    <link rel="icon" type="image/png" href="recursos/ui/logo.png">
 
     <!-- Fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
     <div id="intro-screen">
         <div id="intro-slide-1" class="intro-slide">
             <div class="logo-container">
-                <img src="recursos/SIMESIA-LOGO2.png" class="intro-logo" alt="SCAPS Logo">
+                <img src="recursos/ui/simesia-logo2.png" class="intro-logo" alt="SCAPS Logo">
                 <div class="dev-text">Desarrollado por <span style="color:#5ad">En4bLeD_</span></div>
             </div>
         </div>
@@ -56,7 +56,7 @@
                 style="position: absolute; top: 20px; right: 20px; font-family: 'Share Tech Mono', monospace; color: rgba(90, 173, 237, 0.8); font-size: 14px; letter-spacing: 2px; z-index: 2000; text-shadow: 0 0 10px rgba(90, 173, 237, 0.5);">
                 VERSIÓN 1.6.0 - STABLE</div>
 
-            <img src="recursos/LOGO.png" id="menu-logo" alt="SCAPS LOGO">
+            <img src="recursos/ui/logo.png" id="menu-logo" alt="SCAPS LOGO">
 
             <div id="menu-initial" class="menu-buttons">
                 <button id="btn-play" class="menu-btn primary">Jugar</button>
@@ -72,7 +72,7 @@
             <!-- Banner de Perfil del Jugador (Estilo Rocket League) -->
             <div id="player-banner" class="pixel-border">
                 <div id="player-banner-avatar-frame" class="pixel-border">
-                    <img id="player-banner-avatar" src="recursos/Car1.png" alt="Avatar">
+                    <img id="player-banner-avatar" src="recursos/cars/car1.png" alt="Avatar">
                 </div>
                 <div class="player-banner-info">
                     <span id="player-banner-name">PILOTO_01</span>
@@ -108,19 +108,19 @@
                 <!-- Pestañas fuera del cuadro (Flotantes) -->
                 <div class="custom-tabs-container">
                     <button class="custom-tab-btn active" data-tab="perfil">
-                        <img src="recursos/profile-selector-tab.gif" class="tab-icon-gif">
+                        <img src="recursos/ui/profile-selector-tab.gif" class="tab-icon-gif">
                         <span>Perfil</span>
                     </button>
                     <button class="custom-tab-btn" data-tab="vehiculo">
-                        <img src="recursos/car-selecctor-tab.gif" class="tab-icon-gif">
+                        <img src="recursos/ui/car-selector-tab.gif" class="tab-icon-gif">
                         <span>Vehículo</span>
                     </button>
                     <button class="custom-tab-btn" data-tab="balon">
-                        <img src="recursos/ball-selector-tab.gif" class="tab-icon-gif">
+                        <img src="recursos/ui/ball-selector-tab.gif" class="tab-icon-gif">
                         <span>Balón</span>
                     </button>
                     <button class="custom-tab-btn" data-tab="boost">
-                        <img src="recursos/boost-selector-tab.gif" class="tab-icon-gif">
+                        <img src="recursos/ui/boost-selector-tab.gif" class="tab-icon-gif">
                         <span>Boost</span>
                     </button>
                     <button class="custom-tab-btn" data-tab="explosion">
@@ -246,7 +246,7 @@
                                         <div id="custom-banner-preview" class="banner-preview-sync"
                                             style="transform: scale(0.85); transform-origin: center; margin: 5px 0;">
                                             <div id="custom-banner-avatar-frame"><img id="custom-banner-avatar"
-                                                    src="recursos/avatar/avatar (1).png"></div>
+                                                    src="recursos/avatar/avatar_1.png"></div>
                                             <div class="player-banner-info"><span
                                                     id="custom-banner-name">PILOTO_01</span><span
                                                     id="custom-banner-title">ALPHA TESTER</span></div>
@@ -339,7 +339,7 @@
                                     </div>
                                 </div>
                                 <div id="car-preview-container" class="car-preview-frame"><img id="car-preview-img"
-                                        src="recursos/Car1.png" class="car-preview-img">
+                                        src="recursos/cars/car1.png" class="car-preview-img">
                                     <div class="preview-tag">360° PREVIEW SYSTEM</div>
                                 </div>
 
@@ -422,17 +422,25 @@
                             style="color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             NOMBRE PISTA</div>
                         <div id="settings-song-timer"
-                            style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 14px; text-align: right; margin-top: 5px;">
-                            00:00 / 00:00</div>
+                            style="color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 11px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>00:00 / 00:00</span>
+                            <canvas id="settings-audio-visualizer" width="100" height="15" style="background: rgba(0,0,0,0.3); border-radius: 2px;"></canvas>
+                        </div>
                     </div>
 
                     <div style="display: flex; gap: 10px; width: 100%;">
                         <button id="btn-prev-song" class="menu-btn"
-                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏮</button>
+                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏮
+                            <span style="display:block; font-size:10px; margin-top:5px; border:1px solid #fff; border-radius:4px;">LB</span>
+                        </button>
                         <button id="btn-play-pause" class="menu-btn"
-                            style="flex: 1.5; padding: 10px; margin: 0; font-size: 20px; border-color: #fff !important; color: #fff;">⏯</button>
+                            style="flex: 1.5; padding: 10px; margin: 0; font-size: 20px; border-color: #fff !important; color: #fff;">⏯
+                            <span style="display:block; font-size:10px; margin-top:5px; border:2px solid #ff0; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:auto; margin-right:auto; color:#ff0;">Y</span>
+                        </button>
                         <button id="btn-next-song" class="menu-btn"
-                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏭</button>
+                            style="flex: 1; padding: 10px; margin: 0; font-size: 20px;">⏭
+                            <span style="display:block; font-size:10px; margin-top:5px; border:1px solid #fff; border-radius:4px;">RB</span>
+                        </button>
                     </div>
 
                     <div
@@ -443,16 +451,18 @@
                             style="flex: 1; accent-color: #5ad; cursor: pointer;">
                         <span id="settings-vol-label"
                             style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #5ad; width: 40px;">50%</span>
+                        <span style="display:inline-block; width:22px; height:22px; background:#000; color:#fff; border-radius:50%; line-height:22px; font-size:14px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">+</span>
                     </div>
 
                     <div
-                        style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(255, 153, 0, 0.2);">
+                        style="display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(90, 173, 237, 0.2);">
                         <span
-                            style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #f90; width: 80px;">EFECTOS</span>
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #5ad; width: 80px;">EFECTOS</span>
                         <input type="range" id="slider-settings-sfx" min="0" max="100" value="80"
-                            style="flex: 1; accent-color: #f90; cursor: pointer;">
+                            style="flex: 1; accent-color: #5ad; cursor: pointer;">
                         <span id="settings-sfx-label"
-                            style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #f90; width: 40px;">80%</span>
+                            style="font-family: 'Share Tech Mono', monospace; font-size: 12px; color: #5ad; width: 40px;">80%</span>
+                        <span style="display:inline-block; width:22px; height:22px; background:#000; color:#fff; border-radius:50%; line-height:22px; font-size:14px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">+</span>
                     </div>
 
                     <!-- Selector de Fondo Animado -->
@@ -473,16 +483,43 @@
                             BLOOM (POST-PROCESADO)</span>
                         <input type="checkbox" id="settings-toggle-bloom" checked
                             style="width: 20px; height: 20px; accent-color: #5ad; cursor: pointer;">
+                        <span style="display:inline-block; width:22px; height:22px; background:#000; color:#fff; border-radius:50%; line-height:22px; font-size:14px; margin-left:10px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; text-align: center;">A</span>
                     </div>
 
                 </div>
 
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button id="btn-settings-back" class="menu-btn"
+                        style="padding: 10px; font-size:18px; margin: 0; flex: 1; border-color: #f33; color: #f33;">
+                        <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; text-align: center;">B</span>
+                        CANCELAR
+                    </button>
+                    <button id="btn-settings-apply" class="menu-btn primary"
+                        style="padding: 10px; font-size:18px; margin: 0; flex: 1; border-color: #2fb; color: #2fb;">
+                        <span style="display:inline-block; background:#000; color:#fff; border-radius:6px; padding: 2px 6px; font-size:10px; margin-right:10px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; letter-spacing: 0;">START</span>
+                        ACEPTAR
+                    </button>
+                </div>
+            </div>
 
-                <button id="btn-settings-back" class="menu-btn"
-                    style="padding: 10px; font-size:18px; margin: 0; width: 100%;">
-                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
-                    VOLVER
-                </button>
+            <!-- Modal Confirmación Descartar Cambios -->
+            <div id="settings-discard-overlay" class="hidden"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 8000; display: none; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="pixel-border"
+                    style="background: #0a0a19; padding: 30px; width: 450px; text-align: center; border: 3px solid #f33 !important;">
+                    <h2 class="pixel-title" style="color: #f33; margin-bottom: 20px;">¿DESCARTAR CAMBIOS?</h2>
+                    <p style="color: #eee; font-family: 'Share Tech Mono', monospace; margin-bottom: 30px;">Has realizado cambios en los ajustes. ¿Deseas descartarlos y volver?</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="btn-settings-discard-confirm" class="menu-btn" style="border-color: #f33; color: #f33; width: 180px;">
+                            <span style="display:inline-block; width:22px; height:22px; background:#000; color:#fff; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; text-align: center;">A</span>
+                            DESCARTAR
+                        </button>
+                        <button id="btn-settings-discard-cancel" class="menu-btn" style="width: 180px;">
+                            <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; text-align: center;">B</span>
+                            VOLVER
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Panel de Créditos -->
@@ -700,7 +737,7 @@
 
         <!-- ESCENA DE SELECCIÓN (ESTILO FINAL CON FONDO DE ESTADIO) -->
         <div id="match-setup-overlay" class="hidden"
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('recursos/fondo_menu.png') center/cover; backdrop-filter: blur(15px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('recursos/ui/fondo_menu.png') center/cover; backdrop-filter: blur(15px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
             <h1 class="pixel-title"
                 style="color: #fff; font-size: 54px; text-shadow: 0 0 25px #ff4444; margin-bottom: 25px; letter-spacing: 8px; font-weight: 400;">
                 SELECCIÓN DE MAPA Y MODO</h1>
@@ -708,9 +745,21 @@
                 <!-- Columna Mapas -->
                 <div class="neon-container pixel-border"
                     style="width: 520px; height: 380px; border-radius: 0; border: 3px solid #ff4444; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 15px; animation: pixel-neon-cycle 5s infinite alternate ease-in-out;">
-                    <h2 class="neon-title"
-                        style="text-align: center; margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
-                        MAPAS</h2>
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0 20px;">
+                        <!-- Indicador LT -->
+                        <div style="position: absolute; left: 20px; display: flex; align-items: center; gap: 5px;">
+                            <span style="display:inline-block; width:35px; height:22px; background:#000; color:#fff; border-radius:4px; line-height:22px; font-size:12px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">LT</span>
+                        </div>
+                        
+                        <h2 class="neon-title" style="margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                            MAPAS
+                        </h2>
+
+                        <!-- Indicador RT -->
+                        <div style="position: absolute; right: 60px; display: flex; align-items: center; gap: 5px;">
+                            <span style="display:inline-block; width:35px; height:22px; background:#000; color:#fff; border-radius:4px; line-height:22px; font-size:12px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">RT</span>
+                        </div>
+                    </div>
                     <div id="setup-map-list"
                         style="display: flex; justify-content: center; align-items: center; height: 420px; padding: 10px 20px; flex: 1; overflow: visible;">
                     </div>
@@ -718,9 +767,17 @@
                 <!-- Columna Modos -->
                 <div class="neon-container pixel-border"
                     style="width: 520px; height: 385px; border-radius: 0; border: 3px solid #5ad; display: flex; flex-direction: column; overflow: hidden; padding: 0 0 10px 0; animation: pixel-neon-cycle 5s infinite alternate ease-in-out;">
-                    <h2 class="neon-title"
-                        style="text-align: center; margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
-                        MODOS</h2>
+                    
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0 20px;">
+                         <!-- Indicador D-PAD -->
+                         <div style="position: absolute; left: 20px; display: flex; align-items: center; gap: 5px;">
+                            <span style="display:inline-block; width:30px; height:30px; background:#000; color:#fff; border-radius:50%; line-height:26px; font-size:18px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">+</span>
+                        </div>
+
+                        <h2 class="neon-title" style="margin: 10px 0 5px; font-size: 30px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                            MODOS
+                        </h2>
+                    </div>
                     <div id="setup-mode-list"
                         style="display: flex; flex-direction: column; gap: 10px; padding: 0 20px;">
                         <!-- Fila 1 (Principales) -->
@@ -730,7 +787,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 160px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/PRACTICA.png"
+                                    <img src="recursos/modes/practica.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                             </button>
@@ -738,7 +795,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 160px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/2VS2COMP.png"
+                                    <img src="recursos/modes/2vs2comp.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                             </button>
@@ -746,7 +803,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 135px; transition: all 0.3s; position: relative; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 160px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/3VS3COMP.png"
+                                    <img src="recursos/modes/3vs3comp.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge">PRÓXIMAMENTE</div>
@@ -759,7 +816,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 110px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/CAMPEONATO.png"
+                                    <img src="recursos/modes/campeonato.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
@@ -768,7 +825,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 110px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/CLASIFICACION.png"
+                                    <img src="recursos/modes/clasificacion.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
@@ -777,7 +834,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 110px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/ONLINE.png"
+                                    <img src="recursos/modes/online.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
@@ -786,7 +843,7 @@
                                 style="border-radius: 8px; padding: 4px; width: 110px; transition: all 0.3s; position: relative; background: transparent;">
                                 <div class="pixel-border"
                                     style="width: 100%; height: 110px; border: 2px solid #333 !important; overflow: hidden;">
-                                    <img src="recursos/PRIVADAS.png"
+                                    <img src="recursos/modes/privadas.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
@@ -803,8 +860,10 @@
                     VOLVER
                 </button>
                 <button id="setup-btn-play" class="menu-btn primary" disabled
-                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 380px; font-size: 18px; padding: 12px; margin: 0; display: flex; align-items: center; justify-content: center;">CONFIRMAR
-                    Y JUGAR</button>
+                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 380px; font-size: 18px; padding: 12px; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; background:#000; color:#fff; border-radius:6px; padding: 2px 8px; font-size:12px; margin-right:15px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; letter-spacing: 0;">START</span>
+                    CONFIRMAR Y JUGAR
+                </button>
             </div>
         </div>
 
@@ -840,8 +899,6 @@
     <!-- Modal de Alerta Global (Reemplazo de Notificación HUD) -->
     <div id="modal-alert-overlay" class="hidden"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
-        <div class="pixel-border"
-            style="background: #0a0a19; padding: 30px 50px; width: 500px; text-align: center; border: 4px solid #5ad !important; box-shadow: 0 0 50px rgba(90, 173, 237, 0.3);">
             <div id="modal-alert-icon"
                 style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒</div>
             <h2 id="modal-alert-title" class="pixel-title"

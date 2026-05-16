@@ -314,7 +314,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('../recursos/fondo_menu.png') no-repeat center center;
+    background: url('../recursos/ui/fondo_menu.png') no-repeat center center;
     background-size: cover;
     display: flex;
     flex-direction: column;
@@ -660,19 +660,39 @@ canvas {
     width: 24px;
     height: 24px;
     background: #000;
-    color: #2fb; /* Verde neón estilo botón A de Xbox */
+    color: #2fb;
     border: 2px solid #2fb;
     border-radius: 50%;
-    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: Arial, sans-serif;
+    font-size: 16px;
     font-weight: bold;
-    box-shadow: 0 0 10px rgba(47, 187, 120, 0.6);
+    font-family: Arial, sans-serif;
+    box-shadow: 0 0 10px rgba(47, 187, 47, 0.5);
+    z-index: 10;
+}
+
+/* Indicador A específico para los modos (Abajo Derecha) */
+.mode-option:focus::after, .mode-option.selected::after {
+    content: "A";
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 22px;
+    height: 22px;
+    background: #000;
+    color: #2fb;
+    border: 2px solid #2fb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 0 10px rgba(47, 187, 47, 0.5);
     z-index: 100;
-    pointer-events: none;
-    animation: button-a-pulse 1s infinite alternate;
 }
 
 /* Ajuste específico para mapas */
@@ -972,11 +992,19 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .mode-option.selected .pixel-border {
-    border-color: #f90 !important;
-    background: rgba(255, 153, 0, 0.2) !important;
-    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
-    text-align: center !important;
-    width: 100%;
+    border-color: #000 !important;
+    background: #2fb !important;
+    box-shadow: 0 0 20px rgba(47, 255, 120, 0.4) !important;
+}
+
+.mode-option:focus .pixel-border {
+    border-color: #000 !important;
+    background: #5ad !important;
+}
+
+.mode-option.locked:focus .pixel-border {
+    background: #f33 !important;
+    border-color: #000 !important;
 }
 
 .mode-option.locked {

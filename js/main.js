@@ -8,7 +8,7 @@ import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from './world/physics.js';
-import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause } from './fx/audio.js';
+import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
 import { initPhysicsEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
@@ -20,11 +20,11 @@ const USER_CONFIG = {
     playerName: 'PILOTO_01',
     playerTitle: 'ALPHA TESTER',
     playerBanner: 'banner-style-default',
-    playerAvatar: 'recursos/Car1.png',
-    playerCar: 'recursos/Car1.png',
+    playerAvatar: 'recursos/cars/car1.png',
+    playerCar: 'recursos/cars/car1.png',
     playerCarHue: 0,
     playerCarSaturate: 100,
-    playerBall: 'recursos/Ball1.png',
+    playerBall: 'recursos/balls/ball_1.png',
     playerAvatarBg: '#222222',
     playerBoost: 'classic',
     playerExplosion: 'classic',
@@ -82,6 +82,34 @@ function loadUserConfig() {
         try { 
             const parsed = JSON.parse(saved);
             Object.assign(USER_CONFIG, parsed); 
+            
+            // Sanitización y migración de rutas antiguas almacenadas en localStorage a minúsculas y nuevas carpetas
+            if (typeof USER_CONFIG.playerCar === 'string') {
+                let car = USER_CONFIG.playerCar.toLowerCase();
+                // Migrar de la raíz recursos/ a recursos/cars/ si es necesario
+                if (car.includes('recursos/') && !car.includes('recursos/cars/')) {
+                    car = car.replace('recursos/', 'recursos/cars/');
+                }
+                USER_CONFIG.playerCar = car;
+            }
+            if (typeof USER_CONFIG.playerAvatar === 'string') {
+                let avatar = USER_CONFIG.playerAvatar.toLowerCase();
+                avatar = avatar.replace('recursos/ui/avatar/', 'recursos/avatar/');
+                avatar = avatar.replace(/avatar\s*\((\d+)\)\.png/, 'avatar_$1.png');
+                USER_CONFIG.playerAvatar = avatar;
+            }
+            if (typeof USER_CONFIG.playerBall === 'string') {
+                let ball = USER_CONFIG.playerBall.toLowerCase();
+                // Migrar de recursos/ball1.png o recursos/balls/ball1.png a recursos/balls/ball_1.png
+                if (ball.includes('recursos/ball') && !ball.includes('recursos/balls/ball_')) {
+                    const match = ball.match(/ball(\d+)\.png/);
+                    if (match) {
+                        ball = `recursos/balls/ball_${match[1]}.png`;
+                    }
+                }
+                USER_CONFIG.playerBall = ball;
+            }
+
             // Asegurar que stats existe (merge profundo simple para stats)
             if (parsed.stats) {
                 USER_CONFIG.stats = { ...USER_CONFIG.stats, ...parsed.stats };
@@ -118,7 +146,7 @@ function loadUserConfig() {
         settingsBloomEl.onchange = (e) => {
             USER_CONFIG.bloomEnabled = e.target.checked;
             isBloomEnabled = e.target.checked;
-            saveUserConfig();
+            settingsChanged = true;
             applyBloomSetting();
             const pauseBloomEl = document.getElementById('toggle-bloom');
             if (pauseBloomEl) pauseBloomEl.checked = isBloomEnabled;
@@ -392,8 +420,11 @@ let setupOverlay, btnStartGame, btnExitSetup, mapListContainer;
 let gameOverOverlay, gameOverWinner, finalScoreBlue, finalScoreOrange;
 let selectedMap = 'URBAN';
 let selectedMode = null;
-let selectedCarP1 = 'recursos/car1.png';
-let selectedCarP2 = 'recursos/car2.png';
+let selectedCarP1 = 'recursos/cars/car1.png';
+let selectedCarP2 = 'recursos/cars/car2.png';
+let settingsChanged = false;
+let settingsFocusIndex = 0; // 0: Música, 1: SFX, 2: Bloom
+const SETTINGS_CONTROLS_COUNT = 3;
 let currentMapPage = 1, currentCarPageP1 = 1, currentCarPageP2 = 1, currentBallPage = 1;
 let currentAvatarPage = 1;
 const CARS_PER_PAGE = 12;
@@ -745,7 +776,7 @@ const boostPreviewManager = {
         });
         ctx.restore();
 
-        if (this.carImg.src !== window.location.origin + '/' + USER_CONFIG.playerCar) {
+        if (!this.carImg.src.endsWith(USER_CONFIG.playerCar)) {
             this.carImg.src = USER_CONFIG.playerCar;
         }
 
@@ -847,11 +878,11 @@ async function init() {
         });
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
-        player1 = new Car(0, 0, '#5ad', { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'Space', drift: 'ShiftLeft', isPlayer: true }, "JUGADOR 1", 'recursos/Car1.png');
+        player1 = new Car(0, 0, '#5ad', { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'Space', drift: 'ShiftLeft', isPlayer: true }, "JUGADOR 1", 'recursos/cars/car1.png');
         player1.isPlayer = true;
-        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/Car2.png');
-        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/Car3.png');
-        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'recursos/Car4.png');
+        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/cars/car2.png');
+        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/cars/car3.png');
+        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'recursos/cars/car4.png');
 
         // Inicializar objetos de teclas para los bots y asignar roles
         player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
@@ -860,7 +891,7 @@ async function init() {
 
         [player1_teammate, player2, player2_teammate].forEach(bot => { bot.aiKeys = {}; });
         allCars = [player1, player1_teammate, player2, player2_teammate];
-        ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/Ball1.png');
+        ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/balls/ball_1.png');
 
         grassDetails = createGrassDetails(1500);
         setupBoostPads();
@@ -910,24 +941,61 @@ async function init() {
 
         // Sliders de Volumen
         const sliderMusic = getEl('slider-settings-vol');
+        const volLabel = getEl('settings-vol-label');
         if (sliderMusic) {
             sliderMusic.value = USER_CONFIG.musicVolume;
+            if (volLabel) volLabel.innerText = sliderMusic.value + '%';
             sliderMusic.oninput = (e) => {
                 const vol = parseInt(e.target.value);
-                USER_CONFIG.musicVolume = vol;
+                if (volLabel) volLabel.innerText = vol + '%';
                 setMusicVolume(vol / 100);
-                saveUserConfig();
+                settingsChanged = true;
             };
         }
 
         const sliderSFX = getEl('slider-settings-sfx');
+        const sfxLabel = getEl('settings-sfx-label');
         if (sliderSFX) {
             sliderSFX.value = USER_CONFIG.sfxVolume;
+            if (sfxLabel) sfxLabel.innerText = sliderSFX.value + '%';
             sliderSFX.oninput = (e) => {
                 const vol = parseInt(e.target.value);
-                USER_CONFIG.sfxVolume = vol;
+                if (sfxLabel) sfxLabel.innerText = vol + '%';
                 setSFXVolume(vol / 100);
+                settingsChanged = true;
+            };
+        }
+
+        // Botón Aceptar en Ajustes
+        const btnSettingsApply = getEl('btn-settings-apply');
+        if (btnSettingsApply) {
+            btnSettingsApply.onclick = () => {
                 saveUserConfig();
+                settingsChanged = false;
+                showMenuScreen('initial');
+                playSound('menu_click');
+            };
+        }
+
+        // Modal Descartar Cambios
+        const btnDiscardConfirm = getEl('btn-settings-discard-confirm');
+        const btnDiscardCancel = getEl('btn-settings-discard-cancel');
+        const discardOverlay = getEl('settings-discard-overlay');
+
+        if (btnDiscardConfirm) {
+            btnDiscardConfirm.onclick = () => {
+                loadUserConfig(); // Recargar de localStorage
+                settingsChanged = false;
+                if (discardOverlay) discardOverlay.style.display = 'none';
+                showMenuScreen('initial');
+                playSound('menu_click');
+            };
+        }
+
+        if (btnDiscardCancel) {
+            btnDiscardCancel.onclick = () => {
+                if (discardOverlay) discardOverlay.style.display = 'none';
+                playSound('menu_click');
             };
         }
 
@@ -950,7 +1018,20 @@ async function init() {
             playSound('menu_click');
         };
 
-        ['btn-custom-back', 'btn-settings-back', 'btn-credits-back'].forEach(id => {
+        const btnSettingsBack = getEl('btn-settings-back');
+        if (btnSettingsBack) {
+            btnSettingsBack.onclick = () => {
+                if (settingsChanged) {
+                    const discardOverlay = getEl('settings-discard-overlay');
+                    if (discardOverlay) discardOverlay.style.display = 'flex';
+                } else {
+                    showMenuScreen('initial');
+                }
+                playSound('menu_click');
+            };
+        }
+
+        ['btn-custom-back', 'btn-credits-back'].forEach(id => {
             const el = getEl(id); if (el) el.onclick = () => showMenuScreen('initial');
         });
 
@@ -1049,6 +1130,7 @@ async function init() {
 
         if (btnExitSetup) btnExitSetup.onclick = () => {
             setupOverlay.style.display = 'none';
+            setupOverlay.classList.add('hidden');
             if (mainMenuEl) mainMenuEl.style.display = 'flex';
         };
 
@@ -1059,11 +1141,18 @@ async function init() {
                     playSound('menu_error');
                     return;
                 }
-                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
                 selectedMode = btn.dataset.mode;
                 playSound('menu_click');
                 validateMatchSetup();
+                
+                // Aplicar borde verde al botón de jugar si hay selección
+                const btnPlay = document.getElementById('setup-btn-play');
+                if (btnPlay) {
+                    btnPlay.style.border = '4px solid #2fb';
+                    btnPlay.style.boxShadow = '0 0 20px rgba(47, 255, 120, 0.4)';
+                }
             };
         });
 
@@ -1123,18 +1212,152 @@ async function init() {
                 return;
             }
 
-            // Navegación por menús (Mando/Teclado)
+            // --- Lógica PRIORITARIA para SELECTOR DE MAPA Y MODO ---
+            const setupOverlay = document.getElementById('match-setup-overlay');
+            if (setupOverlay && setupOverlay.style.display === 'flex' && !setupOverlay.classList.contains('hidden')) {
+                // Cruceta: Navegación EXCLUSIVA de MODOS (Grid manual)
+                if (e.code.startsWith('Arrow')) {
+                    e.preventDefault();
+                    const modes = Array.from(setupOverlay.querySelectorAll('.mode-option'));
+                    let idx = modes.indexOf(document.activeElement);
+                    if (idx === -1) {
+                        if (modes[0]) modes[0].focus();
+                    } else {
+                        let nextIdx = idx;
+                        // Fila 1: 0, 1, 2 | Fila 2: 3, 4, 5, 6
+                        if (e.code === 'ArrowRight') nextIdx = (idx + 1) % modes.length;
+                        if (e.code === 'ArrowLeft') nextIdx = (idx - 1 + modes.length) % modes.length;
+                        if (e.code === 'ArrowDown') {
+                            if (idx <= 2) nextIdx = Math.min(idx + 3, modes.length - 1);
+                            else nextIdx = idx; // Se queda en la fila de abajo
+                        }
+                        if (e.code === 'ArrowUp') {
+                            if (idx >= 3) nextIdx = Math.max(idx - 3, 0);
+                            else nextIdx = idx; // Se queda en la fila de arriba
+                        }
+                        if (modes[nextIdx]) {
+                            modes[nextIdx].focus();
+                            // ELIMINADA AUTO-SELECCIÓN: Solo navegamos visualmente
+                            // La selección verde (selectedMode) persiste hasta que se elija otro modo válido
+                        }
+                    }
+                    return; // Bloqueo total para que no pase a la lógica de menús global
+                }
+
+                // A (Enter) en el Selector de Modos
+                if (e.code === 'Enter') {
+                    const focused = document.activeElement;
+                    if (focused && focused.classList.contains('mode-option')) {
+                        focused.click();
+                        e.preventDefault();
+                        return;
+                    }
+                }
+
+                // LT (Q) y RT (E) para cambiar mapas (Directo a la lógica del carrusel)
+                if (e.code === 'KeyQ') {
+                    currentMapPage--;
+                    loadSetupMaps();
+                    playSound('menu_click');
+                    e.preventDefault();
+                    return;
+                }
+                if (e.code === 'KeyE') {
+                    currentMapPage++;
+                    loadSetupMaps();
+                    playSound('menu_click');
+                    e.preventDefault();
+                    return;
+                }
+                // START (Space) para Jugar (si está habilitado)
+                if (e.code === 'Space') {
+                    const btnPlay = document.getElementById('setup-btn-play');
+                    if (btnPlay && !btnPlay.disabled) {
+                        btnPlay.click();
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                // B (Escape) para Volver
+                if (e.code === 'Escape') {
+                    const btnExit = document.getElementById('setup-btn-exit');
+                    if (btnExit) btnExit.click();
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // --- LÓGICA PARA ESCENA DE AJUSTES ---
+            if (gameState === 'settings') {
+                const discardOverlay = getEl('settings-discard-overlay');
+                if (discardOverlay && discardOverlay.style.display === 'flex') {
+                    if (e.code === 'Enter') { getEl('btn-settings-discard-confirm').click(); e.preventDefault(); }
+                    if (e.code === 'Escape') { getEl('btn-settings-discard-cancel').click(); e.preventDefault(); }
+                    return;
+                }
+
+                if (e.code === 'ArrowUp') { updateSettingsFocus(-1); e.preventDefault(); }
+                if (e.code === 'ArrowDown') { updateSettingsFocus(1); e.preventDefault(); }
+                
+                if (e.code === 'ArrowRight') { adjustFocusedSetting(1); e.preventDefault(); }
+                if (e.code === 'ArrowLeft') { adjustFocusedSetting(-1); e.preventDefault(); }
+
+                if (e.code === 'Enter') {
+                    if (settingsFocusIndex === 2) { // Bloom toggle
+                        const cb = getEl('settings-toggle-bloom');
+                        if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }
+                    }
+                    e.preventDefault();
+                }
+
+                if (e.code === 'Space') { // START: Aceptar
+                    const btn = getEl('btn-settings-apply');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+
+                if (e.code === 'Escape') { // B: Cancelar
+                    const btn = getEl('btn-settings-back');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+
+                // MP3 Controls
+                if (e.code === 'KeyL') { // LB: Pista Anterior
+                    prevSong();
+                    syncSettingsAudioUI();
+                    blinkSettingButton('btn-prev-song');
+                    e.preventDefault();
+                }
+                if (e.code === 'KeyR') { // RB: Pista Siguiente
+                    nextSong();
+                    syncSettingsAudioUI();
+                    blinkSettingButton('btn-next-song');
+                    e.preventDefault();
+                }
+                if (e.code === 'KeyY') { // Y: Play/Pause
+                    togglePlayPause();
+                    syncSettingsAudioUI();
+                    // Pequeño retardo para asegurar que el estado de pausa se ha actualizado
+                    setTimeout(syncSettingsAudioUI, 100); 
+                    e.preventDefault();
+                }
+
+                return;
+            }
+
+            // --- RESTO DE LÓGICA (Solo si no estamos en el Selector) ---
             if (gameState === 'menu' || gameState === 'intro') {
                 if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') { updateMenuFocus(-1); e.preventDefault(); }
                 if (e.code === 'ArrowDown' || e.code === 'ArrowRight') { updateMenuFocus(1); e.preventDefault(); }
                 
                 // Atajos de Mando
                 if (e.code === 'KeyY') { // Botón Y: Editor
-                    const btn = getEl('btn-map-editor');
+                    const btn = document.getElementById('btn-map-editor');
                     if (btn && btn.style.display !== 'none') btn.click();
                 }
                 if (e.code === 'KeyC') { // Botón SELECT: Notas
-                    const btn = getEl('btn-credits');
+                    const btn = document.getElementById('btn-credits');
                     if (btn && btn.style.display !== 'none') btn.click();
                 }
                 if (e.code === 'Escape') { // Botón B: Volver
@@ -1142,10 +1365,10 @@ async function init() {
                     e.preventDefault();
                 }
                 if (e.code === 'Space' && gameState === 'menu') { // Botón START: Ajustes
-                    const btn = getEl('btn-settings');
+                    const btn = document.getElementById('btn-settings');
                     if (btn && btn.style.display !== 'none') btn.click();
                 }
-                if (e.code === 'Enter' && gameState === 'menu') { // Botón A: Confirmar
+                if (e.code === 'Enter' && (gameState === 'menu' || gameState === 'zooming')) { // Botón A: Confirmar (Incluir zooming para el popup inicial)
                     const focused = document.activeElement;
                     if (focused && typeof focused.click === 'function') {
                         focused.click();
@@ -1280,6 +1503,14 @@ async function init() {
             stopAllMotors();
         };
 
+        // MP3 en Ajustes
+        const sPP = getEl('btn-play-pause');
+        if (sPP) sPP.onclick = () => { togglePlayPause(); syncSettingsAudioUI(); };
+        const sPrev = getEl('btn-prev-song');
+        if (sPrev) sPrev.onclick = () => { prevSong(); syncSettingsAudioUI(); blinkSettingButton('btn-prev-song'); };
+        const sNext = getEl('btn-next-song');
+        if (sNext) sNext.onclick = () => { nextSong(); syncSettingsAudioUI(); blinkSettingButton('btn-next-song'); };
+
         // MP3 en Pausa
         const pPP = getEl('btn-pause-play-pause');
         if (pPP) pPP.onclick = () => { togglePlayPause(); syncPauseMenuAudioUI(); };
@@ -1353,6 +1584,7 @@ function gameLoop(timestamp) {
     }
 
     renderFrame();
+    if (gameState === 'settings') drawSettingsVisualizer();
     requestAnimationFrame(gameLoop);
 }
 
@@ -1561,6 +1793,7 @@ function updateAll(dt) {
     updateAudio();
     if (player1) setBoostSound(player1.isBoosting);
     updateUI(dt);
+    if (gameState === 'settings') drawSettingsVisualizer();
 }
 
 function checkCollisions() {
@@ -2120,7 +2353,7 @@ function renderAvatars() {
     const totalAvatars = 100;
     const avatars = [];
     for (let i = 1; i <= totalAvatars; i++) {
-        avatars.push(`recursos/avatar/avatar (${i}).png`);
+        avatars.push(`recursos/avatar/avatar_${i}.png`);
     }
 
     const totalPages = Math.ceil(totalAvatars / AVATARS_PER_PAGE);
@@ -2156,7 +2389,7 @@ function renderCarSelection() {
     if (!list) return;
 
     const carImages = [];
-    for (let i = 1; i <= 10; i++) carImages.push(`recursos/Car${i}.png`);
+    for (let i = 1; i <= 10; i++) carImages.push(`recursos/cars/car${i}.png`);
 
     list.innerHTML = '';
 
@@ -2303,6 +2536,7 @@ function showMenuScreen(screenId) {
     if (screenId === 'initial' && menuInitial) {
         menuInitial.style.display = 'flex';
         target = menuInitial;
+        gameState = 'menu'; // CRITICAL: Reset state for gamepad to work
         const videoBg = document.getElementById('menu-video-bg');
         if (videoBg) videoBg.style.opacity = '1';
     }
@@ -2324,6 +2558,14 @@ function showMenuScreen(screenId) {
     else if (screenId === 'settings' && menuSettings) {
         menuSettings.style.display = 'flex';
         target = menuSettings;
+        gameState = 'settings';
+        settingsChanged = false;
+        settingsFocusIndex = 0;
+        // Timeout para asegurar que el DOM está renderizado antes de aplicar el foco
+        setTimeout(() => {
+            updateSettingsFocus(0);
+            syncSettingsAudioUI();
+        }, 50);
     }
 
     if (target) {
@@ -2339,7 +2581,7 @@ function updateMenuFocus(direction) {
     let activeMenu = null;
     for (const id of visibleMenus) {
         const el = getEl(id);
-        if (el && el.style.display !== 'none' && !el.classList.contains('hidden')) {
+        if (el && el.style.display !== 'none' && !el.classList.contains('hidden') && el.offsetParent !== null) {
             activeMenu = el;
             break; 
         }
@@ -2402,7 +2644,20 @@ async function startGame() {
     if (mainMenuEl) mainMenuEl.style.display = 'none';
     if (setupOverlay) {
         setupOverlay.style.display = 'flex';
+        setupOverlay.classList.remove('hidden');
         loadSetupMaps();
+        
+        // Dar foco al primer modo (Práctica) para habilitar navegación por cruceta
+        setTimeout(() => {
+            const firstMode = document.querySelector('.mode-option');
+            if (firstMode) {
+                firstMode.focus();
+                // Auto-seleccionar el primer modo si no está bloqueado
+                if (!firstMode.classList.contains('locked')) {
+                    firstMode.click();
+                }
+            }
+        }, 100);
     }
 }
 
@@ -2419,8 +2674,8 @@ async function loadSetupMaps() {
         const totalMaps = MAPS_LIST.length;
 
         // El currentMapPage ahora actuará como el índice del mapa central (1 a totalMaps)
-        if (currentMapPage > totalMaps) currentMapPage = totalMaps;
-        if (currentMapPage < 1) currentMapPage = 1;
+        if (currentMapPage > totalMaps) currentMapPage = 1;
+        if (currentMapPage < 1) currentMapPage = totalMaps;
 
         const centerIdx = currentMapPage - 1;
         const pageInfo = document.getElementById('map-page-info');
@@ -2458,7 +2713,7 @@ async function loadSetupMaps() {
             card.style.zIndex = isCenter ? "10" : "5";
             card.style.opacity = isCenter ? "1" : "0.6";
             card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 35}px) rotateY(${offset * -20}deg)`;
-            card.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+            card.style.transition = "all 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
             card.style.cursor = "pointer";
             card.style.background = "#0a0a19";
             card.style.borderRadius = "12px";
@@ -2475,13 +2730,12 @@ async function loadSetupMaps() {
 
             card.innerHTML = `
                 <div class="pixel-border" style="width: 100%; height: 290px; overflow: hidden; background: #000; border: ${isCenter ? '4px solid #5ad' : '2px solid #333'} !important; position: relative;">
-                    <img src="recursos/Map${idx + 1}.png" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="recursos/maps/map${idx + 1}.png" style="width: 100%; height: 100%; object-fit: cover;">
                     <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(10,10,25,1) 0%, rgba(10,10,25,0.7) 40%, transparent 100%); opacity: ${isCenter ? 1 : 0}; transition: opacity 0.3s;"></div>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; margin-top: -35px; opacity: ${isCenter ? 1 : 0}; transition: all 0.4s ease; pointer-events: none; z-index: 20; transform: ${isCenter ? 'translateY(0)' : 'translateY(15px)'}">
-                    <!-- Etiqueta Cyberpunk Neon Tag -->
-                    <div style="background: rgba(5, 5, 15, 0.9); border: 2px solid #5ad; padding: 4px 25px; box-shadow: 0 0 20px rgba(90, 173, 237, 0.4); position: relative; display: flex; align-items: center; justify-content: center; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);">
-                        <span style="color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase; text-shadow: 0 0 10px rgba(90, 173, 237, 0.8);">
+                    <div style="background: rgba(5, 5, 15, 0.9); border: 2px solid #5ad; padding: 4px 25px; position: relative; display: flex; align-items: center; justify-content: center; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);">
+                        <span style="color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase;">
                             ${displayName}
                         </span>
                     </div>
@@ -2549,6 +2803,9 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
     const msg = document.getElementById('modal-alert-message');
     const ico = document.getElementById('modal-alert-icon');
     const title = document.getElementById('modal-alert-title');
+    
+    // Guardar el elemento que tenía el foco para restaurarlo luego
+    const lastFocus = document.activeElement;
 
     if (overlay && msg) {
         msg.innerText = text;
@@ -2560,12 +2817,23 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
 
         // Poner foco en el botón OK para cerrar con mando
         const okBtn = document.getElementById('btn-modal-alert-ok');
-        if (okBtn) okBtn.focus();
+        if (okBtn) {
+            okBtn.focus();
+            // Sobrescribir el onclick para restaurar foco
+            const originalClick = okBtn.onclick;
+            okBtn.onclick = () => {
+                if (typeof originalClick === 'function') originalClick();
+                overlay.style.display = 'none';
+                if (lastFocus) lastFocus.focus();
+                playSound('menu_click');
+            };
+        }
 
         // Auto-cierre tras 3.5 segundos para no bloquear el flujo
         setTimeout(() => {
             if (overlay.style.display === 'flex') {
                 overlay.style.display = 'none';
+                if (lastFocus) lastFocus.focus();
             }
         }, 3500);
 
@@ -2773,3 +3041,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Ejecutar el inicio del juego
 init();
+function updateSettingsFocus(dir) {
+    settingsFocusIndex = (settingsFocusIndex + dir + SETTINGS_CONTROLS_COUNT) % SETTINGS_CONTROLS_COUNT;
+    
+    // Quitar focus visual previo
+    const controls = [
+        getEl('slider-settings-vol'),
+        getEl('slider-settings-sfx'),
+        getEl('settings-toggle-bloom')
+    ];
+
+    controls.forEach((c, idx) => {
+        if (!c) return;
+        const parent = c.parentElement;
+        if (idx === settingsFocusIndex) {
+            parent.style.border = '2px solid #5ad'; // Cambiado a Azul
+            parent.style.boxShadow = '0 0 15px rgba(90, 173, 237, 0.4)';
+            c.focus();
+        } else {
+            parent.style.border = '1px solid rgba(255,255,255,0.1)';
+            parent.style.borderColor = 'rgba(90, 173, 237, 0.2)';
+            parent.style.boxShadow = 'none';
+        }
+    });
+}
+
+function adjustFocusedSetting(dir) {
+    if (settingsFocusIndex === 0) { // Music
+        const s = getEl('slider-settings-vol');
+        if (s) { s.value = parseInt(s.value) + dir * 5; s.dispatchEvent(new Event('input')); }
+    } else if (settingsFocusIndex === 1) { // SFX
+        const s = getEl('slider-settings-sfx');
+        if (s) { s.value = parseInt(s.value) + dir * 5; s.dispatchEvent(new Event('input')); }
+    }
+}
+
+function syncSettingsAudioUI() {
+    const btnPP = getEl('btn-play-pause');
+    if (!btnPP) return;
+
+    const paused = isMusicPaused();
+
+    if (paused) {
+        btnPP.innerHTML = `⏸ <span style="display:block; font-size:10px; margin-top:5px; border:2px solid #ff0; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:auto; margin-right:auto; color:#ff0;">Y</span>`;
+        btnPP.style.borderColor = '#f33'; // Rojo
+        btnPP.style.color = '#f33';
+    } else {
+        btnPP.innerHTML = `▶ <span style="display:block; font-size:10px; margin-top:5px; border:2px solid #ff0; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:auto; margin-right:auto; color:#ff0;">Y</span>`;
+        btnPP.style.borderColor = '#2fb'; // Verde
+        btnPP.style.color = '#2fb';
+    }
+}
+
+function drawSettingsVisualizer() {
+    const canvas = getEl('settings-audio-visualizer');
+    if (!canvas) return;
+    const ctxV = canvas.getContext('2d');
+    const data = getAudioVisualData();
+    
+    ctxV.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const barCount = 20;
+    const barWidth = canvas.width / barCount;
+    
+    for (let i = 0; i < barCount; i++) {
+        // Usar los primeros 20 bins del analizador
+        const val = data[i] || 0;
+        const barHeight = (val / 255) * canvas.height;
+        
+        // Efecto de color degradado basado en frecuencia
+        ctxV.fillStyle = `hsl(${200 + (val/5)}, 80%, 60%)`;
+        ctxV.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+    }
+}
+
+function blinkSettingButton(id) {
+    const el = getEl(id);
+    if (!el) return;
+    const originalBorder = el.style.borderColor;
+    el.style.borderColor = '#fff';
+    el.style.boxShadow = '0 0 20px rgba(255,255,255,0.8)';
+    setTimeout(() => {
+        el.style.borderColor = originalBorder;
+        el.style.boxShadow = 'none';
+    }, 150);
+}

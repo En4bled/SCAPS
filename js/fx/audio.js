@@ -16,6 +16,14 @@ masterGain.connect(masterLimiter);
 masterLimiter.connect(audioCtx.destination);
 
 let musicAudio = null;
+const audioAnalyser = audioCtx.createAnalyser();
+audioAnalyser.fftSize = 64; // Pequeño para efecto retro/pixelado
+const analyserDataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+
+export function getAudioVisualData() {
+    audioAnalyser.getByteFrequencyData(analyserDataArray);
+    return analyserDataArray;
+}
 let motorAudios = [];
 let isMusicMuted = false;
 let musicVolume = 0.5;
@@ -63,6 +71,10 @@ export function togglePlayPause() {
         musicAudio.pause();
         return false;
     }
+}
+
+export function isMusicPaused() {
+    return musicAudio ? musicAudio.paused : true;
 }
 
 export function setSFXVolume(vol) {
@@ -192,7 +204,7 @@ export function playSound(type, intensity = 1.0) {
     const now = audioCtx.currentTime;
 
     if (type === 'menu_click') {
-        const clickSnd = new Audio('recursos/sound/Modern2.wav');
+        const clickSnd = new Audio('recursos/sound/modern2.wav');
         clickSnd.volume = 0.4 * sfxVolume;
         clickSnd.play().catch(e => {});
         return;
@@ -218,13 +230,13 @@ export function playSound(type, intensity = 1.0) {
         return;
     }
     if (type === 'countdown') {
-        const cdSnd = new Audio('recursos/sound/Countdown.mp3');
+        const cdSnd = new Audio('recursos/sound/countdown.mp3');
         cdSnd.volume = 0.6 * sfxVolume;
         cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
         return;
     }
     if (type === 'menu_hover') {
-        const hoverSnd = new Audio('recursos/sound/Minimalist8.wav');
+        const hoverSnd = new Audio('recursos/sound/minimalist8.wav');
         hoverSnd.volume = 0.3 * sfxVolume;
         hoverSnd.play().catch(e => {});
         return;
@@ -338,6 +350,11 @@ function playPlaylist() {
     musicAudio = new Audio(`recursos/music/song${currentSongIdx}.mp3`);
     musicAudio.volume = musicVolume;
     musicAudio.muted = isMusicMuted;
+
+    // Conectar al analizador
+    const source = audioCtx.createMediaElementSource(musicAudio);
+    source.connect(audioAnalyser);
+    audioAnalyser.connect(masterGain);
     
     musicAudio.play().then(() => {
         showSongNotification();

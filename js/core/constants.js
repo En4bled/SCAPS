@@ -18,7 +18,7 @@ export const CONFIG = {
     WORLD_H: 3000,
 
     // Fondo y Estética
-    BG_IMG_PATH: 'recursos/Estadio1.png',
+    BG_IMG_PATH: 'recursos/stadiums/estadio1.png',
     BG_SCALE: 1.638,
     BG_OFFSET_X: 0,
     BG_OFFSET_Y: 0,
