@@ -58,6 +58,7 @@ const getEl = (id) => document.getElementById(id);
 // Exportar para acceso desde UI tras inicialización
 window.musicVolume = USER_CONFIG.musicVolume / 100;
 window.sfxVolume = USER_CONFIG.sfxVolume / 100;
+window.getAssetPath = getAssetPath;
 
 function saveUserConfig() {
     localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
