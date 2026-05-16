@@ -81,10 +81,10 @@ export function setMusicVolume(vol) {
     if (volLabel) volLabel.innerText = Math.round(vol * 100) + "%";
 }
 
-export function initAudio(playerCar, allCars) {
-    if (isInitialized) return;
+export function initAudio(playerCar = null, allCars = null) {
+    if (isInitialized && !allCars) return;
     
-    playerCarRef = playerCar;
+    if (playerCar) playerCarRef = playerCar;
     
     // Asegurar que el contexto está activo (gesto del usuario)
     if (audioCtx.state === 'suspended') {
@@ -93,9 +93,12 @@ export function initAudio(playerCar, allCars) {
         });
     }
     
-    isInitialized = true;
+    if (!isInitialized) {
+        isInitialized = true;
+        playPlaylist();
+    }
 
-    playPlaylist();
+    if (!allCars) return;
 
     // Motores Sintéticos de Alta Fidelidad
     motorAudios = [];

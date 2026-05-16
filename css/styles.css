@@ -597,11 +597,11 @@ canvas {
         0 4px 0 -2px #0a0a19,
         -4px 0 0 -2px #0a0a19,
         4px 0 0 -2px #0a0a19;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation: pixel-neon-cycle-btn 5s infinite alternate ease-in-out;
 }
 
-.menu-btn:hover {
+.menu-btn:hover, .menu-btn:focus {
+    outline: none;
     background: #5ad !important;
     color: #000 !important;
     transform: scale(1.1);
@@ -612,6 +612,11 @@ canvas {
         -6px 0 0 -2px #0a0a19,
         6px 0 0 -2px #0a0a19,
         0 0 30px #5ad;
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
+    filter: brightness(0.8);
 }
 
 @keyframes pixel-neon-cycle-btn {
@@ -631,7 +636,8 @@ canvas {
     color: #f90 !important;
 }
 
-.menu-btn.primary:hover {
+.menu-btn.primary:hover, .menu-btn.primary:focus {
+    outline: none;
     background: #f90 !important;
     color: #000 !important;
     transform: scale(1.1);
@@ -642,6 +648,63 @@ canvas {
         -6px 0 0 -2px #0a0a19,
         6px 0 0 -2px #0a0a19,
         0 0 30px #f90;
+}
+
+/* INDICADOR VISUAL BOTÓN 'A' PARA MANDO */
+.menu-btn:focus::after, .custom-tab-btn:focus::after, .subtab-btn:focus::after, .setup-map-item:focus::after {
+    content: "A";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: #000;
+    color: #2fb; /* Verde neón estilo botón A de Xbox */
+    border: 2px solid #2fb;
+    border-radius: 50%;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(47, 187, 120, 0.6);
+    z-index: 100;
+    pointer-events: none;
+    animation: button-a-pulse 1s infinite alternate;
+}
+
+/* Ajuste específico para mapas */
+.setup-map-item:focus::after {
+    right: 10px;
+    top: 10px;
+    transform: none;
+}
+
+@keyframes button-a-pulse {
+    from { transform: translateY(-50%) scale(1); box-shadow: 0 0 10px rgba(47, 187, 120, 0.6); }
+    to { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 20px rgba(47, 187, 120, 0.9); }
+}
+
+/* Ocultar indicador A en todos los botones de VOLVER/CANCELAR */
+#btn-credits-back:focus::after,
+#btn-custom-back:focus::after,
+#btn-settings-back:focus::after,
+#setup-btn-exit:focus::after,
+#btn-editor-cancel:focus::after,
+#btn-exit-cancel:focus::after {
+    display: none !important;
+}
+
+/* Re-ajuste de animación para mapas (sin el translate vertical) */
+.setup-map-item:focus::after {
+    animation: button-a-pulse-map 1s infinite alternate;
+}
+
+@keyframes button-a-pulse-map {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
 }
 
 .menu-footer {
@@ -1803,4 +1866,33 @@ input[type="range"]::-moz-range-thumb {
     0% { transform: translateX(120%) skewX(-20deg); }
     50% { transform: translateX(0%) skewX(-20deg); }
     100% { transform: translateX(-120%) skewX(-20deg); }
+}
+
+/* --- ESTILIZACIÓN DE SCROLLBARS (SCAPS THEME) --- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #5ad; /* Azul SCAPS */
+    border-radius: 0px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #f90; /* Naranja SCAPS */
+    box-shadow: 0 0 15px #f90;
+}
+
+/* Scrollbar específico para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #5ad rgba(0, 0, 0, 0.4);
 }

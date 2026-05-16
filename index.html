@@ -40,7 +40,7 @@
                 <p>Se han tomado ideas, conceptos y mecánicas inspiradas en diversos títulos populares de la industria
                     para crear esta experiencia. No obstante, cualquier similitud directa con productos comerciales
                     existentes es meramente <strong>circunstancial y coincidencia absoluta</strong>.</p>
-                <div class="blink-text" style="margin-top:30px;">PULSA <span style="color:#f90">ESPACIO</span> PARA
+                <div class="blink-text" style="margin-top:30px;">PULSA <span style="color:#f90">ESPACIO</span> o <span style="color:#f90">START</span> PARA
                     CONTINUAR</div>
             </div>
         </div>
@@ -61,7 +61,10 @@
             <div id="menu-initial" class="menu-buttons">
                 <button id="btn-play" class="menu-btn primary">Jugar</button>
                 <button id="btn-custom" class="menu-btn">Personalizar</button>
-                <button id="btn-settings" class="menu-btn">Ajustes</button>
+                <button id="btn-settings" class="menu-btn">
+                    <span style="display:inline-block; background:#000; color:#fff; border-radius:6px; padding: 2px 6px; font-size:10px; margin-right:10px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; letter-spacing: 0;">START</span>
+                    Ajustes
+                </button>
                 <button id="btn-exit" class="menu-btn" style="border-color: #f33; color: #f33;">SALIR</button>
                 <div class="menu-footer">2026 @ SYSTEM SIMESIA</div>
             </div>
@@ -85,13 +88,17 @@
 
             <!-- Botón Editor de Mapas (Encima de Notas de Desarrollo) -->
             <button id="btn-map-editor" class="menu-btn"
-                style="position: absolute; bottom: 12vh; right: 2vw; width: 15vw; min-width: 200px; font-size: 0.8vw; padding: 1vh 0; border-color: #f90; color: #f90; text-align: center;">EDITOR
-                DE MAPAS</button>
+                style="position: absolute; bottom: 12vh; right: 2vw; width: 15vw; min-width: 200px; font-size: 0.8vw; padding: 1vh 0; border-color: #f90; color: #f90; text-align: center;">
+                <span style="display:inline-block; width:22px; height:22px; background:#000; color:#ff0; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #ff0; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">Y</span>
+                EDITOR DE MAPAS
+            </button>
 
             <!-- Botón Notas de Desarrollo (Abajo derecha) -->
             <button id="btn-credits" class="menu-btn"
-                style="position: absolute; bottom: 5vh; right: 2vw; font-size: 0.8vw; padding: 1vh 0; width: 15vw; min-width: 200px; z-index: 2000; border-color: #5ad; color: #5ad; display: block; text-align: center;">NOTAS
-                DE DESARROLLO</button>
+                style="position: absolute; bottom: 5vh; right: 2vw; font-size: 0.8vw; padding: 1vh 0; width: 15vw; min-width: 200px; z-index: 2000; border-color: #5ad; color: #5ad; display: block; text-align: center;">
+                <span style="display:inline-block; background:#000; color:#fff; border-radius:6px; padding: 2px 6px; font-size:10px; margin-right:10px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; letter-spacing: 0;">SELECT</span>
+                NOTAS DE DESARROLLO
+            </button>
 
             <div id="menu-custom" class="personalization-wrapper" style="display: none;">
                 <!-- Título exterior (Banner) ahora fuera del cuadro -->
@@ -472,7 +479,10 @@
 
 
                 <button id="btn-settings-back" class="menu-btn"
-                    style="padding: 10px; font-size:18px; margin: 0; width: 100%;">← VOLVER</button>
+                    style="padding: 10px; font-size:18px; margin: 0; width: 100%;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    VOLVER
+                </button>
             </div>
 
             <!-- Panel de Créditos -->
@@ -482,7 +492,7 @@
                     style="margin: 0; color: #5ad; text-shadow: 0 0 10px #5ad; font-size: 28px; text-align:center;">
                     NOTAS DE DESARROLLO</h2>
 
-                <div class="pixel-border"
+                <div id="credits-scroll-container" class="pixel-border"
                     style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
 
                     <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS
@@ -554,8 +564,10 @@
                             style="font-weight:bold; color:#fff;">SYSTEM SIMESIA</span> @ 2026</p>
                 </div>
 
-                <button id="btn-credits-back" class="menu-btn" style="width: 100%; margin: 0; padding: 10px;">←
-                    VOLVER</button>
+                <button id="btn-credits-back" class="menu-btn" style="width: 100%; margin: 0; padding: 10px;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    VOLVER
+                </button>
             </div>
 
             <!-- Marquesina de Cambios -->
@@ -634,6 +646,12 @@
 
 
         <div id="countdown-overlay">3</div>
+        
+        <!-- Indicador de Mando Global (Top Left) -->
+        <div id="gamepad-indicator" style="position: absolute; top: 1.5vh; left: 1.5vw; z-index: 10000; filter: grayscale(100%); opacity: 0.5; transition: all 0.5s ease; cursor: help; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(4px); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 45px; height: 55px; pointer-events: auto;">
+            <span style="font-size: 24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">🎮</span>
+            <span id="gamepad-status-icon" style="font-size: 16px; margin-top: -2px;">❌</span>
+        </div>
         <div id="goal-text-overlay">¡GOL!</div>
         <div id="camera-mode-overlay"></div>
         <div id="scoreboard-overlay"></div>
@@ -780,7 +798,10 @@
             <div class="menu-buttons"
                 style="width: 1060px; display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 20px; align-items: stretch !important;">
                 <button id="setup-btn-exit" class="menu-btn"
-                    style="border-color: #ff4444; color: #ff4444; width: 380px; font-size: 18px; padding: 12px; margin: 0; display: flex; align-items: center; justify-content: center;">VOLVER</button>
+                    style="border-color: #ff4444; color: #ff4444; width: 380px; font-size: 18px; padding: 12px; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    VOLVER
+                </button>
                 <button id="setup-btn-play" class="menu-btn primary" disabled
                     style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 380px; font-size: 18px; padding: 12px; margin: 0; display: flex; align-items: center; justify-content: center;">CONFIRMAR
                     Y JUGAR</button>
@@ -844,8 +865,15 @@
             </h2>
             <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
                 <button id="btn-exit-confirm" class="menu-btn primary"
-                    style="background: #f33; border-color: #a00; color: #fff; width: 100%;">SÍ, SALIR</button>
-                <button id="btn-exit-cancel" class="menu-btn" style="width: 100%;">NO, VOLVER</button>
+                    style="background: #f33; border-color: #a00; color: #fff; width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#2fb; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #2fb; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">A</span>
+                    SÍ, SALIR
+                </button>
+                <button id="btn-exit-cancel" class="menu-btn" 
+                    style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    NO, VOLVER
+                </button>
             </div>
         </div>
     </div>
@@ -859,12 +887,20 @@
                 ¿ABRIR EDITOR?</h2>
             <p style="font-family: 'Share Tech Mono', monospace; color: #eee; font-size: 14px; margin-bottom: 10px;">
                 Se abrirá el editor avanzado en una pestaña nueva.<br>
-                Podrás crear y guardar tus propios estadios.
+                Podrás crear y guardar tus propios estadios.<br><br>
+                <span style="color: #f33; font-weight: bold;">⚠️ EL EDITOR SOLO ESTÁ DISPONIBLE PARA<br>USO CON TECLADO Y RATÓN.</span>
             </p>
             <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
                 <button id="btn-editor-confirm" class="menu-btn primary"
-                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 100%;">ACEPTAR</button>
-                <button id="btn-editor-cancel" class="menu-btn" style="width: 100%;">CANCELAR</button>
+                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#2fb; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #2fb; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">A</span>
+                    ACEPTAR
+                </button>
+                <button id="btn-editor-cancel" class="menu-btn" 
+                    style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    CANCELAR
+                </button>
             </div>
         </div>
     </div>

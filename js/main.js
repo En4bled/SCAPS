@@ -3,7 +3,7 @@ import { Car } from './entities/car.js';
 import { Ball } from './entities/ball.js';
 import { BoostPad } from './entities/boost.js';
 import { ExplosionParticle, ConfettiParticle } from './fx/particles.js';
-import { setupInput } from './core/input.js';
+import { setupInput, pollGamepad } from './core/input.js';
 import { drawField, drawGoalNets, createGrassDetails } from './world/field.js';
 import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
@@ -51,6 +51,8 @@ const USER_CONFIG = {
         level: 1
     }
 };
+
+const getEl = (id) => document.getElementById(id);
 
 // Exportar para acceso desde UI tras inicialización
 window.musicVolume = USER_CONFIG.musicVolume / 100;
@@ -791,7 +793,6 @@ async function init() {
         if (!canvas) return;
         ctx = canvas.getContext('2d');
 
-        const getEl = (id) => document.getElementById(id);
         countdownEl = getEl('countdown-overlay');
         goalTextEl = getEl('goal-text-overlay');
         cameraModeEl = getEl('camera-mode-overlay');
@@ -846,7 +847,7 @@ async function init() {
         });
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
-        player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'Space', isPlayer: true }, "JUGADOR 1", 'recursos/Car1.png');
+        player1 = new Car(0, 0, '#5ad', { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'Space', drift: 'ShiftLeft', isPlayer: true }, "JUGADOR 1", 'recursos/Car1.png');
         player1.isPlayer = true;
         player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/Car2.png');
         player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/Car3.png');
@@ -1073,6 +1074,94 @@ async function init() {
         }
 
         window.addEventListener('keydown', (e) => {
+            // --- Lógica Específica para NOTAS DE DESARROLLO ---
+            const creditsPanel = getEl('menu-credits');
+            if (creditsPanel && creditsPanel.style.display === 'flex') {
+                const scrollContainer = getEl('credits-scroll-container');
+                if (scrollContainer) {
+                    if (e.code === 'ArrowUp') { scrollContainer.scrollTop -= 40; e.preventDefault(); return; }
+                    if (e.code === 'ArrowDown') { scrollContainer.scrollTop += 40; e.preventDefault(); return; }
+                }
+                // Solo permitimos Escape (Botón B) para salir
+                if (e.code === 'Escape') {
+                    handleMenuBack();
+                    e.preventDefault();
+                }
+                // Bloqueamos TODO lo demás mientras los créditos están abiertos
+                return;
+            }
+
+            // --- Lógica Específica para CONFIRMACIÓN SALIDA ---
+            const exitOverlay = getEl('exit-confirm-overlay');
+            if (exitOverlay && exitOverlay.style.display === 'flex') {
+                if (e.code === 'Enter') {
+                    const btn = getEl('btn-exit-confirm');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+                if (e.code === 'Escape') {
+                    const btn = getEl('btn-exit-cancel');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // --- Lógica Específica para CONFIRMACIÓN EDITOR ---
+            const editorOverlay = getEl('editor-confirm-overlay');
+            if (editorOverlay && editorOverlay.style.display === 'flex') {
+                if (e.code === 'Enter') {
+                    const btn = getEl('btn-editor-confirm');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+                if (e.code === 'Escape') {
+                    const btn = getEl('btn-editor-cancel');
+                    if (btn) btn.click();
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // Navegación por menús (Mando/Teclado)
+            if (gameState === 'menu' || gameState === 'intro') {
+                if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') { updateMenuFocus(-1); e.preventDefault(); }
+                if (e.code === 'ArrowDown' || e.code === 'ArrowRight') { updateMenuFocus(1); e.preventDefault(); }
+                
+                // Atajos de Mando
+                if (e.code === 'KeyY') { // Botón Y: Editor
+                    const btn = getEl('btn-map-editor');
+                    if (btn && btn.style.display !== 'none') btn.click();
+                }
+                if (e.code === 'KeyC') { // Botón SELECT: Notas
+                    const btn = getEl('btn-credits');
+                    if (btn && btn.style.display !== 'none') btn.click();
+                }
+                if (e.code === 'Escape') { // Botón B: Volver
+                    handleMenuBack();
+                    e.preventDefault();
+                }
+                if (e.code === 'Space' && gameState === 'menu') { // Botón START: Ajustes
+                    const btn = getEl('btn-settings');
+                    if (btn && btn.style.display !== 'none') btn.click();
+                }
+                if (e.code === 'Enter' && gameState === 'menu') { // Botón A: Confirmar
+                    const focused = document.activeElement;
+                    if (focused && typeof focused.click === 'function') {
+                        focused.click();
+                        e.preventDefault();
+                    }
+                }
+            }
+
+            // Cerrar Modal de Alerta con cualquier tecla (Space/Enter/Mando)
+            const alertOverlay = document.getElementById('modal-alert-overlay');
+            if (alertOverlay && alertOverlay.style.display === 'flex' && (e.code === 'Space' || e.code === 'Enter')) {
+                alertOverlay.style.display = 'none';
+                playSound('menu_click');
+                return;
+            }
+
             // Manejo de la Intro (Solo se puede saltar en la Escena 2)
             if (gameState === 'intro' && e.code === 'Space') {
                 if (introPhase === 2) {
@@ -1119,6 +1208,61 @@ async function init() {
             togglePause(); 
             resetAfterGoal(); 
         };
+
+        // --- DETECCIÓN DE MANDO (Gamepad API) ---
+        const gpIndicator = getEl('gamepad-indicator');
+
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("SCAPS: Gamepad detectado ->", e.gamepad.id);
+            if (gpIndicator) {
+                gpIndicator.style.filter = "grayscale(0%)";
+                gpIndicator.style.opacity = "1";
+                gpIndicator.style.borderColor = "#2fb";
+                gpIndicator.title = "Mando detectado: " + e.gamepad.id;
+                
+                const statusIcon = document.getElementById('gamepad-status-icon');
+                if (statusIcon) {
+                    statusIcon.innerText = "✔";
+                    statusIcon.style.color = "#2fb";
+                }
+            }
+            if (typeof showInGameNotification === 'function') {
+                showInGameNotification("MANDO DETECTADO: " + e.gamepad.id.substring(0, 20), "#2fb", "🎮");
+            }
+            if (gameState === 'menu') {
+                playSound('menu_click');
+                initAudio();
+            }
+        });
+
+        window.addEventListener("gamepaddisconnected", (e) => {
+            console.log("SCAPS: Gamepad desconectado");
+            if (gpIndicator) {
+                gpIndicator.style.filter = "grayscale(100%)";
+                gpIndicator.style.opacity = "0.5";
+                gpIndicator.style.borderColor = "rgba(255,255,255,0.1)";
+                gpIndicator.title = "Mando no detectado";
+
+                const statusIcon = document.getElementById('gamepad-status-icon');
+                if (statusIcon) {
+                    statusIcon.innerText = "❌";
+                    statusIcon.style.color = "#fff";
+                }
+            }
+            if (typeof showInGameNotification === 'function') {
+                showInGameNotification("MANDO DESCONECTADO", "#f33", "🚫");
+            }
+        });
+
+        // Listener para cerrar el modal con click
+        const modalOk = getEl('btn-modal-alert-ok');
+        if (modalOk) {
+            modalOk.onclick = () => {
+                const overlay = getEl('modal-alert-overlay');
+                if (overlay) overlay.style.display = 'none';
+                playSound('menu_click');
+            };
+        }
 
         const pExit = getEl('btn-pause-exit');
         if (pExit) pExit.onclick = () => {
@@ -1190,6 +1334,9 @@ function gameLoop(timestamp) {
     if (!lastTime) lastTime = timestamp;
     const dt = Math.min((timestamp - lastTime) / 1000, 0.05); // Cap para evitar saltos enormes
     lastTime = timestamp;
+
+    // Actualizar estado del mando (Gamepad)
+    pollGamepad(keysPressed, gameState, introPhase);
 
     // --- EFECTO JUICE: HIT-STOP ---
     // Si hay un impacto masivo, congelamos el tiempo y el render para dar sensación de brutalidad
@@ -2134,6 +2281,9 @@ function setupTitleSelect() {
 
 
 function showMenuScreen(screenId) {
+    // Iniciar música en el menú si no ha empezado (requiere interacción previa)
+    initAudio();
+
     // Asegurar que el contenedor principal esté visible
     if (mainMenuEl) {
         mainMenuEl.style.display = 'flex';
@@ -2149,15 +2299,20 @@ function showMenuScreen(screenId) {
     if (btnCredits) btnCredits.style.display = (screenId === 'initial') ? 'block' : 'none';
     if (btnMapEditor) btnMapEditor.style.display = (screenId === 'initial') ? 'block' : 'none';
 
+    let target = null;
     if (screenId === 'initial' && menuInitial) {
         menuInitial.style.display = 'flex';
-        // Asegurar que el fondo de vídeo sea visible en el menú inicial
+        target = menuInitial;
         const videoBg = document.getElementById('menu-video-bg');
         if (videoBg) videoBg.style.opacity = '1';
     }
-    else if (screenId === 'credits' && menuCredits) menuCredits.style.display = 'flex';
+    else if (screenId === 'credits' && menuCredits) {
+        menuCredits.style.display = 'flex';
+        target = menuCredits;
+    }
     else if (screenId === 'custom' && menuCustom) {
         menuCustom.style.display = 'flex';
+        target = menuCustom;
         updateStatsUI();
         // Reset a la primera pestaña y sub-pestaña
         const profileTab = document.querySelector('.custom-tab-btn[data-tab="perfil"]');
@@ -2166,9 +2321,81 @@ function showMenuScreen(screenId) {
         const dataSubTab = document.querySelector('.subtab-btn[data-sub="datos"]');
         if (dataSubTab) dataSubTab.click();
     }
-    else if (screenId === 'settings' && menuSettings) menuSettings.style.display = 'flex';
+    else if (screenId === 'settings' && menuSettings) {
+        menuSettings.style.display = 'flex';
+        target = menuSettings;
+    }
+
+    if (target) {
+        const firstBtn = target.querySelector('button:not([disabled])');
+        if (firstBtn) firstBtn.focus();
+    }
 
     updatePlayerBanner();
+}
+
+function updateMenuFocus(direction) {
+    const visibleMenus = ['menu-initial', 'menu-credits', 'menu-settings', 'match-setup-overlay', 'menu-custom', 'modal-alert-overlay', 'pause-menu', 'exit-confirm-overlay'];
+    let activeMenu = null;
+    for (const id of visibleMenus) {
+        const el = getEl(id);
+        if (el && el.style.display !== 'none' && !el.classList.contains('hidden')) {
+            activeMenu = el;
+            break; 
+        }
+    }
+
+    if (!activeMenu) return;
+
+    // Selector expandido para incluir mapas, pestañas y elementos interactivos
+    const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), .setup-map-item, .custom-tab-btn, .subtab-btn, [tabindex="0"]';
+    
+    // FILTRAR SOLO ELEMENTOS VISIBLES (Evita que el foco salte a paneles ocultos)
+    const buttons = Array.from(activeMenu.querySelectorAll(focusableSelector))
+        .filter(el => {
+            const style = window.getComputedStyle(el);
+            return el.offsetParent !== null && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+        });
+
+    if (buttons.length === 0) return;
+
+    let index = buttons.indexOf(document.activeElement);
+    if (index === -1) {
+        index = (direction > 0) ? 0 : buttons.length - 1;
+    } else {
+        index = (index + direction + buttons.length) % buttons.length;
+    }
+    
+    buttons[index].focus();
+    // Asegurar que el elemento esté a la vista
+    buttons[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    if (typeof playSound === 'function') playSound('menu_hover');
+}
+
+function handleMenuBack() {
+    // Lista de submenús que pueden cerrarse para volver al principal
+    const subMenus = ['menu-credits', 'menu-settings', 'match-setup-overlay', 'menu-custom'];
+    let backTriggered = false;
+
+    for (const id of subMenus) {
+        const el = getEl(id);
+        if (el && el.style.display !== 'none' && !el.classList.contains('hidden')) {
+            showMenuScreen('initial');
+            playSound('menu_click');
+            backTriggered = true;
+            break;
+        }
+    }
+
+    // Si no estábamos en un submenú, quizás cerrar un modal de alerta
+    if (!backTriggered) {
+        const alert = getEl('modal-alert-overlay');
+        if (alert && alert.style.display === 'flex') {
+            alert.style.display = 'none';
+            playSound('menu_click');
+        }
+    }
 }
 
 async function startGame() {
@@ -2240,6 +2467,7 @@ async function loadSetupMaps() {
             card.style.flexDirection = "column";
             card.style.boxSizing = "border-box";
             card.style.margin = "0 -35px";
+            card.tabIndex = 0; // Enfocable para mando
 
             if (isCenter) {
                 card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(90,173,237,0.3)";
@@ -2260,14 +2488,38 @@ async function loadSetupMaps() {
                 </div>
             `;
 
+            const selectMap = () => {
+                selectedMap = m;
+                validateMatchSetup();
+                playSound('menu_click');
+            };
+
+            card.onfocus = () => {
+                if (!isCenter) {
+                    currentMapPage = idx + 1;
+                    loadSetupMaps();
+                    // Restaurar foco al nuevo centro tras el re-renderizado
+                    setTimeout(() => {
+                        const newCenter = mapListContainer.querySelector('.center');
+                        if (newCenter) newCenter.focus();
+                    }, 50);
+                } else {
+                    selectMap();
+                }
+            };
+
             card.onclick = () => {
                 if (!isCenter) {
                     currentMapPage = idx + 1;
                     loadSetupMaps();
                 }
-                selectedMap = m;
-                validateMatchSetup();
-                playSound('menu_click');
+                selectMap();
+            };
+
+            card.onkeydown = (e) => {
+                if (e.code === 'Enter' || e.code === 'Space') {
+                    selectMap();
+                }
             };
 
             mapListContainer.appendChild(card);
@@ -2305,6 +2557,17 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
 
         overlay.style.display = 'flex';
         overlay.classList.remove('hidden');
+
+        // Poner foco en el botón OK para cerrar con mando
+        const okBtn = document.getElementById('btn-modal-alert-ok');
+        if (okBtn) okBtn.focus();
+
+        // Auto-cierre tras 3.5 segundos para no bloquear el flujo
+        setTimeout(() => {
+            if (overlay.style.display === 'flex') {
+                overlay.style.display = 'none';
+            }
+        }, 3500);
 
         playSound('menu_error');
     }
