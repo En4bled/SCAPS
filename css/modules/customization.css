@@ -232,18 +232,22 @@
 }
 
 .personalization-banner {
-    font-size: 3em !important;
-    color: #ff9900;
-    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 2.3em !important;
+    color: #fa6438 !important;
+    font-family: 'MP16', monospace !important;
     text-transform: uppercase;
     pointer-events: none;
-    margin: 0 0 0.2em 0 !important;
-    letter-spacing: 2px;
-    font-weight: 900;
-    -webkit-text-stroke: 2px #552200;
+    margin: 0.1em 0 0.3em 0 !important;
+    letter-spacing: 1px;
+    font-weight: normal !important;
+    -webkit-text-stroke: 1.5px #4d0d0d !important;
     text-shadow: 
-        4px 4px 0px rgba(0, 0, 0, 0.9),
-        0 0 20px rgba(255, 153, 0, 0.4);
+        2px 2px 0px #4d0d0d,
+        -2px -2px 0px #4d0d0d,
+        2px -2px 0px #4d0d0d,
+        -2px 2px 0px #4d0d0d,
+        0px 4px 0px #260505,
+        0px 6px 0px rgba(0, 0, 0, 0.7) !important;
 }
 
 .custom-tabs-container {
@@ -259,14 +263,14 @@
 }
 
 .custom-tab-btn {
-    flex: 0 0 6.5em;
-    height: 6.5em;
+    flex: 0 0 5.8em;
+    height: 5.8em;
     margin-top: 1px;
     background: #0a0a19;
     border: 0.15em solid rgba(90, 173, 237, 0.5);
     color: rgba(255, 255, 255, 0.5);
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.9em;
+    font-size: 0.85em;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
@@ -274,17 +278,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.1em;
+    gap: 0.05em;
     transition: all 0.3s ease;
+    overflow: visible !important;
 }
 
 .custom-tab-btn i, .tab-icon-gif {
     font-size: 2.5em;
     font-style: normal;
-    width: 3em;
-    height: 3em;
+    width: 2.4em;
+    height: 2.4em;
     object-fit: contain;
     filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+    margin-top: -0.6em;
+    margin-bottom: 0.1em;
 }
 
 .custom-tab-btn.active {
@@ -297,7 +304,9 @@
 
 .btn-close-custom {
     flex: 0 0 auto !important;
-    min-width: 6.5em;
+    min-width: 5.8em;
+    height: 5.8em;
+    font-size: 0.85em;
     padding: 0 2em;
     margin-left: auto !important;
     border-color: #2fb !important;
