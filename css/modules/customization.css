@@ -303,7 +303,6 @@
     width: 2.4em;
     height: 2.4em;
     object-fit: contain;
-    filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
     margin-top: -0.6em;
     margin-bottom: 0.1em;
 }
