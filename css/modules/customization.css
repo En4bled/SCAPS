@@ -1,25 +1,47 @@
-/* --- SISTEMA DE PERSONALIZACIÓN Y PERFIL DE USUARIO --- */
+/* --- SISTEMA DE SUBPESTAÑAS DE PERFIL --- */
+.profile-subtabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-bottom: 0.15em solid rgba(90, 173, 237, 0.3) !important;
+    margin: -1em -1em 1.2em -1em !important;
+    padding: 0 !important;
+}
+
 .subtab-btn {
-    border-radius: 4px !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(90, 173, 237, 0.3) !important;
-    color: #5ad !important;
+    flex: 1;
+    height: 3.2em !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 0.2em solid transparent !important;
+    border-radius: 0 !important;
+    color: rgba(255, 255, 255, 0.45) !important;
     font-family: 'Share Tech Mono', monospace !important;
-    letter-spacing: 1px;
-    transition: all 0.2s ease;
+    font-size: 0.95em !important;
+    font-weight: bold !important;
+    letter-spacing: 1.5px !important;
+    cursor: pointer;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease !important;
+    transform: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
 }
 
 .subtab-btn.active {
-    background: #5ad !important;
-    color: #fff !important;
-    border-color: #fff !important;
-    box-shadow: 0 0 15px rgba(90, 173, 237, 0.5);
-    transform: translateY(-2px);
+    color: #5ad !important;
+    background: rgba(90, 173, 237, 0.08) !important;
+    border-bottom: 0.2em solid #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .subtab-btn:hover:not(.active) {
-    background: rgba(90, 173, 237, 0.2) !important;
-    border-color: #5ad !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-bottom: 0.2em solid rgba(90, 173, 237, 0.2) !important;
 }
 
 /* Banner de Perfil Estilo Rocket League (Diseño 100% Responsivo Relativo al Lienzo) */
