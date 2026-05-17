@@ -186,7 +186,7 @@
 
 .player-banner-level {
     position: absolute;
-    bottom: 0.4em;
+    bottom: 1.0em;
     right: 0.8em;
     z-index: 20;
     background: #fdf5c0;
