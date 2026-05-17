@@ -2832,9 +2832,13 @@ function showMenuScreen(screenId) {
         }, 50);
     }
 
-    if (target) {
+    if (target && screenId !== 'initial') {
         const firstBtn = target.querySelector('button:not([disabled])');
         if (firstBtn) firstBtn.focus();
+    } else if (screenId === 'initial') {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
     }
 
     updatePlayerBanner();
