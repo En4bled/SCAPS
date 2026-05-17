@@ -771,7 +771,7 @@ function renderBoostSelection() {
         item.style.flexDirection = 'column';
         item.innerHTML = `
             <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
-            <div style="font-size: 0.85em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
             USER_CONFIG.playerBoost = key;
@@ -811,8 +811,8 @@ function updateBoostPreviewInfo(key) {
     const descBox = document.querySelector('.boost-description');
     if (nameTag) {
         nameTag.innerText = def.name;
-        nameTag.style.color = def.color === 'multi' ? '#fff' : def.color;
-        nameTag.style.borderColor = def.color === 'multi' ? '#fff' : def.color;
+        nameTag.style.color = '#fff';
+        nameTag.style.borderColor = '#fff';
     }
     if (descBox) {
         const descriptions = {
