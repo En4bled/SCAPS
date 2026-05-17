@@ -275,6 +275,20 @@
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%);
     mask-image: linear-gradient(to right, transparent 0%, black 10%);
     z-index: 1000;
+    opacity: 1;
+    transition: opacity 1s ease;
+    animation: marquee-fade-out 1.5s forwards;
+    animation-delay: 10s;
+}
+
+#marquee-container:hover {
+    opacity: 1 !important;
+    animation: none;
+}
+
+@keyframes marquee-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0.25; }
 }
 
 .marquee-content {

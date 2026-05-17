@@ -30,8 +30,8 @@
     height: 4.8em; /* Proporcional al lienzo de juego */
     min-height: 65px;
     max-height: 85px;
-    min-width: 22em; /* Proporcional al lienzo de juego */
-    width: 22em;
+    min-width: 18em; /* Proporcional al lienzo de juego */
+    width: 18em;
     background: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -187,7 +187,8 @@
 .player-banner-level {
     position: absolute;
     bottom: 0.4em;
-    right: 1.5em;
+    right: 0.8em;
+    z-index: 20;
     background: #fdf5c0;
     color: #444;
     width: 2em;
