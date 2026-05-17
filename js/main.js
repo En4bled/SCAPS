@@ -170,11 +170,6 @@ function loadUserConfig() {
     const inputAvatarBg = document.getElementById('input-avatar-bg');
     if (inputAvatarBg) {
         inputAvatarBg.value = USER_CONFIG.playerAvatarBg;
-        inputAvatarBg.oninput = (e) => {
-            USER_CONFIG.playerAvatarBg = e.target.value;
-            saveUserConfig();
-            updatePlayerBanner();
-        };
     }
     
     // Sincronizar Checkboxes de Bloom
