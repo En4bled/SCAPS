@@ -751,7 +751,7 @@
     overflow: hidden !important;
     max-height: none !important;
     gap: 0.3em;
-    padding: 0.5em 10% !important;
+    padding: 0.1em 2% !important;
     width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
@@ -760,8 +760,13 @@
 .avatar-grid-3x3 .selectable-item {
     aspect-ratio: 1 / 1 !important;
     width: 100% !important;
-    max-width: 5.5em !important;
+    max-width: 6.2em !important;
     height: auto !important;
+}
+
+.avatar-grid-3x3 .selectable-item img {
+    max-width: 88% !important;
+    max-height: 88% !important;
 }
 
 .boost-grid {
