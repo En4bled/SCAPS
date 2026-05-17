@@ -274,9 +274,10 @@
     flex: 0 0 5.8em;
     height: 5.8em;
     margin-top: 1px;
-    background: #0a0a19;
-    border: 0.15em solid rgba(90, 173, 237, 0.5);
-    color: rgba(255, 255, 255, 0.5);
+    background: #091326;
+    border: 0.3em solid rgba(90, 173, 237, 0.5) !important;
+    border-radius: 0 !important;
+    color: rgba(255, 255, 255, 0.6);
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.85em;
     font-weight: 800;
@@ -289,6 +290,11 @@
     gap: 0.05em;
     transition: all 0.3s ease;
     overflow: visible !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #050b14,
+        0 0.3em 0 -0.15em #050b14,
+        -0.3em 0 0 -0.15em #050b14,
+        0.3em 0 0 -0.15em #050b14 !important;
 }
 
 .custom-tab-btn i, .tab-icon-gif {
@@ -303,10 +309,15 @@
 }
 
 .custom-tab-btn.active {
-    background: #1a3a5a;
-    border-color: #5ad;
+    background: #11366b !important;
+    border-color: #5ad !important;
     color: #fff;
-    box-shadow: 0 0 20px rgba(90, 173, 237, 0.4);
+    box-shadow:
+        0 -0.3em 0 -0.15em #050b14,
+        0 0.3em 0 -0.15em #050b14,
+        -0.3em 0 0 -0.15em #050b14,
+        0.3em 0 0 -0.15em #050b14,
+        0 0 15px rgba(90, 173, 237, 0.6) !important;
     transform: translateY(-5px);
 }
 
@@ -317,16 +328,21 @@
     font-size: 0.8em;
     padding: 0 1.2em;
     margin-left: auto !important;
-    border-color: #2fb !important;
+    border: 0.3em solid rgba(34, 255, 187, 0.6) !important;
+    border-radius: 0 !important;
     color: #2fb !important;
-    background: #0a2a1a !important;
-    box-shadow: 0 0 15px rgba(34, 255, 187, 0.2);
+    background: #071f13 !important;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.1em;
+    box-shadow:
+        0 -0.3em 0 -0.15em #030d08,
+        0 0.3em 0 -0.15em #030d08,
+        -0.3em 0 0 -0.15em #030d08,
+        0.3em 0 0 -0.15em #030d08 !important;
 }
 
 .btn-close-custom i {
@@ -347,7 +363,13 @@
 .btn-close-custom:hover {
     transform: scale(1.05) skewX(-3deg) !important;
     background: #0d3a24 !important;
-    box-shadow: 0 0 25px rgba(34, 255, 187, 0.5) !important;
+    border-color: #2fb !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #030d08,
+        0 0.3em 0 -0.15em #030d08,
+        -0.3em 0 0 -0.15em #030d08,
+        0.3em 0 0 -0.15em #030d08,
+        0 0 25px rgba(34, 255, 187, 0.5) !important;
 }
 
 .btn-close-custom:active {
