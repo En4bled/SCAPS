@@ -240,12 +240,12 @@
 }
 
 .personalization-banner {
-    font-size: 3.2em !important;
+    font-size: 3.8em !important;
     color: #fa6438 !important;
     font-family: 'MP16', monospace !important;
     text-transform: uppercase;
     pointer-events: none;
-    margin: 0.1em 0 0.3em 0 !important;
+    margin: -0.4em 0 0.2em 0 !important;
     letter-spacing: 1px;
     font-weight: normal !important;
     -webkit-text-stroke: 1.5px #4d0d0d !important;
@@ -327,7 +327,6 @@
     height: 5.8em;
     font-size: 0.8em;
     padding: 0 1.2em;
-    margin-left: auto !important;
     border: 0.3em solid rgba(34, 255, 187, 0.6) !important;
     border-radius: 0 !important;
     color: #2fb !important;
@@ -385,6 +384,73 @@
 .btn-close-custom i, .btn-close-custom span {
     color: #2fb !important;
     text-shadow: 0 0 10px #2fb;
+}
+
+/* --- BOTÓN ROJO DE DESCARTAR CAMBIOS --- */
+.btn-discard-custom {
+    flex: 0 0 auto !important;
+    min-width: 8em;
+    height: 5.8em;
+    font-size: 0.8em;
+    padding: 0 1.2em;
+    margin-left: auto !important; /* El primer botón a la derecha empuja con margin-left: auto */
+    border: 0.3em solid rgba(255, 68, 68, 0.6) !important;
+    border-radius: 0 !important;
+    color: #f44 !important;
+    background: #1f0707 !important;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1em;
+    box-shadow:
+        0 -0.3em 0 -0.15em #100303,
+        0 0.3em 0 -0.15em #100303,
+        -0.3em 0 0 -0.15em #100303,
+        0.3em 0 0 -0.15em #100303 !important;
+}
+
+.btn-discard-custom i {
+    font-size: 1.8em !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-discard-custom span {
+    font-size: 0.95em !important;
+    font-weight: 900 !important;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+.btn-discard-custom:hover {
+    transform: scale(1.05) skewX(-3deg) !important;
+    background: #3a0d0d !important;
+    border-color: #f44 !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #100303,
+        0 0.3em 0 -0.15em #100303,
+        -0.3em 0 0 -0.15em #100303,
+        0.3em 0 0 -0.15em #100303,
+        0 0 25px rgba(255, 68, 68, 0.5) !important;
+}
+
+.btn-discard-custom:active {
+    transform: scale(0.95) skewX(0deg) !important;
+    background: #f44 !important;
+}
+
+.btn-discard-custom:active i, .btn-discard-custom:active span {
+    color: #000 !important;
+    text-shadow: none !important;
+}
+
+.btn-discard-custom i, .btn-discard-custom span {
+    color: #f44 !important;
+    text-shadow: 0 0 10px #f44;
 }
 
 .custom-panes-container {

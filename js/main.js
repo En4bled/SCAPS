@@ -79,6 +79,43 @@ window.closeCustomization = () => {
     playSound('menu_click');
 };
 
+// Función global para descartar cambios en el menú de personalización
+window.discardCustomization = () => {
+    console.log("SCAPS: Descartando cambios y cerrando personalización...");
+    if (window.USER_CONFIG_BACKUP) {
+        Object.assign(USER_CONFIG, window.USER_CONFIG_BACKUP);
+        saveUserConfig();
+        
+        // Re-renderizar todos los selectores para reflejar el estado restaurado
+        if (typeof renderAvatars === 'function') renderAvatars();
+        if (typeof renderCarSelection === 'function') renderCarSelection();
+        if (typeof renderBallSelection === 'function') renderBallSelection();
+        if (typeof renderBoostSelection === 'function') renderBoostSelection();
+        if (typeof renderExplosionSelection === 'function') renderExplosionSelection();
+        if (typeof updatePlayerBanner === 'function') updatePlayerBanner();
+        
+        // Restaurar sliders de tinte del coche en el DOM
+        const hueSlider = document.getElementById('slider-car-hue');
+        const satSlider = document.getElementById('slider-car-saturate');
+        const previewImg = document.getElementById('car-preview-img');
+        if (hueSlider) hueSlider.value = USER_CONFIG.playerCarHue || 0;
+        if (satSlider) satSlider.value = USER_CONFIG.playerCarSaturate || 100;
+        if (previewImg) {
+            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue || 0}deg) saturate(${USER_CONFIG.playerCarSaturate || 100}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+        }
+        
+        // Restaurar input de nombre e input de fondo de avatar
+        const inputName = document.getElementById('input-player-name');
+        if (inputName) inputName.value = USER_CONFIG.playerName || "Piloto";
+        const inputAvatarBg = document.getElementById('input-avatar-bg');
+        if (inputAvatarBg) inputAvatarBg.value = USER_CONFIG.playerAvatarBg || "#0a0a19";
+    }
+    if (typeof showMenuScreen === 'function') {
+        showMenuScreen('initial');
+    }
+    playSound('menu_click');
+};
+
 function loadUserConfig() {
     const saved = localStorage.getItem('SCAPS_USER_CONFIG');
     if (saved) {
@@ -2304,8 +2341,8 @@ function setupCustomizationMenu() {
     // Manejo de Pestañas
     const tabBtns = document.querySelectorAll('.custom-tab-btn');
     tabBtns.forEach(btn => {
-        // Ignorar el botón de cerrar/guardar de la lógica de pestañas
-        if (btn.classList.contains('btn-close-custom')) return;
+        // Ignorar los botones de cerrar/guardar y descartar de la lógica de pestañas
+        if (btn.classList.contains('btn-close-custom') || btn.classList.contains('btn-discard-custom')) return;
 
         btn.onclick = () => {
             tabBtns.forEach(b => b.classList.remove('active'));
@@ -2625,6 +2662,9 @@ function showMenuScreen(screenId) {
         target = menuCredits;
     }
     else if (screenId === 'custom' && menuCustom) {
+        // Almacenar copia de seguridad inicial para poder descartar cambios
+        window.USER_CONFIG_BACKUP = JSON.parse(JSON.stringify(USER_CONFIG));
+        
         menuCustom.style.display = 'flex';
         target = menuCustom;
         updateStatsUI();
