@@ -22,16 +22,16 @@
     border-color: #5ad !important;
 }
 
-/* Banner de Perfil Estilo Rocket League (Diseño 100% Responsivo) */
+/* Banner de Perfil Estilo Rocket League (Diseño 100% Responsivo Relativo al Lienzo) */
 #player-banner, .banner-preview-sync {
     display: flex;
     align-items: center;
     padding: 0;
-    height: 4.8vw; /* Proporcional a la pantalla */
+    height: 4.8em; /* Proporcional al lienzo de juego */
     min-height: 65px;
     max-height: 85px;
-    min-width: 22vw; /* Proporcional a la pantalla */
-    width: 22vw;
+    min-width: 22em; /* Proporcional al lienzo de juego */
+    width: 22em;
     background: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -41,8 +41,8 @@
 
 #player-banner {
     position: absolute;
-    bottom: 4vh; /* Proporcional */
-    left: 2vw; /* Proporcional */
+    bottom: 2.2em; /* Proporcional al lienzo de juego */
+    left: 2em; /* Proporcional al lienzo de juego */
     z-index: 1000;
     transform-origin: bottom left;
 }
@@ -55,8 +55,8 @@
 }
 
 #player-banner-avatar-frame, #custom-banner-avatar-frame {
-    width: 4.5vw;
-    height: 4.5vw;
+    width: 4.5em;
+    height: 4.5em;
     min-width: 58px;
     min-height: 58px;
     max-width: 78px;
@@ -98,11 +98,11 @@
 
 .player-banner-info {
     flex: 1;
-    height: 3.2vw;
+    height: 3.2em;
     min-height: 44px;
     max-height: 58px;
-    margin-left: -0.8vw;
-    padding: 0.3vw 1vw 0.3vw 1.8vw;
+    margin-left: -0.8em;
+    padding: 0.3em 1em 0.3em 1.8em;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -114,8 +114,8 @@
 }
 
 #player-banner-title, #custom-banner-title {
-    font-size: 0.65vw;
-    font-size: clamp(8px, 0.65vw, 12px);
+    font-size: 0.65em;
+    font-size: clamp(8px, 0.65em, 12px);
     font-family: 'Share Tech Mono', monospace;
     color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
@@ -157,8 +157,8 @@
 #player-banner-name, #custom-banner-name {
     color: #fff;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.4vw;
-    font-size: clamp(16px, 1.4vw, 26px);
+    font-size: 1.4em;
+    font-size: clamp(16px, 1.4em, 26px);
     font-weight: 400;
     letter-spacing: 1px;
     margin-bottom: 2px;
@@ -167,7 +167,7 @@
 
 .player-banner-exp-bar {
     width: 84%;
-    height: 0.3vw;
+    height: 0.3em;
     min-height: 3px;
     max-height: 5px;
     background: rgba(0, 0, 0, 0.4);
@@ -186,14 +186,14 @@
 
 .player-banner-level {
     position: absolute;
-    bottom: 0.4vw;
-    right: 1.5vw;
+    bottom: 0.4em;
+    right: 1.5em;
     background: #fdf5c0;
     color: #444;
-    width: 2vw;
+    width: 2em;
     min-width: 24px;
     max-width: 32px;
-    height: 1.2vw;
+    height: 1.2em;
     min-height: 16px;
     max-height: 22px;
     display: flex;
@@ -201,8 +201,8 @@
     justify-content: center;
     font-family: 'Share Tech Mono', monospace;
     font-weight: bold;
-    font-size: 0.8vw;
-    font-size: clamp(9px, 0.8vw, 13px);
+    font-size: 0.8em;
+    font-size: clamp(9px, 0.8em, 13px);
 }
 
 /* --- MAQUETADO DE LA VENTANA --- */
@@ -273,15 +273,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.2vh;
+    gap: 0.1em;
     transition: all 0.3s ease;
 }
 
 .custom-tab-btn i, .tab-icon-gif {
-    font-size: 2.5vw;
+    font-size: 2.5em;
     font-style: normal;
-    width: 3vw;
-    height: 3vw;
+    width: 3em;
+    height: 3em;
     object-fit: contain;
     filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
 }

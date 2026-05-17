@@ -119,12 +119,12 @@
 }
 
 #menu-logo {
-    width: 25vw;
-    min-width: 300px;
-    max-width: 500px;
+    width: 25em;
+    min-width: 16em;
+    max-width: 28em;
     height: auto;
-    margin-top: 2vh;
-    margin-bottom: 3vh;
+    margin-top: 1.2em;
+    margin-bottom: 1.8em;
     filter: drop-shadow(0 0 15px rgba(90, 173, 237, 0.6));
     animation: logo-neon-float 4s ease-in-out infinite;
 }
@@ -135,7 +135,7 @@
         filter: drop-shadow(0 0 15px rgba(90, 173, 237, 0.8));
     }
     50% {
-        transform: translateY(-12px) scale(1.02);
+        transform: translateY(-0.7em) scale(1.02);
         filter: drop-shadow(0 0 35px rgba(255, 153, 0, 0.8));
     }
 }
@@ -143,9 +143,9 @@
 .menu-buttons {
     display: flex;
     flex-direction: column;
-    gap: 1.5vh;
-    width: 18vw;
-    min-width: 240px;
+    gap: 0.9em;
+    width: 18em;
+    min-width: 12.5em;
     align-items: center;
 }
 
@@ -155,12 +155,12 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     color: #5ad;
-    padding: 1.5vh 2vw;
+    padding: 0.85em 2em;
     font-family: 'Share Tech Mono', monospace !important;
-    font-size: 16px;
+    font-size: 0.9em;
     cursor: pointer;
     text-transform: uppercase;
-    border: 0.4vh solid #5ad !important;
+    border: 0.22em solid #5ad !important;
     border-radius: 0 !important;
     width: 100%;
     box-shadow:
