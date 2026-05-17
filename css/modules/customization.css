@@ -714,14 +714,52 @@
     overflow: hidden !important;
     max-height: none !important;
     gap: 0.6em;
-    padding: 0 !important;
+    padding: 0.8em 5% !important;
     width: 100% !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     box-sizing: border-box;
 }
 
 .ball-grid .selectable-item {
-    max-width: 7.5em !important;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 6.8em !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        -0.15em 0 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ball-grid .selectable-item:hover {
+    border-color: rgba(90, 173, 237, 0.7) !important;
+    background: rgba(90, 173, 237, 0.1);
+}
+
+.ball-grid .selectable-item.selected {
+    border-color: #f90 !important;
+    box-shadow: 
+        0 -0.15em 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        -0.15em 0 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        inset 0 0 15px rgba(255, 153, 0, 0.25) !important;
+}
+
+.ball-grid .selectable-item img {
+    max-width: 82% !important;
+    max-height: 82% !important;
+    object-fit: contain;
 }
 
 .custom-box-ball {
