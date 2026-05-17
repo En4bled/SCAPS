@@ -43,6 +43,7 @@ const USER_CONFIG = {
     bannerPattern: 'none',
     bannerBorderStyle: 'simple',
     bloomEnabled: true,
+    uiTheme: 'blue',
     stats: {
         totalGoals: 0,
         matchesWon: 0,
@@ -63,6 +64,23 @@ window.getAssetPath = getAssetPath;
 
 function saveUserConfig() {
     localStorage.setItem('SCAPS_USER_CONFIG', JSON.stringify(USER_CONFIG));
+}
+
+function syncThemeUI() {
+    const isOrange = USER_CONFIG.uiTheme === 'orange';
+    document.body.classList.toggle('theme-orange', isOrange);
+    
+    const btnThemeBlue = document.getElementById('btn-theme-blue');
+    const btnThemeOrange = document.getElementById('btn-theme-orange');
+    if (btnThemeBlue && btnThemeOrange) {
+        if (isOrange) {
+            btnThemeOrange.classList.add('active');
+            btnThemeBlue.classList.remove('active');
+        } else {
+            btnThemeBlue.classList.add('active');
+            btnThemeOrange.classList.remove('active');
+        }
+    }
 }
 
 // Función global para cerrar el menú de personalización y guardar cambios
@@ -101,7 +119,7 @@ window.discardCustomization = () => {
         if (hueSlider) hueSlider.value = USER_CONFIG.playerCarHue || 0;
         if (satSlider) satSlider.value = USER_CONFIG.playerCarSaturate || 100;
         if (previewImg) {
-            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue || 0}deg) saturate(${USER_CONFIG.playerCarSaturate || 100}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue || 0}deg) saturate(${USER_CONFIG.playerCarSaturate || 100}%) drop-shadow(0 0 15px var(--theme-glow-color))`;
         }
         
         // Restaurar input de nombre e input de fondo de avatar
@@ -109,6 +127,7 @@ window.discardCustomization = () => {
         if (inputName) inputName.value = USER_CONFIG.playerName || "Piloto";
         const inputAvatarBg = document.getElementById('input-avatar-bg');
         if (inputAvatarBg) inputAvatarBg.value = USER_CONFIG.playerAvatarBg || "#0a0a19";
+        syncThemeUI();
     }
     if (typeof showMenuScreen === 'function') {
         showMenuScreen('initial');
@@ -156,6 +175,7 @@ function loadUserConfig() {
             }
         } catch (e) { console.error("Error cargando configuración:", e); }
     }
+    syncThemeUI();
     setMusicVolume(USER_CONFIG.musicVolume / 100);
     setSFXVolume(USER_CONFIG.sfxVolume / 100);
     applyBannerPosition();
@@ -2525,6 +2545,26 @@ function setupCustomizationMenu() {
         };
     }
 
+    // Botones de Selector de Tema de Color
+    const btnThemeBlue = document.getElementById('btn-theme-blue');
+    const btnThemeOrange = document.getElementById('btn-theme-orange');
+    if (btnThemeBlue && btnThemeOrange) {
+        btnThemeBlue.onclick = () => {
+            USER_CONFIG.uiTheme = 'blue';
+            saveUserConfig();
+            syncThemeUI();
+            playSound('menu_click');
+        };
+        btnThemeOrange.onclick = () => {
+            USER_CONFIG.uiTheme = 'orange';
+            saveUserConfig();
+            syncThemeUI();
+            playSound('menu_click');
+        };
+        // Sincronizar estado inicial
+        syncThemeUI();
+    }
+
     // Sliders de Tinte
     const hueSlider = document.getElementById('slider-car-hue');
     const satSlider = document.getElementById('slider-car-saturate');
@@ -2534,7 +2574,7 @@ function setupCustomizationMenu() {
         USER_CONFIG.playerCarHue = hueSlider.value;
         USER_CONFIG.playerCarSaturate = satSlider.value;
         if (previewImg) {
-            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+            previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px var(--theme-glow-color))`;
         }
     };
 
@@ -2706,7 +2746,7 @@ function renderCarSelection() {
     if (satSlider) satSlider.value = USER_CONFIG.playerCarSaturate;
     if (previewImg) {
         previewImg.src = getAssetPath(USER_CONFIG.playerCar);
-        previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px rgba(90,173,237,0.5))`;
+        previewImg.style.filter = `hue-rotate(${USER_CONFIG.playerCarHue}deg) saturate(${USER_CONFIG.playerCarSaturate}%) drop-shadow(0 0 15px var(--theme-glow-color))`;
     }
 }
 
@@ -2746,8 +2786,12 @@ function renderBallSelection() {
 }
 
 function setupTitleSelect() {
-    const select = document.getElementById('select-player-title');
-    if (!select) return;
+    const dropdown = document.getElementById('custom-title-dropdown');
+    const dropdownBtn = document.getElementById('custom-title-dropdown-btn');
+    const dropdownText = document.getElementById('custom-title-dropdown-text');
+    const dropdownContent = document.getElementById('custom-title-dropdown-content');
+    
+    if (!dropdown || !dropdownBtn || !dropdownContent) return;
 
     const titles = [
         "Su ilustrísima", "Random noob", "Alpha Tester", "Beta Tester",
@@ -2755,21 +2799,45 @@ function setupTitleSelect() {
         "Goleador Nato", "Rey del Aire", "Developer"
     ];
 
-    select.innerHTML = '';
+    // Establecer título inicial activo
+    const activeTitle = USER_CONFIG.playerTitle || titles[0];
+    if (dropdownText) dropdownText.innerText = activeTitle.toUpperCase();
+
+    // Renderizar opciones personalizadas en el desplegable
+    dropdownContent.innerHTML = '';
     titles.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.innerText = t.toUpperCase();
-        if (USER_CONFIG.playerTitle === t) opt.selected = true;
-        select.appendChild(opt);
+        const item = document.createElement('div');
+        item.className = 'custom-dropdown-item' + (activeTitle === t ? ' active' : '');
+        item.innerText = t.toUpperCase();
+        item.onclick = (e) => {
+            e.stopPropagation();
+            USER_CONFIG.playerTitle = t;
+            saveUserConfig();
+            updatePlayerBanner();
+            if (dropdownText) dropdownText.innerText = t.toUpperCase();
+            
+            // Cerrar menú y marcar activo
+            dropdownContent.style.display = 'none';
+            document.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            
+            playSound('menu_click');
+        };
+        dropdownContent.appendChild(item);
     });
 
-    select.onchange = (e) => {
-        USER_CONFIG.playerTitle = e.target.value;
-        saveUserConfig();
-        updatePlayerBanner();
+    // Abrir/Cerrar al hacer click en el botón
+    dropdownBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = dropdownContent.style.display === 'block';
+        dropdownContent.style.display = isOpen ? 'none' : 'block';
         playSound('menu_click');
     };
+
+    // Cerrar si se hace click fuera
+    document.addEventListener('click', () => {
+        dropdownContent.style.display = 'none';
+    });
 }
 
 

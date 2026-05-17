@@ -52,8 +52,8 @@
     height: 4.8em; /* Proporcional al lienzo de juego */
     min-height: 65px;
     max-height: 85px;
-    min-width: 18em; /* Proporcional al lienzo de juego */
-    width: 18em;
+    min-width: 21.5em; /* Proporcional al lienzo de juego (un poco más alargado) */
+    width: 21.5em;
     background: none !important;
     border: none !important;
     box-shadow: none !important;
@@ -262,22 +262,24 @@
 }
 
 .personalization-banner {
-    font-size: 3.8em !important;
-    color: #fa6438 !important;
-    font-family: 'MP16', monospace !important;
+    font-size: 4.6em !important;
+    color: #5ad !important; /* Relleno Azul SCAPS */
+    font-family: 'upheavtt', monospace !important;
     text-transform: uppercase;
     pointer-events: none;
     margin: -0.8em 0 0.6em 0 !important;
     letter-spacing: 1px;
-    font-weight: normal !important;
-    -webkit-text-stroke: 1.5px #4d0d0d !important;
+    font-weight: normal !important; /* Mantener peso nativo de upheavtt para máxima nitidez */
+    -webkit-text-stroke: 2.5px #0f3d59 !important; /* Bordes en azul más oscuro aumentados a 2.5px */
     text-shadow: 
-        2px 2px 0px #4d0d0d,
-        -2px -2px 0px #4d0d0d,
-        2px -2px 0px #4d0d0d,
-        -2px 2px 0px #4d0d0d,
-        0px 4px 0px #260505,
+        2px 2px 0px #0f3d59,
+        -2px -2px 0px #0f3d59,
+        2px -2px 0px #0f3d59,
+        -2px 2px 0px #0f3d59,
+        0px 4px 0px #051d2c, /* Sombra en azul todavía más oscuro */
         0px 6px 0px rgba(0, 0, 0, 0.7) !important;
+    animation: none !important; /* Desactivar animación neon para evitar el resplandor difuminado */
+    text-align: center; /* Alineación centrada para perfecta simetría */
 }
 
 .custom-tabs-container {
@@ -1256,7 +1258,7 @@
 /* Estilos Compactos para el Editor de Banners */
 .custom-label-tiny {
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #fff !important;
     text-transform: uppercase;
     font-family: 'Share Tech Mono', monospace;
     display: block;
@@ -1295,5 +1297,724 @@
     padding: 0 5px;
     font-family: 'Share Tech Mono', monospace;
     box-sizing: border-box;
+}
+
+/* ==========================================================================
+   SISTEMA DE TEMAS DE COLOR (TEAM BLUE / TEAM ORANGE)
+   ========================================================================== */
+
+/* Variables CSS principales */
+:root {
+    --theme-primary: #5ad;
+    --theme-primary-rgb: 90, 173, 237;
+    --theme-active-bg: #11366b;
+    --theme-glow-color: rgba(90, 173, 237, 0.5);
+}
+
+body.theme-orange {
+    --theme-primary: #ffa100;
+    --theme-primary-rgb: 255, 161, 0;
+    --theme-active-bg: #6b3f11;
+    --theme-glow-color: rgba(255, 161, 0, 0.5);
+}
+
+/* Aplicación Dinámica de Variables de Tema en Customization */
+body.theme-orange .personalization-menu {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+body.theme-orange .custom-tab-btn:not(.btn-discard-custom):not(.btn-close-custom) {
+    background: #241202 !important;
+    border-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #100802,
+        0 0.3em 0 -0.15em #100802,
+        -0.3em 0 0 -0.15em #100802,
+        0.3em 0 0 -0.15em #100802 !important;
+}
+
+body.theme-orange .custom-tab-btn.active:not(.btn-discard-custom):not(.btn-close-custom) {
+    background: var(--theme-active-bg) !important;
+    border-color: var(--theme-primary) !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #100802,
+        0 0.3em 0 -0.15em #100802,
+        -0.3em 0 0 -0.15em #100802,
+        0.3em 0 0 -0.15em #100802,
+        0 0 15px rgba(var(--theme-primary-rgb), 0.6) !important;
+}
+
+body.theme-orange .custom-tab-btn:hover:not(.active):not(.btn-discard-custom):not(.btn-close-custom) {
+    background: #472403 !important;
+    border-color: rgba(var(--theme-primary-rgb), 0.7) !important;
+    box-shadow:
+        0 -0.3em 0 -0.15em #100802,
+        0 0.3em 0 -0.15em #100802,
+        -0.3em 0 0 -0.15em #100802,
+        0.3em 0 0 -0.15em #100802 !important;
+}
+
+body.theme-orange .profile-subtabs {
+    border-bottom-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+}
+
+body.theme-orange .subtab-btn.active {
+    color: var(--theme-primary) !important;
+    background: rgba(var(--theme-primary-rgb), 0.08) !important;
+    border-bottom-color: var(--theme-primary) !important;
+    text-shadow: 0 0 10px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+body.theme-orange .subtab-btn:hover:not(.active) {
+    border-bottom-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+body.theme-orange .custom-box-profile.pixel-border,
+body.theme-orange .custom-box-gallery.pixel-border,
+body.theme-orange .custom-box-garage.pixel-border,
+body.theme-orange .custom-box-controls.pixel-border,
+body.theme-orange .custom-box-ball.pixel-border {
+    border-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+}
+
+body.theme-orange .neon-container {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .pilot-stats {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .pilot-stats-label {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .selectable-item:hover {
+    border-color: rgba(var(--theme-primary-rgb), 0.7) !important;
+}
+
+body.theme-orange .selectable-item.selected {
+    border-color: var(--theme-primary) !important;
+}
+
+/* Títulos de las columnas del banner ("FONDOS", "DETALLES", "ESTILO") siempre en blanco puro */
+.custom-label-small {
+    color: #fff !important;
+    border-bottom-color: #fff !important;
+}
+
+body.theme-orange .custom-label {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-input-group label:not(.custom-label-tiny) {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-input-group label.custom-label-tiny {
+    color: #fff !important;
+}
+
+body.theme-orange .custom-input {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-input:focus {
+    box-shadow: 0 0 10px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+/* Aplicación Dinámica en Settings */
+body.theme-orange #menu-settings .menu-buttons {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+body.theme-orange #menu-settings .neon-container {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings .neon-container .pixel-title {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings .neon-container div[style*="border"] {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings #settings-song-artist {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings div[style*="border: 1px solid rgba(90, 173, 237, 0.2)"],
+body.theme-orange #menu-settings div[style*="border: 1px solid rgba(90,173,237,0.2)"] {
+    border-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+body.theme-orange #menu-settings div[style*="color: rgb(90, 173, 237)"],
+body.theme-orange #menu-settings span[style*="color: rgb(90, 173, 237)"],
+body.theme-orange #menu-settings div[style*="color: #5ad"],
+body.theme-orange #menu-settings span[style*="color: #5ad"] {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings input[type="range"] {
+    accent-color: var(--theme-primary) !important;
+}
+
+body.theme-orange #menu-settings input[type="checkbox"] {
+    accent-color: var(--theme-primary) !important;
+}
+
+/* Override de los bordes e iluminaciones en foco de ajustes */
+body.theme-orange #menu-settings div[style*="border: 2px solid #5ad"],
+body.theme-orange #menu-settings div[style*="border: 2px solid rgb(90, 173, 237)"] {
+    border: 2px solid var(--theme-primary) !important;
+    box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.4) !important;
+}
+
+body.theme-orange #menu-settings div[style*="border-color: rgba(90, 173, 237, 0.2)"],
+body.theme-orange #menu-settings div[style*="border-color: rgba(90,173,237,0.2)"] {
+    border-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+/* Títulos de los paneles del menú de personalización */
+body.theme-orange .gallery-title,
+body.theme-orange .garage-title,
+body.theme-orange .ball-title,
+body.theme-orange .boost-title,
+body.theme-orange .explosion-title {
+    color: var(--theme-primary) !important;
+    text-shadow: 0 0 10px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+/* Elementos de paginación del menú de personalización */
+body.theme-orange .page-info {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .btn-nav-compact {
+    border-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .btn-nav-compact:hover {
+    background: rgba(var(--theme-primary-rgb), 0.2) !important;
+    border-color: var(--theme-primary) !important;
+    color: #fff !important;
+}
+
+/* Columna de Estadísticas - Nivel y Experiencia en tema naranja */
+body.theme-orange #subpane-stats div[style*="rgba(90, 173, 237,"] {
+    background: rgba(var(--theme-primary-rgb), 0.05) !important;
+    border-color: rgba(var(--theme-primary-rgb), 0.1) !important;
+}
+
+body.theme-orange #subpane-stats span[style*="color: #5ad"] {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange #subpane-stats .player-banner-exp-bar {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange #subpane-stats #stat-xp-fill {
+    background: var(--theme-primary) !important;
+    box-shadow: 0 0 10px var(--theme-primary) !important;
+}
+
+/* Pestaña Vehículo - Controles de slider y vista previa en tema naranja */
+body.theme-orange .slider-label {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .btn-reset-small {
+    border-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .btn-reset-small:hover {
+    background: rgba(var(--theme-primary-rgb), 0.1) !important;
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .tint-slider::-webkit-slider-thumb {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 5px rgba(var(--theme-primary-rgb), 0.8) !important;
+}
+
+body.theme-orange .tint-slider::-moz-range-thumb {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 5px rgba(var(--theme-primary-rgb), 0.8) !important;
+}
+
+body.theme-orange .car-preview-frame {
+    background: radial-gradient(circle, rgba(var(--theme-primary-rgb), 0.15) 0%, rgba(0, 0, 0, 0.8) 100%) !important;
+    border-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+}
+
+body.theme-orange .preview-tag {
+    color: var(--theme-primary) !important;
+    border-top-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+    border-right-color: rgba(var(--theme-primary-rgb), 0.4) !important;
+}
+
+/* Resplandor del coche en la vista previa en tema naranja */
+body.theme-orange .car-preview-img {
+    filter: drop-shadow(0 0 1.5em var(--theme-glow-color)) !important;
+}
+
+/* Estilos de barras y tiradores de sliders de rango en tema naranja */
+body.theme-orange input[type="range"]::-webkit-slider-runnable-track {
+    border-color: var(--theme-primary) !important;
+    box-shadow: inset 0 0 5px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+body.theme-orange input[type="range"]::-webkit-slider-thumb {
+    background: var(--theme-primary) !important;
+    box-shadow:
+        0 -4px 0 -2px var(--theme-primary),
+        0 4px 0 -2px var(--theme-primary),
+        0 0 10px var(--theme-primary) !important;
+}
+
+body.theme-orange input[type="range"]::-moz-range-track {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange input[type="range"]::-moz-range-thumb {
+    background: var(--theme-primary) !important;
+}
+
+/* Borde del cuadro contenedor del slider de tonalidad */
+body.theme-orange .tint-control {
+    border-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+}
+
+/* ==========================================================================
+   SELECTOR DE TEMAS - TEAM BLUE / TEAM ORANGE
+   ========================================================================== */
+#btn-theme-blue, #btn-theme-orange {
+    animation: none !important;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+#btn-theme-blue {
+    border: 0.22em solid rgba(90, 173, 237, 0.4) !important;
+    color: rgba(90, 173, 237, 0.6) !important;
+    background: transparent !important;
+}
+
+#btn-theme-blue.active {
+    border-color: #5ad !important;
+    color: #5ad !important;
+    background: rgba(90, 173, 237, 0.15) !important;
+    box-shadow: 0 0 15px rgba(90, 173, 237, 0.4) !important;
+}
+
+#btn-theme-blue:hover {
+    border-color: #5ad !important;
+    color: #000 !important;
+    background: #5ad !important;
+    box-shadow: 0 0 20px rgba(90, 173, 237, 0.6) !important;
+    transform: scale(1.05);
+}
+
+#btn-theme-orange {
+    border: 0.22em solid rgba(255, 161, 0, 0.4) !important;
+    color: rgba(255, 161, 0, 0.6) !important;
+    background: transparent !important;
+}
+
+#btn-theme-orange.active {
+    border-color: #ffa100 !important;
+    color: #ffa100 !important;
+    background: rgba(255, 161, 0, 0.15) !important;
+    box-shadow: 0 0 15px rgba(255, 161, 0, 0.4) !important;
+}
+
+#btn-theme-orange:hover {
+    border-color: #ffa100 !important;
+    color: #000 !important;
+    background: #ffa100 !important;
+    box-shadow: 0 0 20px rgba(255, 161, 0, 0.6) !important;
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   DESPLEGABLES (SELECT) Y OPCIONES (OPTION) EN TEMA NARANJA
+   ========================================================================== */
+
+/* Selector de títulos de jugador (Grande) en tema naranja */
+body.theme-orange .custom-select {
+    border-color: var(--theme-primary) !important;
+    background-color: #111 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffa100' d='M2 4l4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    color-scheme: dark !important;
+    accent-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-select:focus {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+/* Selectores pequeños de relleno y patrón en tema naranja (mantienen fondo oscuro, sin fondo de flecha SVG conflictivo) */
+body.theme-orange .custom-select-small {
+    border-color: var(--theme-primary) !important;
+    background-color: #111 !important;
+    background-image: none !important; /* Quita el patrón conflictivo */
+    color: #fff !important;
+    color-scheme: dark !important;
+    accent-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-select-small:focus {
+    border-color: var(--theme-primary) !important;
+    box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.5) !important;
+}
+
+/* Opciones de los desplegables en tema naranja */
+body.theme-orange select.custom-select option,
+body.theme-orange select.custom-select-small option {
+    background-color: #1a0f02 !important;
+    color: #fff !important;
+}
+
+/* Forzar hover y checked a naranja en navegadores compatibles */
+body.theme-orange select.custom-select option:hover,
+body.theme-orange select.custom-select option:focus,
+body.theme-orange select.custom-select option:active,
+body.theme-orange select.custom-select option:checked,
+body.theme-orange select.custom-select-small option:hover,
+body.theme-orange select.custom-select-small option:focus,
+body.theme-orange select.custom-select-small option:active,
+body.theme-orange select.custom-select-small option:checked {
+    background: var(--theme-primary) !important;
+    background-color: var(--theme-primary) !important;
+    color: #000 !important;
+}
+
+/* ==========================================================================
+   DESPLEGABLE PERSONALIZADO DE TÍTULOS (HTML/DOM)
+   ========================================================================== */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.custom-dropdown-btn {
+    width: 100%;
+    height: 2.2em;
+    font-size: 0.9em;
+    background-color: #111 !important;
+    color: #fff !important;
+    border: 2px solid #5ad !important;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    box-sizing: border-box;
+    font-family: inherit;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.custom-dropdown-btn:hover {
+    border-color: #fff !important;
+    box-shadow: 0 0 10px rgba(90, 173, 237, 0.4) !important;
+}
+
+.custom-dropdown-arrow {
+    font-size: 0.8em;
+    color: #5ad;
+    transition: all 0.2s ease;
+}
+
+.custom-dropdown-content {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    width: 100%;
+    background-color: #0f0f18 !important;
+    border: 2px solid #5ad !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(90, 173, 237, 0.2) !important;
+    z-index: 9999 !important;
+    max-height: 200px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.custom-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #fff !important;
+    text-transform: uppercase;
+    font-size: 0.95em;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.custom-dropdown-item:hover {
+    background-color: #5ad !important;
+    color: #000 !important;
+}
+
+.custom-dropdown-item.active {
+    background-color: rgba(90, 173, 237, 0.2) !important;
+    color: #5ad !important;
+    font-weight: bold;
+}
+
+/* --- TEMA ORANGE PARA DESPLEGABLE PERSONALIZADO --- */
+body.theme-orange .custom-dropdown-btn {
+    border-color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-dropdown-btn:hover {
+    box-shadow: 0 0 10px rgba(var(--theme-primary-rgb), 0.4) !important;
+}
+
+body.theme-orange .custom-dropdown-arrow {
+    color: var(--theme-primary) !important;
+}
+
+body.theme-orange .custom-dropdown-content {
+    border-color: var(--theme-primary) !important;
+    background-color: #1a0f02 !important; /* Fondo marrón-naranja muy oscuro premium */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.9), 0 0 15px rgba(var(--theme-primary-rgb), 0.3) !important;
+}
+
+body.theme-orange .custom-dropdown-item:hover {
+    background-color: var(--theme-primary) !important;
+    color: #000 !important;
+}
+
+body.theme-orange .custom-dropdown-item.active {
+    background-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+    color: var(--theme-primary) !important;
+}
+
+/* ==========================================================================
+   TEMATIZACIÓN DE SCROLLBARS GLOBALES EN TEMA NARANJA
+   ========================================================================== */
+body.theme-orange * {
+    scrollbar-color: var(--theme-primary) rgba(0, 0, 0, 0.4) !important;
+}
+
+body.theme-orange ::-webkit-scrollbar-thumb {
+    background: var(--theme-primary) !important;
+    border-color: rgba(var(--theme-primary-rgb), 0.2) !important;
+}
+
+body.theme-orange ::-webkit-scrollbar-thumb:hover {
+    background: #fff !important;
+    box-shadow: 0 0 15px var(--theme-primary) !important;
+}
+
+/* ==========================================================================
+   TÍTULO DE BANNER "SISTEMA DE PERSONALIZACIÓN" EN TEMA NARANJA
+   ========================================================================== */
+body.theme-orange .personalization-banner {
+    color: #ffa100 !important; /* Relleno Naranja SCAPS */
+    font-weight: normal !important; /* Mantener peso nativo de upheavtt para máxima nitidez */
+    -webkit-text-stroke: 2.5px #804c00 !important; /* Bordes en naranja más oscuro aumentados a 2.5px */
+    text-shadow: 
+        2px 2px 0px #804c00,
+        -2px -2px 0px #804c00,
+        2px -2px 0px #804c00,
+        -2px 2px 0px #804c00,
+        0px 4px 0px #331f00, /* Sombra en naranja todavía más oscuro */
+        0px 6px 0px rgba(0, 0, 0, 0.7) !important;
+    animation: none !important; /* Desactivar animación neon para evitar el resplandor difuminado */
+}
+
+/* ==========================================================================
+   SINCRONIZACIÓN DE MENÚ PRINCIPAL CON TEMAS TEAM BLUE / TEAM ORANGE
+   ========================================================================== */
+
+/* --- TEMA AZUL (BASE / DEFAULT) --- */
+.menu-btn {
+    color: #5ad !important;
+    border-color: #5ad !important;
+    animation: pixel-neon-pulse-blue 4s infinite alternate ease-in-out !important;
+}
+
+.menu-btn:hover, .menu-btn:focus {
+    background: #5ad !important;
+    color: #000 !important;
+    transform: scale(1.1);
+    box-shadow:
+        0 -6px 0 -2px #0a0a19,
+        0 6px 0 -2px #0a0a19,
+        -6px 0 0 -2px #0a0a19,
+        6px 0 0 -2px #0a0a19,
+        0 0 30px rgba(90, 173, 237, 0.6) !important;
+}
+
+/* Tematización controlada solo para los paneles y títulos del menú principal y personalización */
+#player-banner, 
+#menu-custom, 
+#menu-settings, 
+#menu-credits {
+    border-color: #5ad !important;
+    animation: none !important;
+    box-shadow:
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19,
+        0 0 40px rgba(90, 173, 237, 0.25) !important;
+}
+
+#menu-settings .neon-title, 
+#menu-credits .neon-title {
+    color: #5ad !important;
+    text-shadow: 0 0 10px #5ad !important;
+    animation: none !important;
+}
+
+@keyframes pixel-neon-pulse-blue {
+    0% {
+        border-color: #5ad !important;
+        color: #5ad !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 10px rgba(90, 173, 237, 0.1);
+    }
+    100% {
+        border-color: #9cf !important;
+        color: #9cf !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 20px rgba(153, 207, 255, 0.3);
+    }
+}
+
+/* --- TEMA ORANGE (TEAM ORANGE ACTIVO) --- */
+body.theme-orange .menu-btn {
+    color: var(--theme-primary) !important;
+    border-color: var(--theme-primary) !important;
+    animation: pixel-neon-pulse-orange 4s infinite alternate ease-in-out !important;
+}
+
+body.theme-orange .menu-btn:hover, body.theme-orange .menu-btn:focus {
+    background: var(--theme-primary) !important;
+    color: #000 !important;
+    transform: scale(1.1);
+    box-shadow:
+        0 -6px 0 -2px #0a0a19,
+        0 6px 0 -2px #0a0a19,
+        -6px 0 0 -2px #0a0a19,
+        6px 0 0 -2px #0a0a19,
+        0 0 30px rgba(var(--theme-primary-rgb), 0.6) !important;
+}
+
+body.theme-orange #player-banner, 
+body.theme-orange #menu-custom, 
+body.theme-orange #menu-settings, 
+body.theme-orange #menu-credits {
+    border-color: var(--theme-primary) !important;
+    animation: none !important;
+    box-shadow:
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19,
+        0 0 40px rgba(var(--theme-primary-rgb), 0.25) !important;
+}
+
+body.theme-orange #menu-settings .neon-title, 
+body.theme-orange #menu-credits .neon-title {
+    color: var(--theme-primary) !important;
+    text-shadow: 0 0 10px var(--theme-primary) !important;
+    animation: none !important;
+}
+
+@keyframes pixel-neon-pulse-orange {
+    0% {
+        border-color: var(--theme-primary) !important;
+        color: var(--theme-primary) !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 10px rgba(var(--theme-primary-rgb), 0.1);
+    }
+    100% {
+        border-color: #ffd066 !important;
+        color: #ffd066 !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 20px rgba(255, 208, 102, 0.3);
+    }
+}
+
+/* ==========================================================================
+   SIMETRÍA INVERSA EN BOTÓN "JUGAR" Y BOTÓN "SALIR" ROJO DE SEGURIDAD
+   ========================================================================== */
+
+/* --- BOTÓN JUGAR EN AZUL DENTRO DEL TEMA ORANGE --- */
+body.theme-orange #btn-play {
+    color: #5ad !important;
+    border-color: #5ad !important;
+    animation: pixel-neon-pulse-blue 4s infinite alternate ease-in-out !important;
+}
+
+body.theme-orange #btn-play:hover, body.theme-orange #btn-play:focus {
+    background: #5ad !important;
+    color: #000 !important;
+    transform: scale(1.1);
+    box-shadow:
+        0 -6px 0 -2px #0a0a19,
+        0 6px 0 -2px #0a0a19,
+        -6px 0 0 -2px #0a0a19,
+        6px 0 0 -2px #0a0a19,
+        0 0 30px rgba(90, 173, 237, 0.6) !important;
+}
+
+/* --- BOTÓN SALIR CON TEMATIZACIÓN Y ADVERTENCIA EN HOVER (AMBOS TEMAS) --- */
+
+/* Tema Azul (Base): En reposo se muestra en azul celeste */
+#btn-exit {
+    color: #5ad !important;
+    border-color: #5ad !important;
+    animation: pixel-neon-pulse-blue 4s infinite alternate ease-in-out !important;
+}
+
+/* Tema Naranja (TEAM ORANGE ACTIVO): En reposo se muestra en naranja SCAPS */
+body.theme-orange #btn-exit {
+    color: var(--theme-primary) !important;
+    border-color: var(--theme-primary) !important;
+    animation: pixel-neon-pulse-orange 4s infinite alternate ease-in-out !important;
+}
+
+/* Al pasar el cursor (hover) en ambos temas, se activa el color rojo de advertencia */
+#btn-exit:hover, #btn-exit:focus {
+    background: #f33 !important;
+    color: #000 !important;
+    border-color: #f33 !important;
+    transform: scale(1.1);
+    box-shadow:
+        0 -6px 0 -2px #0a0a19,
+        0 6px 0 -2px #0a0a19,
+        -6px 0 0 -2px #0a0a19,
+        6px 0 0 -2px #0a0a19,
+        0 0 30px rgba(255, 51, 51, 0.7) !important;
+    animation: none !important; /* Detener pulsos de tema para que el rojo brille de forma estable */
 }
 
