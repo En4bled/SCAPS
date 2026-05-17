@@ -883,7 +883,7 @@
     height: auto !important;
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
-    background: rgba(0, 0, 0, 0.4);
+    background: #000000 !important;
     box-shadow:
         0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
         0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
@@ -899,11 +899,12 @@
 
 .boost-grid .selectable-item:hover {
     border-color: rgba(90, 173, 237, 0.7) !important;
-    background: rgba(90, 173, 237, 0.1);
+    background: #000000 !important;
 }
 
 .boost-grid .selectable-item.selected {
     border-color: #f90 !important;
+    background: #000000 !important;
     box-shadow: 
         0 -0.15em 0 -0.07em #1a0f00,
         0 0.15em 0 -0.07em #1a0f00,
@@ -950,7 +951,7 @@
     height: auto !important;
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
-    background: rgba(0, 0, 0, 0.4);
+    background: #000000 !important;
     box-shadow:
         0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
         0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
@@ -966,11 +967,12 @@
 
 .explosion-grid .selectable-item:hover {
     border-color: rgba(90, 173, 237, 0.7) !important;
-    background: rgba(90, 173, 237, 0.1);
+    background: #000000 !important;
 }
 
 .explosion-grid .selectable-item.selected {
     border-color: #f90 !important;
+    background: #000000 !important;
     box-shadow: 
         0 -0.15em 0 -0.07em #1a0f00,
         0 0.15em 0 -0.07em #1a0f00,

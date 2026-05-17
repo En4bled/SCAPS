@@ -593,7 +593,7 @@ function renderExplosionSelection() {
         item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
         item.style.flexDirection = 'column';
         item.innerHTML = `
-            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
+            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
             <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
@@ -770,7 +770,7 @@ function renderBoostSelection() {
         item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
         item.style.flexDirection = 'column';
         item.innerHTML = `
-            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
+            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
             <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
