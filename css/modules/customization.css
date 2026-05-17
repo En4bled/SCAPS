@@ -659,21 +659,32 @@
 
 .tint-slider {
     width: 100%;
-    height: 0.5em;
+    height: 0.6em;
     -webkit-appearance: none;
     appearance: none;
     background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-    border-radius: 0.2em;
+    border-radius: 0 !important;
 }
 
 .tint-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 1.2em;
-    height: 1.2em;
+    width: 0.8em;
+    height: 1.6em;
     background: #fff;
-    border: 0.1em solid #5ad;
-    border-radius: 50%;
+    border: 0.15em solid #5ad;
+    border-radius: 0 !important;
     cursor: pointer;
+    box-shadow: 0 0 5px rgba(90, 173, 237, 0.8);
+}
+
+.tint-slider::-moz-range-thumb {
+    width: 0.8em;
+    height: 1.6em;
+    background: #fff;
+    border: 0.15em solid #5ad;
+    border-radius: 0 !important;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(90, 173, 237, 0.8);
 }
 
 .btn-reset-small {
@@ -1037,7 +1048,7 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    border-radius: 0.8em;
+    border-radius: 0 !important;
     overflow: hidden;
 }
 
@@ -1051,15 +1062,20 @@
 
 .preview-tag {
     position: absolute;
-    bottom: 10%;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 0.1em 0.5em;
-    font-size: 0.6em;
+    bottom: 0 !important;
+    left: 0 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    padding: 0.3em 0.8em !important;
+    font-size: 0.7em !important;
     font-family: 'Share Tech Mono', monospace;
-    color: #5ad;
-    border: 0.05em solid #5ad;
+    color: #5ad !important;
+    border: none !important;
+    border-top: 0.15em solid rgba(90, 173, 237, 0.4) !important;
+    border-right: 0.15em solid rgba(90, 173, 237, 0.4) !important;
+    border-radius: 0 !important;
     z-index: 2;
     pointer-events: none;
+    letter-spacing: 1px;
 }
 
 @keyframes car-preview-rotation {
