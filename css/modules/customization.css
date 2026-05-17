@@ -344,7 +344,7 @@
 
 .btn-close-custom {
     flex: 0 0 auto !important;
-    min-width: 8em;
+    width: 14em !important;
     height: 5.8em;
     font-size: 0.8em;
     padding: 0 1.2em;
@@ -410,7 +410,7 @@
 /* --- BOTÓN ROJO DE DESCARTAR CAMBIOS --- */
 .btn-discard-custom {
     flex: 0 0 auto !important;
-    min-width: 8em;
+    width: 14em !important;
     height: 5.8em;
     font-size: 0.8em;
     padding: 0 1.2em;
