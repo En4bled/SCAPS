@@ -858,9 +858,8 @@
     grid-template-columns: repeat(4, 1fr) !important;
     justify-content: center !important;
     justify-items: center !important;
-    padding: 0.5em 5% !important;
+    padding: 0.1em 2% !important;
     width: 100% !important;
-    max-width: 30em;
     margin: 0 auto !important;
     box-sizing: border-box;
     overflow: hidden !important;
@@ -872,24 +871,54 @@
 }
 
 .boost-grid .selectable-item {
-    max-width: 6em !important;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 6.2em !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        -0.15em 0 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.boost-grid .selectable-item:hover {
+    border-color: rgba(90, 173, 237, 0.7) !important;
+    background: rgba(90, 173, 237, 0.1);
+}
+
+.boost-grid .selectable-item.selected {
+    border-color: #f90 !important;
+    box-shadow: 
+        0 -0.15em 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        -0.15em 0 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        inset 0 0 15px rgba(255, 153, 0, 0.25) !important;
 }
 
 .custom-box-boost,
 .custom-box-explosion {
-    flex: 0 0 calc(50% - 0.6em) !important;
-    max-width: calc(50% - 0.6em) !important;
+    flex: 0 0 calc(50% - 0.625em) !important;
+    max-width: calc(50% - 0.625em) !important;
 }
 
 .custom-box-preview-boost,
 .custom-box-preview-explosion {
-    flex: 0 0 calc(50% - 1.5em) !important;
-    max-width: calc(50% - 1.5em) !important;
+    flex: 0 0 calc(50% - 0.625em) !important;
+    max-width: calc(50% - 0.625em) !important;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin-right: 1.25em !important;
+    box-sizing: border-box;
 }
 
 .explosion-grid {
@@ -897,9 +926,8 @@
     grid-template-columns: repeat(4, 1fr) !important;
     justify-content: center !important;
     justify-items: center !important;
-    padding: 1em 8% !important;
+    padding: 0.1em 2% !important;
     width: 100% !important;
-    max-width: 30em;
     margin: 0 auto !important;
     box-sizing: border-box;
     overflow: hidden !important;
@@ -910,34 +938,71 @@
     display: none;
 }
 
+.explosion-grid .selectable-item {
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    max-width: 6.2em !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        -0.15em 0 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.explosion-grid .selectable-item:hover {
+    border-color: rgba(90, 173, 237, 0.7) !important;
+    background: rgba(90, 173, 237, 0.1);
+}
+
+.explosion-grid .selectable-item.selected {
+    border-color: #f90 !important;
+    box-shadow: 
+        0 -0.15em 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        -0.15em 0 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        inset 0 0 15px rgba(255, 153, 0, 0.25) !important;
+}
+
 .explosion-preview-frame {
-    width: 88%;
-    aspect-ratio: 1 / 1;
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 !important;
     background: radial-gradient(circle, rgba(40, 20, 20, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
-    border: 0.1em solid rgba(255, 153, 0, 0.3);
+    border: 0.15em solid rgba(255, 153, 0, 0.4) !important;
     position: relative;
-    border-radius: 0.5em;
+    border-radius: 0 !important;
     overflow: hidden;
-    margin-top: 1em;
-    margin-bottom: 1.5em;
+    margin: 0.5em 0 0 0 !important;
 }
 
 .explosion-title {
-    margin-top: 1.5em !important;
-    margin-bottom: 0em !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.5em !important;
     text-align: center;
     font-size: 1.2em !important;
 }
 
 .boost-preview-frame {
-    width: 100%;
-    height: 12em;
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 !important;
     background: radial-gradient(circle, rgba(20, 20, 40, 0.8) 0%, rgba(0, 0, 0, 1) 100%);
-    border: 0.1em solid rgba(90, 173, 237, 0.3);
+    border: 0.15em solid rgba(90, 173, 237, 0.4) !important;
     position: relative;
-    border-radius: 0.5em;
+    border-radius: 0 !important;
     overflow: hidden;
-    margin-bottom: 1em;
+    margin: 0.5em 0 0 0 !important;
 }
 
 #canvas-boost-preview {
