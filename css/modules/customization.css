@@ -951,7 +951,7 @@
 .avatar-grid-3x3 .selectable-item {
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
-    background: rgba(0, 0, 0, 0.4) !important;
+    background: rgba(0, 0, 0, 0.4);
     box-shadow:
         0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
         0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
@@ -962,12 +962,11 @@
 
 .avatar-grid-3x3 .selectable-item:hover {
     border-color: rgba(90, 173, 237, 0.7) !important;
-    background: rgba(90, 173, 237, 0.1) !important;
+    background: rgba(90, 173, 237, 0.1);
 }
 
 .avatar-grid-3x3 .selectable-item.selected {
     border-color: #f90 !important;
-    background: rgba(255, 153, 0, 0.12) !important;
     box-shadow: 
         0 -0.15em 0 -0.07em #1a0f00,
         0 0.15em 0 -0.07em #1a0f00,
