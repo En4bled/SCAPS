@@ -594,14 +594,14 @@ function renderExplosionSelection() {
         item.style.flexDirection = 'column';
         item.innerHTML = `
             <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
-            <div style="font-size: 0.85em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
             USER_CONFIG.playerExplosion = key;
             const tag = document.getElementById('explosion-name-tag');
             if (tag) {
                 tag.innerText = def.name;
-                tag.style.color = def.color === 'multi' ? '#f90' : def.color;
+                tag.style.color = '#fff';
             }
             saveUserConfig();
             renderExplosionSelection();
