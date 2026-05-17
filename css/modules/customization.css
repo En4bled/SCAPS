@@ -429,6 +429,21 @@
     flex-direction: column;
 }
 
+/* Desactivación de resplandores exteriores y ciclo de animación en las columnas interiores */
+.custom-box-profile.pixel-border,
+.custom-box-gallery.pixel-border,
+.custom-box-garage.pixel-border,
+.custom-box-controls.pixel-border,
+.custom-box-ball.pixel-border {
+    animation: none !important;
+    box-shadow: 
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19 !important;
+    border-color: rgba(90, 173, 237, 0.4) !important;
+}
+
 .banner-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr) !important;
