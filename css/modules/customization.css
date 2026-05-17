@@ -601,6 +601,12 @@
     flex: 1;
 }
 
+#pane-boost,
+#pane-explosion {
+    margin-top: 1.25em !important;
+    height: calc(100% - 1.25em) !important;
+}
+
 .custom-input-group {
     display: flex;
     flex-direction: column;
