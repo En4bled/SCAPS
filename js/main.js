@@ -434,6 +434,8 @@ function applyBannerPosition() {
     }
 }
 
+
+
 function setupDraggableBanner() {
     const banner = document.getElementById('song-notification');
     if (!banner) return;
@@ -455,6 +457,8 @@ function setupDraggableBanner() {
         if (isDragging) { isDragging = false; banner.style.transition = 'opacity 1s ease-in-out, transform 0.2s'; saveUserConfig(); }
     });
 }
+
+
 
 export let shakeMagnitude = 0;
 export let hitStopFrames = 0;
@@ -1332,8 +1336,8 @@ async function init() {
 
         const btnMapPrev = getEl('btn-map-prev');
         const btnMapNext = getEl('btn-map-next');
-        if (btnMapPrev) btnMapPrev.onclick = () => { if (currentMapPage > 1) { currentMapPage--; loadSetupMaps(); playSound('menu_click'); } };
-        if (btnMapNext) btnMapNext.onclick = () => { currentMapPage++; loadSetupMaps(); playSound('menu_click'); };
+        if (btnMapPrev) btnMapPrev.onclick = () => { if (currentMapPage > 1) { changeMap(currentMapPage - 1); playSound('menu_click'); } };
+        if (btnMapNext) btnMapNext.onclick = () => { changeMap(currentMapPage + 1); playSound('menu_click'); };
 
         if (btnExitSetup) btnExitSetup.onclick = () => {
             setupOverlay.style.display = 'none';
@@ -1641,21 +1645,35 @@ async function init() {
 
         // --- DETECCIÓN DE MANDO (Gamepad API) ---
         const gpIndicator = getEl('gamepad-indicator');
+        const gpText = getEl('gamepad-text');
+
+        const checkInitialGamepads = () => {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            const gp = Array.from(gamepads).find(g => g && g.connected);
+            if (gp && gpIndicator) {
+                gpIndicator.style.filter = "grayscale(0%)";
+                gpIndicator.style.opacity = "1";
+                gpIndicator.title = "MANDO CONECTADO";
+                if (gpText) gpText.innerText = "MANDO DETECTADO";
+            } else if (gpIndicator) {
+                gpIndicator.style.filter = "grayscale(100%)";
+                gpIndicator.style.opacity = "0.5";
+                gpIndicator.title = "MANDO DESCONECTADO";
+                if (gpText) gpText.innerText = "MANDO NO DETECTADO";
+            }
+        };
+        // Ejecución inmediata y retardada de control inicial
+        checkInitialGamepads();
+        setTimeout(checkInitialGamepads, 300);
 
         window.addEventListener("gamepadconnected", (e) => {
             console.log("SCAPS: Gamepad detectado ->", e.gamepad.id);
             if (gpIndicator) {
                 gpIndicator.style.filter = "grayscale(0%)";
                 gpIndicator.style.opacity = "1";
-                gpIndicator.style.borderColor = "#2fb";
-                gpIndicator.title = "Mando detectado: " + e.gamepad.id;
-                
-                const statusIcon = document.getElementById('gamepad-status-icon');
-                if (statusIcon) {
-                    statusIcon.innerText = "✔";
-                    statusIcon.style.color = "#2fb";
-                }
+                gpIndicator.title = "MANDO CONECTADO";
             }
+            if (gpText) gpText.innerText = "MANDO DETECTADO";
             if (typeof showInGameNotification === 'function') {
                 showInGameNotification("MANDO DETECTADO: " + e.gamepad.id.substring(0, 20), "#2fb", "🎮");
             }
@@ -1670,15 +1688,9 @@ async function init() {
             if (gpIndicator) {
                 gpIndicator.style.filter = "grayscale(100%)";
                 gpIndicator.style.opacity = "0.5";
-                gpIndicator.style.borderColor = "rgba(255,255,255,0.1)";
-                gpIndicator.title = "Mando no detectado";
-
-                const statusIcon = document.getElementById('gamepad-status-icon');
-                if (statusIcon) {
-                    statusIcon.innerText = "❌";
-                    statusIcon.style.color = "#fff";
-                }
+                gpIndicator.title = "MANDO DESCONECTADO";
             }
+            if (gpText) gpText.innerText = "MANDO NO DETECTADO";
             if (typeof showInGameNotification === 'function') {
                 showInGameNotification("MANDO DESCONECTADO", "#f33", "🚫");
             }
@@ -2995,21 +3007,64 @@ async function startGame() {
         setupOverlay.classList.remove('hidden');
         loadSetupMaps();
         
-        // Dar foco al primer modo (Práctica) para habilitar navegación por cruceta
-        setTimeout(() => {
-            const firstMode = document.querySelector('.mode-option');
-            if (firstMode) {
-                firstMode.focus();
-                // Auto-seleccionar el primer modo si no está bloqueado
-                if (!firstMode.classList.contains('locked')) {
-                    firstMode.click();
-                }
-            }
-        }, 100);
+        // Limpiar cualquier selección previa de modos al abrir la pantalla para iniciar de forma limpia e imparcial
+        selectedMode = null;
+        document.querySelectorAll('.mode-option').forEach(b => {
+            b.classList.remove('selected');
+            b.blur(); // Garantiza la remoción de cualquier foco visual
+        });
+        
+        validateMatchSetup(); // Recalcular la validación para bloquear el botón CONFIRMAR Y JUGAR
     }
 }
 
-async function loadSetupMaps() {
+let lastMapIndex = 0;
+let isMapChanging = false;
+
+async function changeMap(targetPage) {
+    if (isMapChanging || !mapListContainer) return;
+    isMapChanging = true;
+    
+    const totalMaps = 4; // URBAN, ATLANTIS, VOLCANO, WINTER
+    let newPage = targetPage;
+    if (newPage > totalMaps) newPage = 1;
+    if (newPage < 1) newPage = totalMaps;
+    
+    // Si no hay cambio real de página, saltamos
+    if (newPage === currentMapPage) {
+        isMapChanging = false;
+        return;
+    }
+    
+    const direction = (newPage > currentMapPage || (currentMapPage === totalMaps && newPage === 1)) ? 'next' : 'prev';
+    // Caso de borde para rotación infinita hacia atrás
+    let isInfiniteEdge = (currentMapPage === 1 && newPage === totalMaps);
+    const finalDirection = isInfiniteEdge ? 'prev' : direction;
+    
+    // Aplicar animación de salida rápida a las cartas actualmente en pantalla
+    const cards = mapListContainer.querySelectorAll('.setup-map-item');
+    cards.forEach(c => {
+        c.classList.remove('slide-next', 'slide-prev', 'enter-next', 'enter-prev');
+        c.classList.add(finalDirection === 'next' ? 'exit-next' : 'exit-prev');
+    });
+    
+    lastMapIndex = currentMapPage - 1;
+    currentMapPage = newPage;
+    
+    // Esperamos 200ms a que termine la animación de salida por deslizamiento antes de recrear el DOM
+    setTimeout(async () => {
+        await loadSetupMaps(finalDirection);
+        isMapChanging = false;
+        
+        // Restaurar foco al nuevo centro tras la animación
+        setTimeout(() => {
+            const newCenter = mapListContainer.querySelector('.center');
+            if (newCenter) newCenter.focus();
+        }, 50);
+    }, 200);
+}
+
+async function loadSetupMaps(forcedDirection = '') {
     if (!mapListContainer) return;
     try {
         const resp = await fetch('php/get_maps.php');
@@ -3018,7 +3073,7 @@ async function loadSetupMaps() {
         // Asegurar al menos 10 mapas para la demostración de paginación si faltan
         while (maps.length < 10) maps.push(`MAPA ${maps.length + 1}`);
 
-        const MAPS_LIST = ['URBAN', 'ATLANTIS', 'VOLCANO', 'WINTER'];
+        const MAPS_LIST = ['URBAN', 'VOLCANO', 'ATLANTIS', 'JUNGLE'];
         const totalMaps = MAPS_LIST.length;
 
         // El currentMapPage ahora actuará como el índice del mapa central (1 a totalMaps)
@@ -3033,6 +3088,13 @@ async function loadSetupMaps() {
         const btnNext = document.getElementById('btn-map-next');
         if (btnPrev) { btnPrev.disabled = (currentMapPage === 1); btnPrev.style.opacity = (currentMapPage === 1) ? '0.3' : '1'; }
         if (btnNext) { btnNext.disabled = (currentMapPage === totalMaps); btnNext.style.opacity = (currentMapPage === totalMaps) ? '0.3' : '1'; }
+
+        // Detectar dirección del cambio de mapa para la animación de entrada
+        let directionClass = '';
+        if (forcedDirection) {
+            directionClass = (forcedDirection === 'next') ? 'enter-next' : 'enter-prev';
+        }
+        lastMapIndex = centerIdx;
 
         mapListContainer.innerHTML = '';
         mapListContainer.style.perspective = "1000px";
@@ -3053,39 +3115,171 @@ async function loadSetupMaps() {
 
             const card = document.createElement('div');
             card.className = `setup-map-item coverflow-card ${isCenter ? 'center' : 'side'}`;
+            
+            // Inyectar clase de transición de entrada direccional y auto-limpiarla para que no interfiera con hover TCG
+            if (directionClass) {
+                card.classList.add(directionClass);
+                setTimeout(() => {
+                    card.classList.remove('enter-next', 'enter-prev');
+                }, 500); // 500ms de limpieza justa tras asentarse
+            }
 
             // Estilos dinámicos para el efecto 3D
-            card.style.width = isCenter ? "280px" : "180px";
-            card.style.height = "fit-content !important"; // Forzar ajuste al contenido
+            card.style.width = isCenter ? "15.6em" : "9.9em";
+            card.style.height = "19.8em"; // Altura compacta y uniforme para el mazo
             card.style.minHeight = "0";
             card.style.zIndex = isCenter ? "10" : "5";
             card.style.opacity = isCenter ? "1" : "0.6";
-            card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 35}px) rotateY(${offset * -20}deg)`;
-            card.style.transition = "all 0.6s cubic-bezier(0.23, 1, 0.32, 1)";
+            card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+            card.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.32, 1)"; // Transición ágil
             card.style.cursor = "pointer";
-            card.style.background = "#0a0a19";
-            card.style.borderRadius = "12px";
-            card.style.padding = "10px 10px 10px 10px"; // Padding uniforme
+            card.style.background = "none"; /* Quitar fondos del contenedor principal para que los stack-back se encarguen */
+            card.style.borderRadius = "0px";
+            card.style.padding = "0px"; /* Cero paddings para evitar desplazamientos extraños */
             card.style.display = "flex";
             card.style.flexDirection = "column";
             card.style.boxSizing = "border-box";
-            card.style.margin = "0 -35px";
+            card.style.margin = "0 -1.8em"; /* Mantener encabalgado de forma compacta en em */
             card.tabIndex = 0; // Enfocable para mando
 
             if (isCenter) {
-                card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(90,173,237,0.3)";
+                card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px var(--theme-glow)";
+                
+                let rect = null;
+                
+                card.onmouseenter = () => {
+                    // Capturar el rect original estático antes de aplicar cualquier deformación 3D
+                    rect = card.getBoundingClientRect();
+                    // Eliminar la transición durante el movimiento para un rastreo instantáneo y sin temblores
+                    card.style.transition = "none";
+                };
+                
+                // Efecto interactivo de oscilación 3D estilo carta TCG
+                card.onmousemove = (e) => {
+                    if (!rect) rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const maxRotate = 16; // Grados máximos de oscilación
+                    const rotateY = ((x - centerX) / centerX) * maxRotate;
+                    const rotateX = ((centerY - y) / centerY) * maxRotate;
+                    
+                    card.style.transform = `scale(1.05) translateZ(30px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    
+                    // Brillo/Resplandor dinámico reactivo a la posición física del cursor
+                    const glowX = ((x - centerX) / centerX) * 20;
+                    const glowY = ((y - centerY) / centerY) * 20;
+                    card.style.boxShadow = `${-glowX}px ${-glowY}px 40px var(--theme-glow-strong), 0 20px 60px rgba(0, 0, 0, 0.85)`;
+                    
+                    // Calcular porcentajes relativos de posición para el Foil Holográfico
+                    const percentX = (x / rect.width) * 100;
+                    const percentY = (y / rect.height) * 100;
+                    card.style.setProperty('--glow-x', `${percentX}%`);
+                    card.style.setProperty('--glow-y', `${percentY}%`);
+                };
+ 
+                card.onmouseleave = () => {
+                    rect = null;
+                    // Restauración fluida a la posición y sombra original reactivando la transición suave de retorno
+                    card.style.transition = "all 0.5s cubic-bezier(0.23, 1, 0.32, 1)";
+                    card.style.transform = "scale(1) translateZ(0) rotateX(0deg) rotateY(0deg)";
+                    card.style.boxShadow = "0 15px 50px rgba(0,0,0,0.8), 0 0 30px var(--theme-glow)";
+                };
+            } else {
+                // Hover reactivo con iluminación y acercamiento para tarjetas laterales (side)
+                card.onmouseenter = () => {
+                    card.style.opacity = "1";
+                    card.style.transform = `scale(0.94) translateZ(-80px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+                    
+                    const front = card.querySelector('.card-stack-front');
+                    if (front) {
+                        front.style.borderColor = "var(--theme-color)";
+                        front.style.boxShadow = "0 0 25px var(--theme-glow-strong)";
+                    }
+                };
+ 
+                card.onmouseleave = () => {
+                    card.style.opacity = "0.6";
+                    card.style.transform = `scale(0.9) translateZ(-100px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+                    
+                    const front = card.querySelector('.card-stack-front');
+                    if (front) {
+                        front.style.borderColor = "#333";
+                        front.style.boxShadow = "none";
+                    }
+                };
             }
-
+ 
+            // HTML Dinámico de mazo apilado concéntrico en 3 capas del DOM (Diseño TCG Premium)
             card.innerHTML = `
-                <div class="pixel-border" style="width: 100%; height: 290px; overflow: hidden; background: #000; border: ${isCenter ? '4px solid #5ad' : '2px solid #333'} !important; position: relative;">
-                    <img src="recursos/maps/map${idx + 1}.png" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(10,10,25,1) 0%, rgba(10,10,25,0.7) 40%, transparent 100%); opacity: ${isCenter ? 1 : 0}; transition: opacity 0.3s;"></div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; margin-top: -35px; opacity: ${isCenter ? 1 : 0}; transition: all 0.4s ease; pointer-events: none; z-index: 20; transform: ${isCenter ? 'translateY(0)' : 'translateY(15px)'}">
-                    <div style="background: rgba(5, 5, 15, 0.9); border: 2px solid #5ad; padding: 4px 25px; position: relative; display: flex; align-items: center; justify-content: center; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);">
-                        <span style="color: #5ad; font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase;">
-                            ${displayName}
-                        </span>
+                <!-- Capa 3: Carta de fondo del mazo -->
+                <div class="card-stack-back-2 pixel-border" style="border-radius: 0px !important;"></div>
+                <!-- Capa 2: Carta intermedia del mazo -->
+                <div class="card-stack-back-1 pixel-border" style="border-radius: 0px !important;"></div>
+                
+                <!-- Capa 1: Carta frontal (Diseño TCG Premium de alta fidelidad) -->
+                <div class="card-stack-front tcg-card-design pixel-border" style="border-radius: 0px !important; border: ${isCenter ? '4px solid var(--theme-color)' : '2px solid #333'} !important;">
+                    
+                    <!-- Brillo de Foil Holográfico TCG (Flotante y Personalizado por Elemento) -->
+                    <div class="tcg-shine shine-${displayName.toLowerCase()}"></div>
+                    
+                    <!-- 1. Cabecera (Header) de la Carta TCG -->
+                    <div class="tcg-header">
+                        <!-- Icono izquierdo (Gema de Rombo) -->
+                        <div class="tcg-icon-left">
+                            <div class="tcg-diamond-inner"></div>
+                        </div>
+                        
+                        <!-- Banner central con nombre del mapa -->
+                        <div class="tcg-title-banner">
+                            <span class="tcg-map-name">${displayName}</span>
+                        </div>
+                        
+                        <!-- Icono derecho (Hexágono) -->
+                        <div class="tcg-icon-right">
+                            <div class="tcg-hexagon-inner"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. Ilustración principal del Estadio (Enmarcada) -->
+                    <div class="tcg-artwork-container">
+                        <img src="recursos/maps/map${idx + 1}.png" class="tcg-map-img">
+                        <div class="tcg-artwork-overlay"></div>
+                    </div>
+                    
+                    <!-- 3. Caja de información del cromo (Sección Inferior) -->
+                    <div class="tcg-info-box">
+                        <div class="tcg-info-border-line"></div>
+                        
+                        <!-- Estadísticas y detalles estéticos del mapa -->
+                        <div class="tcg-stats-content">
+                            <div class="tcg-stat-row">
+                                <span class="tcg-stat-label">TIPO:</span>
+                                <span class="tcg-stat-value">
+                                    ${idx === 0 ? 'ESTADIO PÍXEL' : 
+                                      idx === 1 ? 'ESTADIO VOLCÁNICO' : 
+                                      idx === 2 ? 'TIPO SUMERGIDO' : 'TIPO JUNGLA'}
+                                </span>
+                            </div>
+                            <div class="tcg-stat-row">
+                                <span class="tcg-stat-label">CAPACIDAD:</span>
+                                <span class="tcg-stat-value">${idx === 0 ? '45,000 ESP' : idx === 1 ? '38,000 ESP' : idx === 2 ? '52,000 ESP' : '29,000 ESP'}</span>
+                            </div>
+                            <div class="tcg-stat-row">
+                                <span class="tcg-stat-label">DIFICULTAD:</span>
+                                <span class="tcg-stat-value" style="color: ${idx === 1 ? '#ff4d4d' : idx === 2 ? '#00ffcc' : idx === 3 ? '#00ff55' : '#ffffff'}">
+                                    ${idx === 0 ? '★☆☆' : idx === 1 ? '★★☆' : idx === 2 ? '★★★' : '★★☆'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Pie de página TCG con seriales retro y créditos -->
+                        <div class="tcg-footer">
+                            <span class="tcg-serial">№ 00${idx + 1} / 004</span>
+                            <span class="tcg-author">SCAPS TCG • HR EIST ARTIST</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3098,13 +3292,7 @@ async function loadSetupMaps() {
 
             card.onfocus = () => {
                 if (!isCenter) {
-                    currentMapPage = idx + 1;
-                    loadSetupMaps();
-                    // Restaurar foco al nuevo centro tras el re-renderizado
-                    setTimeout(() => {
-                        const newCenter = mapListContainer.querySelector('.center');
-                        if (newCenter) newCenter.focus();
-                    }, 50);
+                    changeMap(idx + 1);
                 } else {
                     selectMap();
                 }
@@ -3112,8 +3300,7 @@ async function loadSetupMaps() {
 
             card.onclick = () => {
                 if (!isCenter) {
-                    currentMapPage = idx + 1;
-                    loadSetupMaps();
+                    changeMap(idx + 1);
                 }
                 selectMap();
             };
