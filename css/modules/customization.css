@@ -723,7 +723,7 @@
 .ball-grid .selectable-item {
     aspect-ratio: 1 / 1 !important;
     width: 100% !important;
-    max-width: 6.8em !important;
+    max-width: 9.2em !important;
     height: auto !important;
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
