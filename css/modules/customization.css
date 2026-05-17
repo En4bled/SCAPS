@@ -325,8 +325,14 @@
     width: 2.4em;
     height: 2.4em;
     object-fit: contain;
-    margin-top: -0.6em;
-    margin-bottom: 0.1em;
+    margin-top: -0.5em !important;
+    margin-bottom: 0.05em !important;
+}
+
+.custom-tab-btn span {
+    font-size: 1.15em !important;
+    font-weight: 800 !important;
+    margin-bottom: 0.45em !important;
 }
 
 .custom-tab-btn.active {
@@ -346,7 +352,7 @@
     flex: 0 0 auto !important;
     width: 14em !important;
     height: 5.8em;
-    font-size: 0.8em;
+    font-size: 0.9em !important;
     padding: 0 1.2em;
     border: 0.3em solid rgba(34, 255, 187, 0.6) !important;
     border-radius: 0 !important;
@@ -412,7 +418,7 @@
     flex: 0 0 auto !important;
     width: 14em !important;
     height: 5.8em;
-    font-size: 0.8em;
+    font-size: 0.9em !important;
     padding: 0 1.2em;
     margin-left: auto !important; /* El primer botón a la derecha empuja con margin-left: auto */
     border: 0.3em solid rgba(255, 68, 68, 0.6) !important;
