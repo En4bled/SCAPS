@@ -1318,7 +1318,7 @@ async function init() {
         if (btnExitSetup) btnExitSetup.onclick = () => {
             setupOverlay.style.display = 'none';
             setupOverlay.classList.add('hidden');
-            if (mainMenuEl) mainMenuEl.style.display = 'flex';
+            showMenuScreen('initial');
         };
 
         document.querySelectorAll('.mode-option').forEach(btn => {
@@ -2784,7 +2784,7 @@ function showMenuScreen(screenId) {
         mainMenuEl.classList.remove('hidden');
     }
 
-    [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
+    [menuInitial, menuCredits, menuCustom, menuSettings, setupOverlay].forEach(m => { if (m) m.style.display = 'none'; });
 
     const logo = document.getElementById('menu-logo');
     if (logo) logo.style.display = (screenId === 'initial') ? 'block' : 'none';
@@ -2909,7 +2909,19 @@ function handleMenuBack() {
 }
 
 async function startGame() {
-    if (mainMenuEl) mainMenuEl.style.display = 'none';
+    if (mainMenuEl) {
+        mainMenuEl.style.display = 'flex';
+        mainMenuEl.classList.remove('hidden');
+    }
+    // Ocultar botones iniciales, logo y créditos
+    [menuInitial, menuCredits, menuCustom, menuSettings].forEach(m => { if (m) m.style.display = 'none'; });
+    const logo = document.getElementById('menu-logo');
+    if (logo) logo.style.display = 'none';
+    const btnCredits = document.getElementById('btn-credits');
+    const btnMapEditor = document.getElementById('btn-map-editor');
+    if (btnCredits) btnCredits.style.display = 'none';
+    if (btnMapEditor) btnMapEditor.style.display = 'none';
+
     if (setupOverlay) {
         setupOverlay.style.display = 'flex';
         setupOverlay.classList.remove('hidden');
