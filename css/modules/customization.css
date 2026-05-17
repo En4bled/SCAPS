@@ -726,7 +726,7 @@
     overflow: hidden !important;
     max-height: none !important;
     gap: 0.4em;
-    padding: 0.5em 30% !important;
+    padding: 0.1em 2% !important;
     width: 100% !important;
     margin: 0 !important;
     box-sizing: border-box;
@@ -740,8 +740,43 @@
 .custom-box-garage .selectable-item {
     aspect-ratio: 1 / 1 !important;
     width: 100% !important;
-    max-width: 5.5em !important;
+    max-width: 6.2em !important;
     height: auto !important;
+    border-radius: 0 !important;
+    border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow:
+        0 -0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5),
+        -0.15em 0 0 -0.07em rgba(0, 0, 0, 0.5),
+        0 0.15em 0 -0.07em rgba(0, 0, 0, 0.5) !important;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.custom-box-garage .selectable-item:hover {
+    border-color: rgba(90, 173, 237, 0.7) !important;
+    background: rgba(90, 173, 237, 0.1);
+}
+
+.custom-box-garage .selectable-item.selected {
+    border-color: #f90 !important;
+    box-shadow: 
+        0 -0.15em 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        -0.15em 0 0 -0.07em #1a0f00,
+        0 0.15em 0 -0.07em #1a0f00,
+        inset 0 0 15px rgba(255, 153, 0, 0.25) !important;
+}
+
+.custom-box-garage .selectable-item img {
+    max-width: 88% !important;
+    max-height: 88% !important;
+    object-fit: contain;
 }
 
 .avatar-grid-3x3 {
@@ -989,11 +1024,12 @@
 
 /* Vista Previa Coche */
 .car-preview-frame {
-    width: 15em;
-    height: 15em;
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 !important;
     max-width: none;
     max-height: none;
-    margin: 1em auto;
+    margin: 0.5em 0 0 0 !important;
     background: radial-gradient(circle, rgba(90, 173, 237, 0.15) 0%, rgba(0, 0, 0, 0.8) 100%);
     border: 0.15em solid rgba(90, 173, 237, 0.4);
     display: flex;
@@ -1006,7 +1042,7 @@
 }
 
 .car-preview-img {
-    width: 35% !important;
+    width: 60% !important;
     height: auto !important;
     filter: drop-shadow(0 0 1.5em rgba(90, 173, 237, 0.6));
     animation: car-preview-rotation 20s linear infinite !important;
