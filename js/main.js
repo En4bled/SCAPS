@@ -495,10 +495,97 @@ let player1, player1_teammate, player2, player2_teammate, allCars, ball;
 let introPhase = 1; // 1: Logo, 2: Legal, 3: Menu
 let replaySystem = new ReplaySystem();
 
+// Registro global de animaciones miniatura activas para boost y explosiones
+let activeMiniPreviews = [];
+let miniPreviewAnimationId = null;
+
+function animateMiniPreviews() {
+    activeMiniPreviews.forEach(item => {
+        const { canvas, ctx, type, particles, color } = item;
+        
+        // Comprobar que el canvas siga visible en el DOM
+        if (!canvas.offsetParent) return; 
+
+        // Limpiar lienzo con fondo semi-transparente
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Generar partículas continuamente si hay pocas
+        if (particles.length < 7) {
+            if (type === 'boost') {
+                // Flujo horizontal (de izquierda a derecha)
+                particles.push({
+                    x: 10,
+                    y: canvas.height / 2 + (Math.random() - 0.5) * 12,
+                    vx: Math.random() * 1.5 + 1.2,
+                    vy: (Math.random() - 0.5) * 0.6,
+                    size: Math.random() * 3 + 2,
+                    alpha: 1,
+                    decay: Math.random() * 0.035 + 0.02
+                });
+            } else {
+                // Explosiones radiales desde el centro
+                if (particles.length === 0 || Math.random() < 0.25) {
+                    const count = Math.random() * 3 + 2;
+                    for (let i = 0; i < count; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 1.2 + 0.4;
+                        particles.push({
+                            x: canvas.width / 2,
+                            y: canvas.height / 2,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            size: Math.random() * 3.5 + 2.5,
+                            alpha: 1,
+                            decay: Math.random() * 0.045 + 0.02
+                        });
+                    }
+                }
+            }
+        }
+
+        // Actualizar y dibujar partículas
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+            p.size *= 0.96;
+
+            if (p.alpha <= 0 || p.size <= 0.5) {
+                particles.splice(i, 1);
+                continue;
+            }
+
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            
+            let drawColor = color;
+            if (color === 'multi') {
+                const hues = [0, 60, 120, 180, 240, 300];
+                const index = Math.floor((Date.now() / 120) + p.x) % hues.length;
+                drawColor = `hsl(${hues[index]}, 100%, 60%)`;
+            }
+            ctx.fillStyle = drawColor;
+            ctx.shadowBlur = p.size * 1.5;
+            ctx.shadowColor = drawColor;
+            ctx.fill();
+            ctx.restore();
+        }
+    });
+
+    miniPreviewAnimationId = requestAnimationFrame(animateMiniPreviews);
+}
+
 function renderExplosionSelection() {
     const list = document.getElementById('custom-explosion-list');
     if (!list) return;
     list.innerHTML = '';
+
+    // Filtrar previsualizaciones anteriores de explosiones
+    activeMiniPreviews = activeMiniPreviews.filter(p => p.type !== 'explosion');
 
     Object.keys(EXPLOSION_DEFS).forEach(key => {
         const def = EXPLOSION_DEFS[key];
@@ -506,8 +593,8 @@ function renderExplosionSelection() {
         item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
         item.style.flexDirection = 'column';
         item.innerHTML = `
-            <div style="font-size: 1.5em; margin-bottom: 0.2em;">${def.icon}</div>
-            <div style="font-size: 0.6em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-weight: bold; text-align: center;">${def.name}</div>
+            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
+            <div style="font-size: 0.85em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
             USER_CONFIG.playerExplosion = key;
@@ -522,7 +609,28 @@ function renderExplosionSelection() {
             explosionPreviewManager.trigger();
         };
         list.appendChild(item);
+
+        // Inicializar canvas miniatura
+        const canvas = item.querySelector('.mini-particle-canvas');
+        if (canvas) {
+            canvas.width = 100;
+            canvas.height = 58;
+            const ctx = canvas.getContext('2d');
+            activeMiniPreviews.push({
+                canvas: canvas,
+                ctx: ctx,
+                type: 'explosion',
+                effectKey: key,
+                particles: [],
+                color: def.color
+            });
+        }
     });
+
+    // Iniciar bucle de animación si no está corriendo
+    if (!miniPreviewAnimationId && activeMiniPreviews.length > 0) {
+        animateMiniPreviews();
+    }
 }
 
 const explosionPreviewManager = {
@@ -628,6 +736,16 @@ const explosionPreviewManager = {
                 ctx.lineTo(p.x - p.size, p.y + p.size);
                 ctx.closePath();
                 ctx.fill();
+            } else if (p.type === 'sakura') {
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.y, p.size, p.size * 0.55, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (p.type === 'bubbles') {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
             } else {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -643,14 +761,17 @@ function renderBoostSelection() {
     if (!list) return;
     list.innerHTML = '';
 
+    // Filtrar previsualizaciones anteriores de boost
+    activeMiniPreviews = activeMiniPreviews.filter(p => p.type !== 'boost');
+
     Object.keys(BOOST_DEFS).forEach(key => {
         const def = BOOST_DEFS[key];
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
         item.style.flexDirection = 'column';
         item.innerHTML = `
-            <div style="font-size: 1.5em; margin-bottom: 0.2em;">${def.icon}</div>
-            <div style="font-size: 0.6em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-weight: bold; text-align: center;">${def.name}</div>
+            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: rgba(0,0,0,0.45); margin-bottom: 0.3em;"></canvas>
+            <div style="font-size: 0.85em; color: ${def.color === 'multi' ? '#fff' : def.color}; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
         `;
         item.onclick = () => {
             USER_CONFIG.playerBoost = key;
@@ -660,7 +781,28 @@ function renderBoostSelection() {
             playSound('menu_click');
         };
         list.appendChild(item);
+
+        // Inicializar canvas miniatura
+        const canvas = item.querySelector('.mini-particle-canvas');
+        if (canvas) {
+            canvas.width = 100;
+            canvas.height = 58;
+            const ctx = canvas.getContext('2d');
+            activeMiniPreviews.push({
+                canvas: canvas,
+                ctx: ctx,
+                type: 'boost',
+                effectKey: key,
+                particles: [],
+                color: def.color
+            });
+        }
     });
+
+    // Iniciar bucle de animación si no está corriendo
+    if (!miniPreviewAnimationId && activeMiniPreviews.length > 0) {
+        animateMiniPreviews();
+    }
 }
 
 function updateBoostPreviewInfo(key) {
@@ -685,7 +827,11 @@ function updateBoostPreviewInfo(key) {
             'void': 'Consumo total de luz en una estela de oscuridad.',
             'rainbow': 'Espectro completo de luz refractada en movimiento.',
             'cyber': 'Filamentos de datos de alta velocidad en red.',
-            'nature': 'Rastro de hojas y esencia botánica regenerativa.'
+            'nature': 'Rastro de hojas y esencia botánica regenerativa.',
+            'bubble': 'Torrente continuo de burbujas jabonosas e iridiscentes.',
+            'matrix': 'Cascada de código binario verde fluyendo a través del espacio.',
+            'lava': 'Flujo denso de magma ardiente y brasas volcánicas incandescentes.',
+            'cosmic': 'Estela de polvo estelar y nebulosas magentas cósmicas.'
         };
         descBox.innerText = descriptions[key] || 'Efecto de propulsión avanzado.';
     }
@@ -790,12 +936,12 @@ const boostPreviewManager = {
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p.x + p.size * 4, p.y);
                 ctx.stroke();
-            } else if (p.type === 'bubbles' || p.type === 'toxic') {
+            } else if (p.type === 'bubbles' || p.type === 'toxic' || p.type === 'bubbles') {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                 ctx.strokeStyle = p.color;
                 ctx.stroke(); // Solo borde para burbujas
-            } else if (p.type === 'sparkles' || p.type === 'gold') {
+            } else if (p.type === 'sparkles' || p.type === 'gold' || p.type === 'cosmic') {
                 const s = p.size;
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y - s);
@@ -804,6 +950,9 @@ const boostPreviewManager = {
                 ctx.lineTo(p.x - s / 2, p.y);
                 ctx.closePath();
                 ctx.fill();
+            } else if (p.type === 'binary') {
+                ctx.font = `bold ${Math.floor(p.size * 1.6 + 5)}px monospace`;
+                ctx.fillText(Math.random() < 0.5 ? '0' : '1', p.x, p.y);
             } else {
                 // Default: Círculos suaves (fuego, humo, etc.)
                 ctx.beginPath();

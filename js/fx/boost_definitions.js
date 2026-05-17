@@ -111,5 +111,41 @@ export const BOOST_DEFS = {
         speed: 0.7,
         density: 1.2,
         icon: '🍃'
+    },
+    'bubble': {
+        name: 'BURBUJAS',
+        color: '#0cf',
+        secondary: '#fff',
+        particles: 'bubbles',
+        speed: 1.0,
+        density: 1.6,
+        icon: '🧼'
+    },
+    'matrix': {
+        name: 'CÓDIGO',
+        color: '#0f0',
+        secondary: '#fff',
+        particles: 'binary',
+        speed: 1.5,
+        density: 1.1,
+        icon: '💾'
+    },
+    'lava': {
+        name: 'MAGMA',
+        color: '#f30',
+        secondary: '#fa0',
+        particles: 'lava',
+        speed: 1.1,
+        density: 1.4,
+        icon: '🌋'
+    },
+    'cosmic': {
+        name: 'CÓSMICO',
+        color: '#d0f',
+        secondary: '#0ff',
+        particles: 'cosmic',
+        speed: 1.2,
+        density: 1.3,
+        icon: '🌌'
     }
 };

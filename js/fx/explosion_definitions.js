@@ -111,5 +111,41 @@ export const EXPLOSION_DEFS = {
         count: 80,
         duration: 4500,
         icon: '🕹️'
+    },
+    'bubble': {
+        name: 'BURBUJAS',
+        color: '#0cf',
+        secondary: '#fff',
+        particles: 'bubbles',
+        count: 65,
+        duration: 4000,
+        icon: '🫧'
+    },
+    'fireworks': {
+        name: 'PIROTECNIA',
+        color: 'multi',
+        secondary: '#ff0',
+        particles: 'fireworks',
+        count: 90,
+        duration: 5000,
+        icon: '🎆'
+    },
+    'blossom': {
+        name: 'CEREZO',
+        color: '#ffb7c5',
+        secondary: '#ff69b4',
+        particles: 'sakura',
+        count: 55,
+        duration: 4000,
+        icon: '🌸'
+    },
+    'magma': {
+        name: 'ERUPCIÓN',
+        color: '#f30',
+        secondary: '#ff9000',
+        particles: 'lava',
+        count: 75,
+        duration: 4500,
+        icon: '🌋'
     }
 };

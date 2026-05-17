@@ -871,9 +871,9 @@
 }
 
 .boost-grid .selectable-item {
-    aspect-ratio: 1 / 1 !important;
+    aspect-ratio: 1.12 / 1 !important;
     width: 100% !important;
-    max-width: 6.2em !important;
+    max-width: 7.0em !important;
     height: auto !important;
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
@@ -939,9 +939,9 @@
 }
 
 .explosion-grid .selectable-item {
-    aspect-ratio: 1 / 1 !important;
+    aspect-ratio: 1.12 / 1 !important;
     width: 100% !important;
-    max-width: 6.2em !important;
+    max-width: 7.0em !important;
     height: auto !important;
     border-radius: 0 !important;
     border: 0.22em solid rgba(255, 255, 255, 0.18) !important;
