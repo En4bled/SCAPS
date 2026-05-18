@@ -1,0 +1,170 @@
+/* Estilos Dedicados para el Editor de Físicas (Herramientas de Desarrollador) */
+
+#btn-pause-physics {
+    border-color: #a5f !important;
+    color: #a5f !important;
+    box-shadow: 0 0 15px rgba(165, 85, 255, 0.4) !important;
+    animation: pixel-neon-pulse-purple 4s infinite alternate ease-in-out !important;
+    background: transparent !important;
+}
+
+#btn-pause-physics:hover, #btn-pause-physics:focus {
+    background: #a5f !important;
+    color: #000 !important;
+    transform: scale(1.05) !important;
+    box-shadow:
+        0 -6px 0 -2px #0a0a19,
+        0 6px 0 -2px #0a0a19,
+        -6px 0 0 -2px #0a0a19,
+        6px 0 0 -2px #0a0a19,
+        0 0 30px rgba(165, 85, 255, 0.7) !important;
+}
+
+@keyframes pixel-neon-pulse-purple {
+    0% {
+        border-color: #a5f !important;
+        color: #a5f !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 10px rgba(165, 85, 255, 0.2) !important;
+    }
+    100% {
+        border-color: #d8b2ff !important;
+        color: #d8b2ff !important;
+        box-shadow:
+            0 -4px 0 -2px #0a0a19,
+            0 4px 0 -2px #0a0a19,
+            -4px 0 0 -2px #0a0a19,
+            4px 0 0 -2px #0a0a19,
+            0 0 20px rgba(216, 178, 255, 0.4) !important;
+    }
+}
+
+/* Neutralización de la Animación de Ciclo de Tema y Bordes Azules/Naranjas del Editor */
+#physics-editor-header-banner.pixel-border,
+#physics-editor-panel.pixel-border {
+    border-color: #a5f !important;
+    border-width: 3px !important;
+    animation: none !important;
+    box-shadow: 0 0 15px rgba(165, 85, 255, 0.4) !important;
+}
+
+/* Sobreescritura del Panel de Físicas */
+#physics-editor-overlay * {
+    /* Forzar barras de desplazamiento moradas */
+    scrollbar-color: #a5f rgba(0, 0, 0, 0.4) !important;
+}
+
+#physics-editor-overlay ::-webkit-scrollbar-thumb {
+    background: #a5f !important;
+}
+
+/* Sliders del Editor de Físicas (BLANCOS / GRISES PREMIUM) */
+#physics-editor-panel input[type="range"] {
+    accent-color: #fff !important;
+}
+
+#physics-editor-panel input[type="range"]::-webkit-slider-runnable-track {
+    border-color: #fff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+#physics-editor-panel input[type="range"]::-webkit-slider-thumb {
+    background: #fff !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
+}
+
+#physics-editor-panel input[type="range"]::-moz-range-track {
+    border-color: #fff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+#physics-editor-panel input[type="range"]::-moz-range-thumb {
+    background: #fff !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Botones del Editor de Físicas (Copiar/Pegar en BLANCO) */
+#btn-physics-export,
+#btn-physics-paste {
+    border-color: #fff !important;
+    color: #fff !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+#btn-physics-apply {
+    background: #1b5e20 !important;
+    border-color: #0f3811 !important;
+    color: #fff !important;
+}
+#btn-physics-reset {
+    border-color: #f33 !important;
+    color: #f33 !important;
+}
+
+/* Hover de Botones con mouse o foco */
+#btn-physics-export:hover, #btn-physics-export:focus,
+#btn-physics-paste:hover, #btn-physics-paste:focus,
+#btn-physics-export.selected, #btn-physics-paste.selected {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.7) !important;
+    border-color: #fff !important;
+    transform: scale(1.03) !important;
+}
+
+#btn-physics-export:active, #btn-physics-paste:active,
+#btn-physics-export.pressed, #btn-physics-paste.pressed {
+    background: #ccc !important;
+    color: #000 !important;
+    transform: scale(0.96) !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important;
+}
+
+#btn-physics-apply:hover, #btn-physics-apply:focus {
+    background: #2e7d32 !important;
+    color: #fff !important;
+    border-color: #1b5e20 !important;
+    box-shadow: 0 0 15px rgba(46, 125, 50, 0.6) !important;
+}
+#btn-physics-reset:hover, #btn-physics-reset:focus {
+    background: #f33 !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(255, 51, 51, 0.6) !important;
+}
+
+/* Modal de Confirmación de Reseteo (para que mantenga diseño coherente) */
+#physics-reset-confirm-overlay .pixel-border {
+    border-color: #f33 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8) !important;
+}
+
+#physics-reset-confirm-overlay h2 {
+    color: #f33 !important;
+    text-shadow: 0 0 10px #f33 !important;
+}
+
+#btn-physics-confirm-reset {
+    background: #f33 !important;
+    border-color: #b32424 !important;
+    color: #fff !important;
+}
+#btn-physics-confirm-reset:hover {
+    background: #b32424 !important;
+    box-shadow: 0 0 15px rgba(255, 51, 51, 0.6) !important;
+}
+
+#btn-physics-cancel-reset {
+    border-color: #888 !important;
+    color: #eee !important;
+}
+#btn-physics-cancel-reset:hover {
+    background: #888 !important;
+    color: #000 !important;
+}

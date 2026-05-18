@@ -321,6 +321,12 @@
         0.3em 0 0 -0.15em #050b14 !important;
 }
 
+.custom-tab-btn:focus,
+.custom-tab-btn:active,
+.custom-tab-btn:hover {
+    outline: none !important;
+}
+
 .custom-tab-btn i, .tab-icon-gif {
     font-size: 2.5em;
     font-style: normal;
@@ -352,7 +358,7 @@
 
 .btn-close-custom {
     flex: 0 0 auto !important;
-    width: 14em !important;
+    width: 11em !important;
     height: 5.8em;
     font-size: 0.9em !important;
     padding: 0 1.2em;
@@ -418,7 +424,7 @@
 /* --- BOTÓN ROJO DE DESCARTAR CAMBIOS --- */
 .btn-discard-custom {
     flex: 0 0 auto !important;
-    width: 14em !important;
+    width: 11em !important;
     height: 5.8em;
     font-size: 0.9em !important;
     padding: 0 1.2em;
@@ -1421,8 +1427,14 @@ body.theme-orange .explosion-preview-frame {
     border-color: rgba(255, 153, 0, 0.4) !important;
 }
 
-body.theme-orange .selectable-item:hover {
-    border-color: rgba(var(--theme-primary-rgb), 0.7) !important;
+body.theme-orange .selectable-item:hover,
+body.theme-orange .selectable-item:focus {
+    outline: none;
+    border-color: var(--theme-primary) !important;
+    background: rgba(var(--theme-primary-rgb), 0.15) !important;
+    box-shadow: 0 0 12px rgba(var(--theme-primary-rgb), 0.6) !important;
+    transform: scale(1.05);
+    z-index: 5;
 }
 
 body.theme-orange .selectable-item.selected {
@@ -1529,10 +1541,12 @@ body.theme-orange .btn-nav-compact {
     color: var(--theme-primary) !important;
 }
 
-body.theme-orange .btn-nav-compact:hover {
+body.theme-orange .btn-nav-compact:hover,
+body.theme-orange .btn-nav-compact:focus {
     background: rgba(var(--theme-primary-rgb), 0.2) !important;
     border-color: var(--theme-primary) !important;
     color: #fff !important;
+    outline: none;
 }
 
 /* Columna de Estadísticas - Nivel y Experiencia en tema naranja */
@@ -1564,9 +1578,11 @@ body.theme-orange .btn-reset-small {
     color: var(--theme-primary) !important;
 }
 
-body.theme-orange .btn-reset-small:hover {
+body.theme-orange .btn-reset-small:hover,
+body.theme-orange .btn-reset-small:focus {
     background: rgba(var(--theme-primary-rgb), 0.1) !important;
     border-color: var(--theme-primary) !important;
+    outline: none;
 }
 
 body.theme-orange .tint-slider::-webkit-slider-thumb {
@@ -2534,4 +2550,96 @@ body.theme-orange #btn-exit {
         rgba(255, 255, 255, 0) 100%
     );
 }
+
+/* ==========================================================================
+   SISTEMA DE ENFOQUE DE MANDO / TECLADO PREMIUM PARA PERSONALIZACIÓN
+   ========================================================================== */
+
+/* Items Seleccionables (Vehículos, Balones, Boosts, Explosiones, Avatares) */
+.selectable-item:hover,
+.selectable-item:focus {
+    outline: none;
+    border-color: #5ad !important;
+    background: rgba(90, 173, 237, 0.15) !important;
+    box-shadow: 0 0 12px rgba(90, 173, 237, 0.6) !important;
+    transform: scale(1.05);
+    z-index: 5;
+}
+
+.selectable-item:active,
+.selectable-item.pressed {
+    transform: scale(0.95) !important;
+    filter: brightness(0.8) !important;
+}
+
+/* Subpestañas (Piloto / Estadísticas) */
+.subtab-btn:hover:not(.active),
+.subtab-btn:focus:not(.active) {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-bottom: 0.2em solid rgba(90, 173, 237, 0.2) !important;
+    outline: none;
+}
+
+.subtab-btn.active:hover,
+.subtab-btn.active:focus {
+    color: #5ad !important;
+    background: rgba(90, 173, 237, 0.08) !important;
+    border-bottom: 0.2em solid #5ad !important;
+    text-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+    outline: none;
+}
+
+/* Inputs de Texto y Color */
+.custom-input:focus,
+.custom-color-picker-small:focus {
+    outline: none;
+    border-color: #5ad !important;
+    box-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+/* Selectores y Dropdowns */
+.custom-select:focus,
+.custom-select-small:focus,
+.custom-dropdown-btn:focus {
+    outline: none;
+    border-color: #5ad !important;
+    box-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+}
+
+/* Botones de Navegación Compactos */
+.btn-nav-compact:hover,
+.btn-nav-compact:focus {
+    background: rgba(90, 173, 237, 0.2) !important;
+    border-color: #5ad !important;
+    color: #fff !important;
+    outline: none;
+}
+
+.btn-nav-compact:active,
+.btn-nav-compact.pressed {
+    transform: scale(0.95) !important;
+}
+
+/* Botón Restablecer */
+.btn-reset-small:hover,
+.btn-reset-small:focus {
+    background: rgba(90, 173, 237, 0.1) !important;
+    border-color: #5ad !important;
+    color: #5ad !important;
+    outline: none;
+}
+
+.btn-reset-small:active,
+.btn-reset-small.pressed {
+    transform: scale(0.95) !important;
+}
+
+/* Sliders de Rango (Tono, etc.) */
+input[type="range"].tint-slider:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(90, 173, 237, 0.5) !important;
+    border-color: #5ad !important;
+}
+
 

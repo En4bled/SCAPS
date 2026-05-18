@@ -11,7 +11,7 @@ import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, updateCarAI, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from './world/physics.js';
 import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
-import { initPhysicsEditor } from './ui/physics_editor.js';
+import { initPhysicsEditor, toggleEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
 import { ReplaySystem } from './core/replay.js';
@@ -81,7 +81,56 @@ function syncThemeUI() {
             btnThemeOrange.classList.remove('active');
         }
     }
+    if (typeof syncCustomColorPickerButtons === 'function') {
+        syncCustomColorPickerButtons();
+    }
 }
+
+window.hasCustomizationChanges = () => {
+    if (!window.USER_CONFIG_BACKUP) return false;
+    const fields = [
+        'playerName', 'playerTitle', 'playerBanner', 'playerAvatar',
+        'playerCar', 'playerCarHue', 'playerCarSaturate', 'playerBall',
+        'playerAvatarBg', 'playerBoost', 'playerExplosion',
+        'bannerBgColor1', 'bannerBgColor2', 'bannerBorderColor', 'bannerTextColor',
+        'bannerType', 'bannerAngle', 'bannerPattern', 'bannerBorderStyle'
+    ];
+    return fields.some(f => USER_CONFIG[f] !== window.USER_CONFIG_BACKUP[f]);
+};
+
+window.tryDiscardCustomization = () => {
+    if (window.hasCustomizationChanges()) {
+        const overlay = document.getElementById('custom-discard-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.classList.remove('hidden');
+            window.customDiscardConfirmOpen = true;
+            const cancelBtn = document.getElementById('btn-custom-discard-cancel');
+            if (cancelBtn) cancelBtn.focus();
+        }
+        playSound('menu_click');
+    } else {
+        window.discardCustomization();
+    }
+};
+
+window.confirmDiscardCustomization = () => {
+    const overlay = document.getElementById('custom-discard-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    window.customDiscardConfirmOpen = false;
+    window.discardCustomization();
+};
+
+window.cancelDiscardCustomization = () => {
+    const overlay = document.getElementById('custom-discard-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    window.customDiscardConfirmOpen = false;
+    playSound('menu_click');
+};
 
 // Función global para cerrar el menú de personalización y guardar cambios
 window.closeCustomization = () => {
@@ -615,6 +664,7 @@ function renderExplosionSelection() {
         const def = EXPLOSION_DEFS[key];
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
+        item.tabIndex = 0;
         item.style.flexDirection = 'column';
         item.innerHTML = `
             <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
@@ -633,6 +683,12 @@ function renderExplosionSelection() {
             explosionPreviewManager.trigger();
         };
         list.appendChild(item);
+
+        if (USER_CONFIG.playerExplosion === key) {
+            setTimeout(() => {
+                item.focus();
+            }, 10);
+        }
 
         // Inicializar canvas miniatura
         const canvas = item.querySelector('.mini-particle-canvas');
@@ -792,6 +848,7 @@ function renderBoostSelection() {
         const def = BOOST_DEFS[key];
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
+        item.tabIndex = 0;
         item.style.flexDirection = 'column';
         item.innerHTML = `
             <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
@@ -805,6 +862,12 @@ function renderBoostSelection() {
             playSound('menu_click');
         };
         list.appendChild(item);
+
+        if (USER_CONFIG.playerBoost === key) {
+            setTimeout(() => {
+                item.focus();
+            }, 10);
+        }
 
         // Inicializar canvas miniatura
         const canvas = item.querySelector('.mini-particle-canvas');
@@ -1513,6 +1576,99 @@ async function init() {
                 }
             }
 
+            // --- LÓGICA PARA ESCENA DE PERSONALIZACIÓN ---
+            if (gameState === 'customization') {
+                const discardOverlay = document.getElementById('custom-discard-overlay');
+                if (discardOverlay && discardOverlay.style.display === 'flex') {
+                    if (e.code === 'Enter') {
+                        const btnConfirm = document.getElementById('btn-custom-discard-confirm');
+                        if (btnConfirm) btnConfirm.click();
+                        e.preventDefault();
+                    }
+                    if (e.code === 'Escape') {
+                        const btnCancel = document.getElementById('btn-custom-discard-cancel');
+                        if (btnCancel) btnCancel.click();
+                        e.preventDefault();
+                    }
+                    return;
+                }
+
+                // Obtener todos los conntroles enfocables dinámicamente
+                let focusables = [];
+                if (window.activeColorPopup) {
+                    focusables = Array.from(window.activeColorPopup.querySelectorAll('.custom-color-swatch'));
+                } else {
+                    const activePane = document.querySelector('.custom-pane.active');
+                    if (activePane) {
+                        focusables = Array.from(activePane.querySelectorAll(
+                            'button:not([disabled]):not(.custom-tab-btn), input:not([disabled]), select:not([disabled]), [tabindex="0"]'
+                        )).filter(el => {
+                            // Excluir elementos ocultos o de tamaño cero (como subpestañas inactivas)
+                            const rect = el.getBoundingClientRect();
+                            if (rect.width === 0 || rect.height === 0) return false;
+
+                            // Excluir inputs de color nativos ocultos
+                            if (el.tagName === 'INPUT' && el.type === 'color') return false;
+                            
+                            // Excluir items de dropdown cerrado
+                            const dropdownContent = el.closest('.custom-dropdown-content');
+                            if (dropdownContent && dropdownContent.style.display !== 'block') {
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+                }
+
+                if (window.customizationActiveMenuMode) {
+                    // --- MODO NAVEGACIÓN LIBRE POR EL PANEL ACTIVO ---
+                    if (e.code === 'ArrowDown' || e.code === 'ArrowRight' || e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
+                        if (focusables.length > 0) {
+                            const nextTarget = getSpatialNavigationTarget(e.code, focusables);
+                            if (nextTarget) {
+                                nextTarget.focus();
+                                playSound('menu_hover');
+                            }
+                        }
+                        e.preventDefault();
+                        return;
+                    }
+                    if (e.code === 'Enter') {
+                        const activeEl = document.activeElement;
+                        if (activeEl && (focusables.includes(activeEl) || activeEl.classList.contains('custom-color-swatch'))) {
+                            activeEl.click();
+                            playSound('menu_click');
+                            e.preventDefault();
+                        }
+                        return;
+                    }
+                    if (e.code === 'Escape') {
+                        // 1. Cerrar popup de color si está abierto
+                        if (window.activeColorPopup) {
+                            closeActiveColorPopup();
+                            e.preventDefault();
+                            return;
+                        }
+                        // 2. Cerrar dropdown de título si está abierto
+                        const openDropdown = document.querySelector('.custom-dropdown-content');
+                        if (openDropdown && openDropdown.style.display === 'block') {
+                            openDropdown.style.display = 'none';
+                            const dropdownBtn = document.getElementById('custom-title-dropdown-btn');
+                            if (dropdownBtn) dropdownBtn.focus();
+                            playSound('menu_click');
+                            e.preventDefault();
+                            return;
+                        }
+                        // 3. Descartar cambios (abrir modal de confirmación)
+                        if (typeof window.tryDiscardCustomization === 'function') {
+                            window.tryDiscardCustomization();
+                        }
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+
             // --- LÓGICA PARA ESCENA DE AJUSTES ---
             if (gameState === 'settings') {
                 const discardOverlay = getEl('settings-discard-overlay');
@@ -1611,11 +1767,9 @@ async function init() {
                 return;
             }
 
-            // Manejo de la Intro (Solo se puede saltar en la Escena 2)
+            // Manejo de la Intro (Se puede saltar en cualquier momento con Space/START)
             if (gameState === 'intro' && e.code === 'Space') {
-                if (introPhase === 2) {
-                    transitionToPhase(3);
-                }
+                transitionToPhase(3);
                 return;
             }
 
@@ -1718,6 +1872,7 @@ async function init() {
                 playSound('menu_click');
                 initAudio();
             }
+            updatePauseGamepadStatus();
         });
 
         window.addEventListener("gamepaddisconnected", (e) => {
@@ -1731,6 +1886,7 @@ async function init() {
             if (typeof showInGameNotification === 'function') {
                 showInGameNotification("MANDO DESCONECTADO", "#f33", "🚫");
             }
+            updatePauseGamepadStatus();
         });
 
         // Listener para cerrar el modal con click
@@ -1758,6 +1914,16 @@ async function init() {
             }
             stopAllMotors();
         };
+
+        const btnPausePhysics = document.getElementById('btn-pause-physics');
+        if (btnPausePhysics) {
+            btnPausePhysics.onclick = () => {
+                isPaused = false;
+                const pm = getEl('pause-menu');
+                if (pm) pm.style.display = 'none';
+                toggleEditor(true);
+            };
+        }
 
         // MP3 en Ajustes
         const sPP = getEl('btn-play-pause');
@@ -2008,7 +2174,12 @@ function updateAll(dt) {
 
     if (gameState === 'playing' || gameState === 'countdown' || gameState === 'goalScored') {
         // 1. Actualizar Entidades (Multiplicar por timeScale para físicas consistentes)
-        player1.update(keysPressed, gameState, particles, skidMarks, timeScale);
+        const physicsOverlay = document.getElementById('physics-editor-overlay');
+        const isPhysicsOpen = physicsOverlay && !physicsOverlay.classList.contains('hidden') && physicsOverlay.style.display !== 'none';
+        const blockControls = isPhysicsOpen && !window.physicsIsFolded;
+        const activeKeys = blockControls ? {} : keysPressed;
+
+        player1.update(activeKeys, gameState, particles, skidMarks, timeScale);
         applyTirePhysics(player1, timeScale);
 
         allCars.forEach(car => {
@@ -2413,8 +2584,36 @@ function togglePause() {
     if (pm) {
         pm.style.display = isPaused ? 'flex' : 'none';
         if (isPaused) {
+            window.pauseFocusIndex = 0;
+            if (typeof window.updatePauseFocus === 'function') {
+                window.updatePauseFocus();
+            }
             syncPauseMenuAudioUI();
+            updatePauseGamepadStatus();
         }
+    }
+}
+
+function updatePauseGamepadStatus() {
+    const led = document.getElementById('pause-status-led');
+    const txt = document.getElementById('pause-status-text');
+    if (!led || !txt) return;
+
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = Array.from(gamepads).find(g => g && g.connected);
+
+    if (gp) {
+        led.style.background = '#2fb';
+        led.style.boxShadow = '0 0 8px #2fb';
+        led.style.animation = 'blink 1.2s infinite ease-in-out';
+        txt.innerText = 'MANDO DETECTADO Y CONECTADO';
+        txt.style.color = '#2fb';
+    } else {
+        led.style.background = '#ff4444';
+        led.style.boxShadow = '0 0 8px #ff4444';
+        led.style.animation = 'none';
+        txt.innerText = 'TECLADO / MANDO DESCONECTADO';
+        txt.style.color = '#ff4444';
     }
 }
 
@@ -2430,6 +2629,11 @@ function syncPauseMenuAudioUI() {
     
     if (sMusic) sMusic.value = (window.musicVolume || 0.5) * 100;
     if (sSFX) sSFX.value = (window.sfxVolume || 0.8) * 100;
+
+    const pPP = document.getElementById('btn-pause-play-pause-icon');
+    if (pPP) {
+        pPP.innerText = isMusicPaused() ? '⏸' : '▶';
+    }
 }
 function applySpawns() {
     allCars.forEach((car, i) => {
@@ -2605,6 +2809,27 @@ function setupCustomizationMenu() {
                 renderExplosionSelection();
                 setTimeout(() => explosionPreviewManager.resize(), 50);
             }
+
+            // Forzar navegación en el panel y enfocar primer control visible
+            window.customizationActiveMenuMode = true;
+            setTimeout(() => {
+                const activePane = document.getElementById('pane-' + target);
+                if (activePane) {
+                    const focusables = Array.from(activePane.querySelectorAll(
+                        'button:not([disabled]):not(.custom-tab-btn), input:not([disabled]), select:not([disabled]), [tabindex="0"]'
+                    )).filter(el => {
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width === 0 || rect.height === 0) return false;
+                        if (el.tagName === 'INPUT' && el.type === 'color') return false;
+                        const dropdownContent = el.closest('.custom-dropdown-content');
+                        if (dropdownContent && dropdownContent.style.display !== 'block') return false;
+                        return true;
+                    });
+                    if (focusables.length > 0) {
+                        focusables[0].focus();
+                    }
+                }
+            }, 100);
         };
     });
 
@@ -2742,6 +2967,7 @@ function renderAvatars() {
     pageItems.forEach(url => {
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerAvatar === url ? ' selected' : '');
+        item.tabIndex = 0;
         // Aplicamos fondo personalizado
         item.style.background = USER_CONFIG.playerAvatarBg;
 
@@ -2754,6 +2980,12 @@ function renderAvatars() {
             playSound('menu_click');
         };
         container.appendChild(item);
+
+        if (USER_CONFIG.playerAvatar === url) {
+            setTimeout(() => {
+                item.focus();
+            }, 10);
+        }
     });
 }
 
@@ -2780,6 +3012,7 @@ function renderCarSelection() {
         const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
 
         item.className = 'selectable-item' + (USER_CONFIG.playerCar === img ? ' selected' : '');
+        item.tabIndex = 0;
         if (isLocked) {
             item.classList.add('locked-item');
             item.innerHTML = `<img src="${img}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
@@ -2799,6 +3032,12 @@ function renderCarSelection() {
             };
         }
         list.appendChild(item);
+
+        if (USER_CONFIG.playerCar === img && !isLocked) {
+            setTimeout(() => {
+                item.focus();
+            }, 10);
+        }
     });
 
     // Añadir 2 botones "PROXIMAMENTE" para completar la rejilla 4x3 (10 coches + 2 huecos = 12)
@@ -2847,6 +3086,7 @@ function renderBallSelection() {
     pageItems.forEach(url => {
         const item = document.createElement('div');
         item.className = 'selectable-item' + (USER_CONFIG.playerBall === url ? ' selected' : '');
+        item.tabIndex = 0;
         item.innerHTML = `<img src="${url}">`;
         item.onclick = () => {
             USER_CONFIG.playerBall = url;
@@ -2855,6 +3095,12 @@ function renderBallSelection() {
             playSound('menu_click');
         };
         container.appendChild(item);
+
+        if (USER_CONFIG.playerBall === url) {
+            setTimeout(() => {
+                item.focus();
+            }, 10);
+        }
     });
 }
 
@@ -2882,6 +3128,7 @@ function setupTitleSelect() {
         const item = document.createElement('div');
         item.className = 'custom-dropdown-item' + (activeTitle === t ? ' active' : '');
         item.innerText = t.toUpperCase();
+        item.tabIndex = 0;
         item.onclick = (e) => {
             e.stopPropagation();
             USER_CONFIG.playerTitle = t;
@@ -2925,6 +3172,13 @@ function showMenuScreen(screenId) {
         mainMenuEl.classList.remove('hidden');
     }
 
+    // Identificar de qué menú o pantalla estamos saliendo antes de ocultar
+    let exitingSubmenu = null;
+    if (menuSettings && menuSettings.style.display !== 'none') exitingSubmenu = 'settings';
+    else if (menuCustom && menuCustom.style.display !== 'none') exitingSubmenu = 'custom';
+    else if (setupOverlay && setupOverlay.style.display !== 'none') exitingSubmenu = 'play';
+    else if (gameState === 'game' || (typeof isPlaying !== 'undefined' && isPlaying) || (document.getElementById('pause-menu') && document.getElementById('pause-menu').style.display !== 'none')) exitingSubmenu = 'game';
+
     [menuInitial, menuCredits, menuCustom, menuSettings, setupOverlay].forEach(m => { if (m) m.style.display = 'none'; });
 
     const logo = document.getElementById('menu-logo');
@@ -2952,6 +3206,15 @@ function showMenuScreen(screenId) {
         
         menuCustom.style.display = 'flex';
         target = menuCustom;
+        gameState = 'customization';
+        window.customizationActiveMenuMode = true;
+        
+        // Inicializar selectores de color premium
+        if (typeof initCustomColorPickers === 'function') {
+            initCustomColorPickers();
+            syncCustomColorPickerButtons();
+        }
+
         updateStatsUI();
         // Reset a la primera pestaña y sub-pestaña
         const profileTab = document.querySelector('.custom-tab-btn[data-tab="perfil"]');
@@ -2977,8 +3240,24 @@ function showMenuScreen(screenId) {
         const firstBtn = target.querySelector('button:not([disabled])');
         if (firstBtn) firstBtn.focus();
     } else if (screenId === 'initial') {
-        if (document.activeElement && typeof document.activeElement.blur === 'function') {
-            document.activeElement.blur();
+        // Determinar qué botón del menú principal debe recibir el foco
+        let btnToFocus = document.getElementById('btn-play'); // Por defecto
+        if (exitingSubmenu === 'settings') {
+            btnToFocus = document.getElementById('btn-settings');
+        } else if (exitingSubmenu === 'custom') {
+            btnToFocus = document.getElementById('btn-custom');
+        } else if (exitingSubmenu === 'play' || exitingSubmenu === 'game') {
+            btnToFocus = document.getElementById('btn-play');
+        }
+
+        if (btnToFocus) {
+            setTimeout(() => {
+                btnToFocus.focus();
+            }, 50);
+        } else {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
         }
     }
 
@@ -3705,4 +3984,230 @@ function blinkSettingButton(id) {
         el.style.borderColor = originalBorder;
         el.style.boxShadow = 'none';
     }, 150);
+}
+
+// --- SISTEMA DE PERSONALIZACIÓN Y NAVEGACIÓN ESPACIAL 2D ---
+window.activeColorPopup = null;
+
+function closeActiveColorPopup() {
+    if (window.activeColorPopup) {
+        const parentBtn = window.activeColorPopup.triggerButton;
+        window.activeColorPopup.remove();
+        window.activeColorPopup = null;
+        if (parentBtn) parentBtn.focus();
+        playSound('menu_click');
+    }
+}
+
+function openColorPickerPopup(button, input) {
+    if (window.activeColorPopup && window.activeColorPopup.triggerButton === button) {
+        closeActiveColorPopup();
+        return;
+    }
+    if (window.activeColorPopup) {
+        closeActiveColorPopup();
+    }
+
+    const popup = document.createElement('div');
+    popup.className = 'custom-color-popup';
+    popup.triggerButton = button;
+    
+    // Inyectar estilos del popup y swatch si no existen
+    if (!document.getElementById('custom-color-picker-styles')) {
+        const style = document.createElement('style');
+        style.id = 'custom-color-picker-styles';
+        style.textContent = `
+            .custom-color-popup {
+                position: absolute;
+                background: #0b0b1a;
+                border: 3px solid #5ad;
+                padding: 8px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                z-index: 10000;
+                box-shadow: 0 0 20px rgba(90, 173, 237, 0.7);
+                border-radius: 6px;
+            }
+            .custom-color-swatch {
+                width: 28px;
+                height: 28px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                cursor: pointer;
+                border-radius: 4px;
+                box-sizing: border-box;
+                transition: transform 0.15s ease, border-color 0.15s ease;
+            }
+            .custom-color-swatch:focus,
+            .custom-color-swatch:hover {
+                outline: none;
+                border-color: #22ffbb !important;
+                box-shadow: 0 0 10px #22ffbb !important;
+                transform: scale(1.2);
+            }
+            .custom-color-picker-btn {
+                transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            }
+            .custom-color-picker-btn:focus,
+            .custom-color-picker-btn:hover {
+                outline: none;
+                border-color: #22ffbb !important;
+                box-shadow: 0 0 10px #22ffbb !important;
+                transform: scale(1.05);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const colors = [
+        "#ff0000", "#00ff00", "#0000ff", "#ffff00", 
+        "#ff00ff", "#00ffff", "#ffffff", "#000000", 
+        "#55aadd", "#22ffbb", "#ff9900", "#333333", 
+        "#aaaaaa"
+    ];
+
+    colors.forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.className = 'custom-color-swatch';
+        swatch.style.background = color;
+        swatch.tabIndex = 0;
+        swatch.onclick = (e) => {
+            e.stopPropagation();
+            input.value = color;
+            button.style.background = color;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            popup.remove();
+            window.activeColorPopup = null;
+            button.focus();
+            playSound('menu_click');
+        };
+        swatch.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                swatch.click();
+                e.preventDefault();
+            }
+        };
+        popup.appendChild(swatch);
+    });
+
+    document.body.appendChild(popup);
+    window.activeColorPopup = popup;
+
+    const rect = button.getBoundingClientRect();
+    popup.style.left = `${rect.left + window.scrollX}px`;
+    popup.style.top = `${rect.bottom + window.scrollY + 6}px`;
+
+    const firstSwatch = popup.querySelector('.custom-color-swatch');
+    if (firstSwatch) firstSwatch.focus();
+
+    playSound('menu_click');
+}
+
+function initCustomColorPickers() {
+    const colorInputs = document.querySelectorAll('input[type="color"]');
+    colorInputs.forEach(input => {
+        let btn = document.getElementById(`btn-picker-for-${input.id}`);
+        if (btn) return;
+
+        input.style.display = 'none';
+
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = `btn-picker-for-${input.id}`;
+        btn.className = 'custom-color-picker-btn custom-color-picker-small';
+        btn.style.background = input.value || '#ffffff';
+        btn.style.width = '100%';
+        btn.style.height = '25px';
+        btn.style.border = '2px solid rgba(255,255,255,0.2)';
+        btn.style.cursor = 'pointer';
+        btn.style.boxSizing = 'border-box';
+        btn.style.borderRadius = '4px';
+        btn.tabIndex = 0;
+
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            openColorPickerPopup(btn, input);
+        };
+
+        input.parentNode.insertBefore(btn, input);
+    });
+
+    if (!window.customColorPickerGlobalClickRegistered) {
+        window.customColorPickerGlobalClickRegistered = true;
+        document.addEventListener('click', (e) => {
+            if (window.activeColorPopup && !window.activeColorPopup.contains(e.target) && !window.activeColorPopup.triggerButton.contains(e.target)) {
+                closeActiveColorPopup();
+            }
+        });
+    }
+}
+
+function syncCustomColorPickerButtons() {
+    const colorInputs = document.querySelectorAll('input[type="color"]');
+    colorInputs.forEach(input => {
+        const btn = document.getElementById(`btn-picker-for-${input.id}`);
+        if (btn) {
+            btn.style.background = input.value;
+        }
+    });
+}
+
+function getSpatialNavigationTarget(direction, focusables) {
+    const current = document.activeElement;
+    if (!current || !focusables.includes(current)) {
+        return focusables[0];
+    }
+
+    const currentRect = current.getBoundingClientRect();
+    const currentX = currentRect.left + currentRect.width / 2;
+    const currentY = currentRect.top + currentRect.height / 2;
+
+    let bestTarget = null;
+    let minScore = Infinity;
+
+    focusables.forEach(elem => {
+        if (elem === current) return;
+
+        const rect = elem.getBoundingClientRect();
+        const targetX = rect.left + rect.width / 2;
+        const targetY = rect.top + rect.height / 2;
+
+        const dx = targetX - currentX;
+        const dy = targetY - currentY;
+
+        let isCorrectDirection = false;
+        let score = 0;
+
+        // Tolerancia de 8px para evitar que subpixel rendering confunda filas/columnas
+        const threshold = 8;
+
+        switch (direction) {
+            case 'ArrowRight':
+                isCorrectDirection = dx > threshold;
+                score = Math.abs(dx) + Math.abs(dy) * 4;
+                break;
+            case 'ArrowLeft':
+                isCorrectDirection = dx < -threshold;
+                score = Math.abs(dx) + Math.abs(dy) * 4;
+                break;
+            case 'ArrowDown':
+                isCorrectDirection = dy > threshold;
+                score = Math.abs(dy) + Math.abs(dx) * 4;
+                break;
+            case 'ArrowUp':
+                isCorrectDirection = dy < -threshold;
+                score = Math.abs(dy) + Math.abs(dx) * 4;
+                break;
+        }
+
+        if (isCorrectDirection) {
+            if (score < minScore) {
+                minScore = score;
+                bestTarget = elem;
+            }
+        }
+    });
+
+    return bestTarget || current;
 }

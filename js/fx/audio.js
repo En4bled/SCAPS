@@ -389,6 +389,11 @@ function playPlaylist() {
         // Sincronizar para pausa
         const meta = songMetadata[currentSongIdx - 1];
         window.currentTrack = { name: meta.title, artist: meta.artist };
+
+        const pPP = document.getElementById('btn-pause-play-pause-icon');
+        if (pPP) pPP.innerText = '▶';
+        const pauseSongNameEl = document.getElementById('pause-song-name');
+        if (pauseSongNameEl) pauseSongNameEl.innerText = meta.title;
     }).catch(e => console.log("Música bloqueada:", e));
 
     musicAudio.ontimeupdate = () => {
@@ -397,6 +402,12 @@ function playPlaylist() {
             const current = formatTime(musicAudio.currentTime);
             const total = formatTime(musicAudio.duration);
             timerEl.innerText = `${current} / ${total}`;
+        }
+        const pauseSongInfoEl = document.getElementById('pause-song-info');
+        if (pauseSongInfoEl) {
+            const current = formatTime(musicAudio.currentTime);
+            const total = formatTime(musicAudio.duration);
+            pauseSongInfoEl.innerText = `${current} / ${total}`;
         }
     };
 

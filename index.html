@@ -17,6 +17,7 @@
 
     <!-- Estilos (VERSIÓN FORZADA PARA CACHÉ) -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/modules/physics_editor.css">
 </head>
 
 <body class="input-method-mouse">
@@ -107,7 +108,10 @@
                     SISTEMA DE PERSONALIZACIÓN</h1>
 
                 <!-- Pestañas fuera del cuadro (Flotantes) -->
-                <div class="custom-tabs-container">
+                <div class="custom-tabs-container" style="display: flex; align-items: center;">
+                    <!-- Badge LB para mando -->
+                    <span class="gamepad-badge gp-lb" style="width: 30px; height: 30px; margin: 0 10px 0 5px; flex-shrink: 0;"></span>
+
                     <button class="custom-tab-btn active" data-tab="perfil">
                         <img src="recursos/ui/profile-selector-tab.gif" class="tab-icon-gif">
                         <span>Perfil</span>
@@ -129,19 +133,26 @@
                         <span>Explosión</span>
                     </button>
 
+                    <!-- Badge RB para mando -->
+                    <span class="gamepad-badge gp-rb" style="width: 30px; height: 30px; margin: 0 15px 0 10px; flex-shrink: 0;"></span>
+
                     <!-- Espaciador para separar el botón de cerrar -->
                     <div style="flex: 1;"></div>
 
                     <!-- Botón Descartar Cambios -->
-                    <button class="custom-tab-btn btn-discard-custom" onclick="window.discardCustomization()">
-                        <i style="color: #f44; text-shadow: 0 0 10px #f44;">✖</i>
-                        <span style="color: #f44;">DESCARTAR CAMBIOS</span>
+                    <button class="custom-tab-btn btn-discard-custom" onclick="window.tryDiscardCustomization()" style="position: relative;">
+                        <!-- Badge B para mando posicionado en el borde superior derecho -->
+                        <span class="gamepad-badge gp-b" style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
+                        <i style="color: #f44; text-shadow: 0 0 10px #f44; margin: 0;">✖</i>
+                        <span style="color: #f44; font-size: 10.5px;">DESCARTAR CAMBIOS</span>
                     </button>
 
                     <!-- Botón Cerrar (Separado) -->
-                    <button class="custom-tab-btn btn-close-custom" onclick="window.closeCustomization()">
-                        <i style="color: #2fb; text-shadow: 0 0 10px #2fb;">✔</i>
-                        <span style="color: #2fb;">GUARDAR Y SALIR</span>
+                    <button class="custom-tab-btn btn-close-custom" onclick="window.closeCustomization()" style="position: relative;">
+                        <!-- Badge A para mando posicionado en el borde superior derecho -->
+                        <span class="gamepad-badge gp-a" style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
+                        <i style="color: #2fb; text-shadow: 0 0 10px #2fb; margin: 0;">✔</i>
+                        <span style="color: #2fb; font-size: 10.5px;">GUARDAR Y SALIR</span>
                     </button>
                 </div>
 
@@ -435,6 +446,28 @@
                 </div>
             </div>
 
+            <!-- Modal Confirmación Descartar Cambios (Personalización) -->
+            <div id="custom-discard-overlay" class="hidden"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 9600; display: none; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="pixel-border"
+                    style="background: #0a0a19; padding: 30px; width: 450px; text-align: center; border: 3px solid #f33 !important; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                    <h2 class="pixel-title" style="color: #f33; margin-bottom: 20px; font-size: 22px;">¿DESCARTAR CAMBIOS?</h2>
+                    <p style="color: #eee; font-family: 'Share Tech Mono', monospace; margin-bottom: 30px; font-size: 13px; line-height: 1.5;">Has realizado cambios en tu personalización. ¿Deseas descartarlos y volver al menú principal?</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="btn-custom-discard-confirm" class="menu-btn" onclick="window.confirmDiscardCustomization()"
+                            style="border-color: #f33; color: #f33; width: 180px; height: 38px !important; padding: 0 8px !important; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                            <span class="gamepad-badge gp-a" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            DESCARTAR
+                        </button>
+                        <button id="btn-custom-discard-cancel" class="menu-btn" onclick="window.cancelDiscardCustomization()"
+                            style="width: 180px; height: 38px !important; padding: 0 8px !important; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                            <span class="gamepad-badge gp-b" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            VOLVER
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Panel de Ajustes (GADGET MP3 v2.0) -->
             <div id="menu-settings"
                 style="position: absolute; top: 0; left: 0; display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; z-index: 6000; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
@@ -685,41 +718,71 @@
 
         <!-- Panel de Edición de Físicas (Tecla º) -->
         <div id="physics-editor-overlay" class="hidden"
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9000; display: none; flex-direction: column; justify-content: center; align-items: center;">
-            <div class="pixel-border"
-                style="background: #0a0a19; padding: 15px 25px; width: 620px; display: flex; flex-direction: column; gap: 12px; border: 3px solid #f90 !important; max-height: 95vh; overflow: hidden;">
-                <h2 class="pixel-title"
-                    style="margin: 0; color: #f90; text-shadow: 0 0 10px #f90; font-size: 24px; text-align:center;">
-                    EDITOR DE FÍSICAS</h2>
-
-                <div id="physics-controls-container"
-                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 5px; overflow-y: auto;">
-                    <!-- Los controles se generan dinámicamente -->
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9000; display: none; flex-direction: column; justify-content: flex-start; align-items: center; transition: background 0.3s ease, backdrop-filter 0.3s ease;">
+            
+            <div id="physics-editor-wrapper"
+                style="position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 640px; display: flex; flex-direction: column; gap: 0; z-index: 9100; pointer-events: auto;">
+                
+                <!-- Banner Superior de Estado Dockeado -->
+                <div id="physics-editor-header-banner" class="pixel-border"
+                    style="background: #050515; width: 640px; border: 3px solid #a5f !important; border-bottom: none !important; padding: 10px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-align: center; box-shadow: 0 0 15px rgba(165, 85, 255, 0.4); box-sizing: border-box; transition: all 0.3s ease;">
+                    EDITOR DESPLEGADO
                 </div>
 
-                <!-- Sección Importar/Exportar Compacta -->
-                <div class="pixel-border"
-                    style="background: rgba(0,0,0,0.3); padding: 10px; display: flex; flex-direction: column; gap: 6px; border-color: rgba(255, 153, 0, 0.2) !important;">
-                    <span
-                        style="color: #f90; font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 1px;">TRANSFERENCIA
-                        JSON</span>
-                    <textarea id="physics-config-io" placeholder="Pega ajustes aquí..."
-                        style="background: rgba(0,0,0,0.8); border: 1px solid #333; color: #5ad; font-family: 'Share Tech Mono', monospace; font-size: 10px; height: 30px; padding: 5px; resize: none; outline: none;"></textarea>
-                    <div style="display: flex; gap: 8px;">
+                <!-- Ventana Principal del Panel de Control -->
+                <div id="physics-editor-panel" class="pixel-border"
+                    style="background: #0a0a19; padding: 20px 30px; width: 640px; display: flex; flex-direction: column; gap: 15px; border: 3px solid #a5f !important; max-height: 80vh; overflow: hidden; transform-origin: top; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease; box-sizing: border-box;">
+                    
+                    <h2 class="pixel-title"
+                        style="margin: 0; color: #fff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4); font-size: 24px; text-align:center;">
+                        EDITOR DE FÍSICAS</h2>
+
+                    <div id="physics-controls-container"
+                        style="display: grid; grid-template-columns: repeat(2, 1fr); row-gap: 16px; column-gap: 12px; padding: 5px; overflow-y: auto;">
+                        <!-- Los controles se generan dinámicamente -->
+                    </div>
+
+                    <!-- Botones al mismo nivel que los sliders pero debajo -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 5px;">
                         <button id="btn-physics-export" class="menu-btn"
-                            style="flex: 1; font-size: 10px; padding: 4px; margin: 0; border-color: #5ad; color: #5ad; height: auto;">COPIAR
-                            AJUSTES</button>
-                        <button id="btn-physics-import" class="menu-btn"
-                            style="flex: 1; font-size: 10px; padding: 4px; margin: 0; border-color: #4CAF50; color: #4CAF50; height: auto;">APLICAR
-                            PEGADO</button>
+                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">COPIAR AJUSTES AL PORTAPAPELES</button>
+                        <button id="btn-physics-paste" class="menu-btn"
+                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">PEGAR AJUSTES DEL PORTAPAPELES</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 5px; justify-items: center; width: 100%;">
+                        <button id="btn-physics-apply" class="menu-btn primary"
+                            style="background: #1b5e20; border-color: #0f3811; color: #fff; width: 100%; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                            <span class="gamepad-badge gp-start" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> GUARDAR
+                        </button>
+                        <button id="btn-physics-reset" class="menu-btn"
+                            style="width: 100%; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                            <span class="gamepad-badge gp-y" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> RESETEAR TODO
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- Modal de Confirmación de Resetear Físicas -->
+        <div id="physics-reset-confirm-overlay" class="hidden"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 9500; display: none; flex-direction: column; justify-content: center; align-items: center;">
+            <div class="pixel-border"
+                style="background: #0a0a19; padding: 25px 35px; width: 420px; display: flex; flex-direction: column; gap: 20px; border: 3px solid #f33 !important; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                <div style="font-size: 40px; filter: drop-shadow(0 0 10px #f33);">⚠️</div>
+                <h2 class="pixel-title" style="margin: 0; color: #f33; text-shadow: 0 0 10px #f33; font-size: 20px;">RESTABLECER AJUSTES</h2>
+                <p style="color: #eee; font-family: 'Share Tech Mono', monospace; font-size: 13px; margin: 0; line-height: 1.5;">
+                    ¿Estás seguro de que deseas restablecer TODOS los parámetros del editor de físicas a sus valores originales?
+                </p>
                 <div style="display: flex; gap: 15px; justify-content: center; margin-top: 5px;">
-                    <button id="btn-physics-apply" class="menu-btn primary"
-                        style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 150px; padding: 6px; font-size: 14px;">CERRAR</button>
-                    <button id="btn-physics-reset" class="menu-btn"
-                        style="width: 150px; padding: 6px; font-size: 14px;">RESETEAR TODO</button>
+                    <button id="btn-physics-confirm-reset" class="menu-btn primary"
+                        style="background: #f33; border-color: #900; color: #fff; width: 160px; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                        <span class="gamepad-badge gp-a" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> RESETEAR
+                    </button>
+                    <button id="btn-physics-cancel-reset" class="menu-btn"
+                        style="width: 160px; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
+                        <span class="gamepad-badge gp-b" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> CANCELAR
+                    </button>
                 </div>
             </div>
         </div>
@@ -1063,24 +1126,12 @@
 
     <!-- MENÚ DE PAUSA -->
     <div id="pause-menu"
-        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 8500; flex-direction: column; justify-content: center; align-items: center;">
+        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 8500; flex-direction: row; justify-content: center; align-items: center; gap: 30px;">
         <div class="pixel-border"
             style="background: #050515; padding: 30px; width: 420px; display: flex; flex-direction: column; gap: 15px; border: 4px solid #5ad !important;">
             <h2 class="pixel-title"
                 style="color: #5ad; font-size: 32px; text-shadow: 0 0 15px #5ad; margin: 0 0 5px; text-align: center;">
                 PAUSA</h2>
-
-            <button id="btn-pause-continue" class="menu-btn primary" style="width: 100%;">CONTINUAR</button>
-            <button id="btn-pause-restart" class="menu-btn"
-                style="width: 100%; border-color: #f90; color: #f90;">REINICIAR PARTIDA</button>
-
-            <div
-                style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5);">
-                <span style="font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #fff;">EFECTO
-                    BLOOM</span>
-                <input type="checkbox" id="toggle-bloom" checked
-                    style="width: 20px; height: 20px; accent-color: #5ad; cursor: pointer;">
-            </div>
 
             <!-- GADGET MP3 PAUSA -->
             <div class="neon-container pixel-border"
@@ -1099,23 +1150,29 @@
                         00:00</div>
                 </div>
 
-                <div style="display: flex; gap: 8px; width: 100%;">
+                <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
                     <button id="btn-pause-prev" class="menu-btn"
-                        style="flex: 1; padding: 5px; font-size: 14px; margin: 0;">⏮</button>
+                        style="flex: 1; height: 56px; padding: 4px 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                        <span style="font-size: 18px; line-height: 1;">⏮</span><span class="gamepad-badge gp-lt" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                    </button>
                     <button id="btn-pause-play-pause" class="menu-btn"
-                        style="flex: 1.5; padding: 5px; font-size: 14px; margin: 0; border-color: #fff !important; color: #fff;">⏯</button>
+                        style="flex: 1.5; height: 56px; padding: 4px 0; margin: 0; border-color: #fff !important; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                        <span id="btn-pause-play-pause-icon" style="font-size: 18px; line-height: 1;">⏯</span><span class="gamepad-badge gp-y" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                    </button>
                     <button id="btn-pause-next" class="menu-btn"
-                        style="flex: 1; padding: 5px; font-size: 14px; margin: 0;">⏭</button>
+                        style="flex: 1; height: 56px; padding: 4px 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+                        <span style="font-size: 18px; line-height: 1;">⏭</span><span class="gamepad-badge gp-rt" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                    </button>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
                         <span
                             style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #5ad; width: 40px;">MUS</span>
                         <input type="range" id="slider-pause-music" min="0" max="100" value="50"
                             style="flex: 1; accent-color: #5ad;">
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
                         <span
                             style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #f90; width: 40px;">SFX</span>
                         <input type="range" id="slider-pause-sfx" min="0" max="100" value="80"
@@ -1124,8 +1181,130 @@
                 </div>
             </div>
 
+            <button id="btn-pause-continue" class="menu-btn primary" style="width: 100%;">CONTINUAR</button>
+            <button id="btn-pause-restart" class="menu-btn"
+                style="width: 100%; border-color: #f90; color: #f90;">REINICIAR PARTIDA</button>
+
             <button id="btn-pause-exit" class="menu-btn"
                 style="width: 100%; border-color: #f33; color: #f33; margin-top: 5px;">SALIR AL MENÚ</button>
+        </div>
+
+        <!-- COLUMNA DERECHA: CONTROLES + EDITOR -->
+        <div style="display: flex; flex-direction: column; gap: 15px; width: 500px; align-items: stretch;">
+            <!-- PANEL DE CONTROLES (GAMEPAD GUIDE) -->
+            <div class="pixel-border" id="pause-gamepad-guide"
+                style="background: #050515; padding: 25px 30px; width: 100%; display: flex; flex-direction: column; gap: 15px; border: 4px solid var(--theme-color) !important; color: #fff; font-family: 'Share Tech Mono', monospace; box-sizing: border-box; box-shadow: 0 0 25px var(--theme-glow-strong);">
+                
+                <h2 class="pixel-title"
+                    style="color: var(--theme-color); font-size: 24px; text-shadow: 0 0 15px var(--theme-color); margin: 0 0 5px; text-align: center; letter-spacing: 2px;">
+                    CONTROLES DE JUEGO</h2>
+
+                <div class="neon-container pixel-border"
+                    style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 2px solid var(--theme-color) !important; box-sizing: border-box;">
+                    
+                    <!-- Sección de Conducción -->
+                    <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px;">
+                        <span style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">MOVIMIENTO</span>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Acelerar -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-rt" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Gatillo Derecho (RT)</span>
+                            </div>
+                            <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">ACELERAR</span>
+                        </div>
+                        
+                        <!-- Frenar -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-lt" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Gatillo Izquierdo (LT)</span>
+                            </div>
+                            <span style="color: #f33; font-weight: bold; font-size: 12px; letter-spacing: 1px;">FRENAR / REVERSA</span>
+                        </div>
+                        
+                        <!-- Dirección -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-lstick" style="width: 24px; height: 24px; margin-right: 6px;"></span>
+                                <span style="color: #aaa; font-size: 13px; font-family: sans-serif; margin-right: 6px; font-weight: bold;">/</span>
+                                <span class="gamepad-badge gp-dpad" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Stick Izquierdo / Cruceta</span>
+                            </div>
+                            <span style="color: #5ad; font-weight: bold; font-size: 12px; letter-spacing: 1px;">GIRAR DIRECCIÓN</span>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Acciones Especiales -->
+                    <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; margin-top: 5px;">
+                        <span style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">ACCIONES ESPECIALES</span>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Turbo -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-a" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Botón A / CROSS</span>
+                            </div>
+                            <span style="color: #ff0; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,255,0,0.3);">TURBO (BOOST)</span>
+                        </div>
+                        
+                        <!-- Freno Mano -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-x" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Botón X / SQUARE</span>
+                            </div>
+                            <span style="color: #a5f; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(165,85,255,0.3);">DERRAPE (DRIFT)</span>
+                        </div>
+                        
+                        <!-- Cámara -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-y" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span style="font-size: 13px; color: #eee;">Botón Y / TRIANGLE</span>
+                            </div>
+                            <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">CAMBIAR CÁMARA</span>
+                        </div>
+
+                        <!-- Marcadores -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-select" style="width: 20px; height: 20px; margin-right: 14px;"></span>
+                                <span style="font-size: 13px; color: #eee;">SELECT / SHARE</span>
+                            </div>
+                            <span style="color: #f90; font-weight: bold; font-size: 12px; letter-spacing: 1px;">MOSTRAR MARCADORES</span>
+                        </div>
+
+                        <!-- Pausa -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <span class="gamepad-badge gp-start" style="width: 20px; height: 20px; margin-right: 14px;"></span>
+                                <span style="font-size: 13px; color: #eee;">START / OPTIONS</span>
+                            </div>
+                            <span style="color: #aaa; font-weight: bold; font-size: 12px; letter-spacing: 1px;">PAUSAR / CONTINUAR</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estado en Tiempo Real -->
+                <div id="pause-gamepad-status"
+                    style="background: rgba(0,0,0,0.4); padding: 10px; border: 1px solid var(--theme-color); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px; box-sizing: border-box;">
+                    <span id="pause-status-led" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #ff4444; box-shadow: 0 0 8px #ff4444;"></span>
+                    <span id="pause-status-text" style="color: #ff4444; font-weight: bold; letter-spacing: 1px;">TECLADO / MANDO DESCONECTADO</span>
+                </div>
+            </div>
+
+            <!-- Botón del Editor de Físicas (suelto debajo de la ventana) -->
+            <button id="btn-pause-physics" class="menu-btn"
+                style="width: 100%; border-color: #a5f; color: #a5f; font-family: 'Share Tech Mono', monospace; font-size: 14px; letter-spacing: 2px; margin: 0; box-shadow: 0 0 15px rgba(165, 85, 255, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span class="gamepad-badge gp-select" style="width: 20px; height: 20px; margin: 0;"></span>
+                ABRIR EDITOR DE FÍSICAS
+            </button>
         </div>
     </div>
     </div>

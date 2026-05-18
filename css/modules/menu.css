@@ -230,7 +230,7 @@
 
 /* INDICADOR VISUAL BOTÓN 'A' REAL PARA MANDO */
 /* INDICADOR VISUAL BOTÓN 'A' REAL PARA MANDO */
-.menu-btn:focus::after, .custom-tab-btn:focus::after, .subtab-btn:focus::after, .setup-map-item:focus::after {
+.menu-btn:focus::after, .subtab-btn:focus::after, .setup-map-item:focus::after {
     content: "" !important;
     position: absolute !important;
     right: 0.6em !important; /* Alineación simétrica a la derecha */
@@ -252,12 +252,18 @@
     z-index: 10 !important;
 }
 
-/* Ocultar indicador A en todos los botones de VOLVER/CANCELAR */
+/* Ocultar indicador A en todos los botones de VOLVER/CANCELAR y botones del menú principal */
+#menu-initial .menu-btn:focus::after,
+#btn-map-editor:focus::after,
+#btn-credits:focus::after,
 #btn-credits-back:focus::after,
 #btn-custom-back:focus::after,
 #btn-settings-back:focus::after,
 #setup-btn-exit:focus::after,
 #btn-editor-cancel:focus::after,
+#btn-physics-cancel-reset:focus::after,
+#btn-custom-discard-cancel:focus::after,
+.custom-tab-btn:focus::after,
 #btn-exit-cancel:focus::after {
     display: none !important;
 }
@@ -732,6 +738,11 @@ input[type="range"]::-moz-range-thumb {
     width: 1.8em;
     height: 1.8em;
 }
+.gamepad-badge.gp-lstick {
+    background-image: url('../../recursos/gamepad/T_X_L_2D_Alt_2.png');
+    width: 1.8em;
+    height: 1.8em;
+}
 
 /* Escalado Premium para los iconos LT, RT y D-Pad en el selector de mapa y modo */
 #setup-map-column .gamepad-badge.gp-lt,
@@ -740,11 +751,10 @@ input[type="range"]::-moz-range-thumb {
     width: 3.2em !important;
     height: 3.2em !important;
 }
-
 /* --- SISTEMA INTELIGENTE DE DETECCIÓN DE ENTRADA ACTIVA (JS + CSS) --- */
 
-/* 1. Método Activo: RATÓN/TECLADO (Ocultar insignias de mando por defecto, excepto en la intro informativa) */
-body.input-method-mouse .gamepad-badge:not(#intro-slide-2 .gamepad-badge),
+/* 1. Método Activo: RATÓN/TECLADO (Ocultar insignias de mando por defecto, excepto en la intro informativa y la guía de pausa) */
+body.input-method-mouse .gamepad-badge:not(#intro-slide-2 .gamepad-badge):not(#pause-gamepad-guide .gamepad-badge),
 body.input-method-mouse .mode-option:focus::after,
 body.input-method-mouse .mode-option.selected::after,
 body.input-method-mouse .menu-btn:focus::after,
