@@ -294,8 +294,6 @@
     z-index: 1000;
     opacity: 1;
     transition: opacity 1s ease;
-    animation: marquee-fade-out 1.5s forwards;
-    animation-delay: 10s;
 }
 
 #marquee-container:hover {

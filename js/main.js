@@ -1861,6 +1861,36 @@ async function init() {
             resetAfterGoal(); 
         };
 
+        // --- PANTALLA COMPLETA ---
+        const fsToggle = getEl('fullscreen-toggle');
+        if (fsToggle) {
+            fsToggle.onclick = () => {
+                playSound('menu_click');
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const fsIcon = getEl('fullscreen-icon');
+            const fsText = getEl('fullscreen-text');
+            const fsTitle = getEl('fullscreen-toggle');
+            if (document.fullscreenElement) {
+                if (fsIcon) fsIcon.innerText = '🗖';
+                if (fsText) fsText.innerText = 'SALIR PANTALLA COMPLETA';
+                if (fsTitle) fsTitle.title = 'SALIR PANTALLA COMPLETA';
+            } else {
+                if (fsIcon) fsIcon.innerText = '⛶';
+                if (fsText) fsText.innerText = 'PANTALLA COMPLETA';
+                if (fsTitle) fsTitle.title = 'PANTALLA COMPLETA';
+            }
+        });
+
         // --- DETECCIÓN DE MANDO (Gamepad API) ---
         const gpIndicator = getEl('gamepad-indicator');
         const gpText = getEl('gamepad-text');
