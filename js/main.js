@@ -2557,23 +2557,79 @@ function showGameOver() {
             gameOverWinner.style.textShadow = `0 0 15px ${winnerColor}`;
         }
 
-        // --- ACTUALIZAR ESTADÍSTICAS INDIVIDUALES EN PANTALLA ---
+        // --- ACTUALIZAR TABLA DE JUGADORES ---
+        const scoreboardList = document.getElementById('gameover-scoreboard-list');
+        if (scoreboardList) {
+            scoreboardList.innerHTML = '';
+            
+            // Ordenar por participación (goles x2 + asistencias)
+            const sortedCars = [...allCars].sort((a, b) => {
+                const aScore = (a.goals || 0) * 2 + (a.assists || 0);
+                const bScore = (b.goals || 0) * 2 + (b.assists || 0);
+                return bScore - aScore;
+            });
+            
+            sortedCars.forEach(car => {
+                const color = car.team === 'blue' ? '#5ad' : '#f90';
+                const isPlayer = (car === player1);
+                const nameStyle = isPlayer ? `color: #fff; font-weight: bold; text-shadow: 0 0 8px ${color};` : `color: ${color};`;
+                const bgStyle = isPlayer ? `background: rgba(255,255,255,0.15); border-left: 3px solid ${color};` : `border-left: 3px solid transparent;`;
+                
+                const html = `
+                    <div style="display: flex; font-size: 14px; padding: 6px 10px; border-radius: 4px; ${bgStyle} transition: background 0.3s;">
+                        <div style="flex: 2; ${nameStyle} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px;">
+                            ${isPlayer ? '<span style="font-size:10px; background:#2fb; color:#000; padding:1px 4px; border-radius:2px;">TÚ</span>' : ''} ${car.name || 'JUGADOR'}
+                        </div>
+                        <div style="flex: 1; text-align: center; color: #fff; font-weight: bold;">${car.goals || 0}</div>
+                        <div style="flex: 1; text-align: center; color: #ccc;">${car.assists || 0}</div>
+                    </div>
+                `;
+                scoreboardList.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // --- CÁLCULO Y ANIMACIÓN DE XP ---
         let earnedXP = 500; // Base por partido terminado
         if (player1) {
             earnedXP += (player1.goals || 0) * 100;
             earnedXP += (player1.assists || 0) * 50;
-        }
-        if (score.blue > score.orange) {
-            earnedXP += 250; // Victoria
+            if ((score.blue > score.orange && player1.team === 'blue') || (score.orange > score.blue && player1.team === 'orange')) {
+                earnedXP += 250; // Victoria
+            }
         }
 
-        const goalsEl = document.getElementById('gameover-stats-goals');
-        const assistsEl = document.getElementById('gameover-stats-assists');
         const xpEl = document.getElementById('gameover-stats-xp');
-
-        if (goalsEl && player1) goalsEl.innerText = player1.goals || 0;
-        if (assistsEl && player1) assistsEl.innerText = player1.assists || 0;
-        if (xpEl) xpEl.innerText = `+${earnedXP} XP`;
+        const xpLabelEl = document.getElementById('gameover-stats-xp-label');
+        if (xpEl) {
+            xpEl.innerText = '0 XP';
+            xpEl.style.transform = 'scale(1)';
+            if (xpLabelEl) xpLabelEl.innerText = 'Sumando experiencia...';
+            
+            let currentXP = 0;
+            const duration = 1200; // 1.2s
+            const interval = 30;
+            const steps = duration / interval;
+            const increment = earnedXP / steps;
+            
+            const xpInterval = setInterval(() => {
+                if (gameState !== 'gameOver') {
+                    clearInterval(xpInterval);
+                    return;
+                }
+                currentXP += increment;
+                if (currentXP >= earnedXP) {
+                    currentXP = earnedXP;
+                    clearInterval(xpInterval);
+                    xpEl.style.transform = 'scale(1.15)';
+                    setTimeout(() => xpEl.style.transform = 'scale(1)', 200);
+                    if (xpLabelEl) xpLabelEl.innerText = '¡Experiencia Obtenida!';
+                    playSound('menu_click');
+                } else {
+                    if (Math.random() > 0.6) playSound('menu_hover');
+                }
+                xpEl.innerText = `+${Math.floor(currentXP)} XP`;
+            }, interval);
+        }
 
         // --- ACTUALIZAR ESTADÍSTICAS PERSISTENTES ---
         if (USER_CONFIG.stats) {
