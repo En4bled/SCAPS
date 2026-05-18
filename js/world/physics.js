@@ -161,15 +161,16 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             }
 
             const carSpeedMag = Math.abs(car.speed);
-            // Se ha aumentado la transferencia de momento por velocidad del coche (de 0.4 a 0.65)
-            let impulse = ((CONST.CONFIG.BALL_HIT_FORCE * hitForceMultiplier) + (-dotProduct * 0.8) + (carSpeedMag * 0.65)) * timeScale;
+            // Se ha aumentado significativamente la potencia del rebote y transferencia de velocidad
+            let impulse = ((CONST.CONFIG.BALL_HIT_FORCE * hitForceMultiplier) + (-dotProduct * 1.3) + (carSpeedMag * 1.25)) * timeScale;
             
             // --- PINCH LOGIC ---
             if (ball.onWallTimer > 0) {
                 impulse *= 1.4; // Impulso extra si el balón está contra la pared o volando bajo
             }
 
-            if (impulse > 5 && car.isPlayer) addScreenShake(impulse * 0.4);
+            // Eliminado el efecto de temblor al golpear la pelota por petición del usuario
+            // if (impulse > 5 && car.isPlayer) addScreenShake(impulse * 0.4);
             if (impulse > 8 && car.isPlayer) addHitStop(3); // Pausa dramática al golpear fortísimo el balón
 
             ball.vx += Math.cos(angle) * impulse;
@@ -185,10 +186,10 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             ball.vx += forwardX * (carSpeedMag * 0.3) * timeScale;
             ball.vy += forwardY * (carSpeedMag * 0.3) * timeScale;
 
-            // TRANSFERENCIA DE MASA: El coche pierde inercia al golpear el balón pesado
+            // TRANSFERENCIA DE MASA: El coche pierde inercia al golpear el balón pesado (muy reducida para máxima comodidad)
             if (carSpeedMag > 0.5) {
-                // Si el impacto es muy frontal, el coche se frena un 60%, si es de refilón un 25%
-                car.speed *= (dotFront > 0.5) ? 0.4 : 0.75;
+                // Si el impacto es muy frontal, el coche se frena solo un 15% (antes 60%), si es de refilón un 5% (antes 25%)
+                car.speed *= (dotFront > 0.5) ? 0.85 : 0.95;
             }
             
             const maxBallSpeed = CONST.CONFIG.BALL_MAX_SPEED;
