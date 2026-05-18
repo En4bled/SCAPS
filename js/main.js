@@ -663,25 +663,45 @@ function renderExplosionSelection() {
     Object.keys(EXPLOSION_DEFS).forEach(key => {
         const def = EXPLOSION_DEFS[key];
         const item = document.createElement('div');
+        const requiredLevel = getExplosionUnlockLevel(key);
+        const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
+
         item.className = 'selectable-item' + (USER_CONFIG.playerExplosion === key ? ' selected' : '');
         item.tabIndex = 0;
         item.style.flexDirection = 'column';
-        item.innerHTML = `
-            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
-            <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
-        `;
-        item.onclick = () => {
-            USER_CONFIG.playerExplosion = key;
-            const tag = document.getElementById('explosion-name-tag');
-            if (tag) {
-                tag.innerText = def.name;
-                tag.style.color = '#fff';
-            }
-            saveUserConfig();
-            renderExplosionSelection();
-            playSound('menu_click');
-            explosionPreviewManager.trigger();
-        };
+
+        if (isLocked) {
+            item.classList.add('locked-item');
+            item.innerHTML = `
+                <div style="width: 100%; height: 58%; background: #111; display: flex; align-items: center; justify-content: center; margin-bottom: 0.3em; position: relative;">
+                    <span style="font-size: 2em; filter: grayscale(1); opacity: 0.3;">${def.icon || '💥'}</span>
+                    <div class="lock-icon" style="position: absolute; font-size: 0.8em; font-weight: bold; color: #ff3333;">🔒 Lvl ${requiredLevel}</div>
+                </div>
+                <div style="font-size: 0.85em; color: #888; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            `;
+            item.onclick = () => {
+                showInGameNotification(`ESTE EFECTO DE GOL SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
+                playSound('menu_error');
+            };
+        } else {
+            item.innerHTML = `
+                <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
+                <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            `;
+            item.onclick = () => {
+                USER_CONFIG.playerExplosion = key;
+                const tag = document.getElementById('explosion-name-tag');
+                if (tag) {
+                    tag.innerText = def.name;
+                    tag.style.color = '#fff';
+                }
+                saveUserConfig();
+                renderExplosionSelection();
+                playSound('menu_click');
+                explosionPreviewManager.trigger();
+            };
+        }
+
         list.appendChild(item);
 
         if (USER_CONFIG.playerExplosion === key) {
@@ -690,20 +710,22 @@ function renderExplosionSelection() {
             }, 10);
         }
 
-        // Inicializar canvas miniatura
-        const canvas = item.querySelector('.mini-particle-canvas');
-        if (canvas) {
-            canvas.width = 100;
-            canvas.height = 58;
-            const ctx = canvas.getContext('2d');
-            activeMiniPreviews.push({
-                canvas: canvas,
-                ctx: ctx,
-                type: 'explosion',
-                effectKey: key,
-                particles: [],
-                color: def.color
-            });
+        // Inicializar canvas miniatura si no está bloqueado
+        if (!isLocked) {
+            const canvas = item.querySelector('.mini-particle-canvas');
+            if (canvas) {
+                canvas.width = 100;
+                canvas.height = 58;
+                const ctx = canvas.getContext('2d');
+                activeMiniPreviews.push({
+                    canvas: canvas,
+                    ctx: ctx,
+                    type: 'explosion',
+                    effectKey: key,
+                    particles: [],
+                    color: def.color
+                });
+            }
         }
     });
 
@@ -847,20 +869,40 @@ function renderBoostSelection() {
     Object.keys(BOOST_DEFS).forEach(key => {
         const def = BOOST_DEFS[key];
         const item = document.createElement('div');
+        const requiredLevel = getBoostUnlockLevel(key);
+        const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
+
         item.className = 'selectable-item' + (USER_CONFIG.playerBoost === key ? ' selected' : '');
         item.tabIndex = 0;
         item.style.flexDirection = 'column';
-        item.innerHTML = `
-            <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
-            <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
-        `;
-        item.onclick = () => {
-            USER_CONFIG.playerBoost = key;
-            updateBoostPreviewInfo(key);
-            saveUserConfig();
-            renderBoostSelection();
-            playSound('menu_click');
-        };
+
+        if (isLocked) {
+            item.classList.add('locked-item');
+            item.innerHTML = `
+                <div style="width: 100%; height: 58%; background: #111; display: flex; align-items: center; justify-content: center; margin-bottom: 0.3em; position: relative;">
+                    <span style="font-size: 2em; filter: grayscale(1); opacity: 0.3;">${def.icon || '💨'}</span>
+                    <div class="lock-icon" style="position: absolute; font-size: 0.8em; font-weight: bold; color: #ff3333;">🔒 Lvl ${requiredLevel}</div>
+                </div>
+                <div style="font-size: 0.85em; color: #888; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            `;
+            item.onclick = () => {
+                showInGameNotification(`ESTE PROPULSOR SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
+                playSound('menu_error');
+            };
+        } else {
+            item.innerHTML = `
+                <canvas class="mini-particle-canvas" style="width: 100%; height: 58%; background: #000000; margin-bottom: 0.3em;"></canvas>
+                <div style="font-size: 0.85em; color: #fff; font-family: 'Share Tech Mono', monospace; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 0.2em;">${def.name}</div>
+            `;
+            item.onclick = () => {
+                USER_CONFIG.playerBoost = key;
+                updateBoostPreviewInfo(key);
+                saveUserConfig();
+                renderBoostSelection();
+                playSound('menu_click');
+            };
+        }
+
         list.appendChild(item);
 
         if (USER_CONFIG.playerBoost === key) {
@@ -869,20 +911,22 @@ function renderBoostSelection() {
             }, 10);
         }
 
-        // Inicializar canvas miniatura
-        const canvas = item.querySelector('.mini-particle-canvas');
-        if (canvas) {
-            canvas.width = 100;
-            canvas.height = 58;
-            const ctx = canvas.getContext('2d');
-            activeMiniPreviews.push({
-                canvas: canvas,
-                ctx: ctx,
-                type: 'boost',
-                effectKey: key,
-                particles: [],
-                color: def.color
-            });
+        // Inicializar canvas miniatura si no está bloqueado
+        if (!isLocked) {
+            const canvas = item.querySelector('.mini-particle-canvas');
+            if (canvas) {
+                canvas.width = 100;
+                canvas.height = 58;
+                const ctx = canvas.getContext('2d');
+                activeMiniPreviews.push({
+                    canvas: canvas,
+                    ctx: ctx,
+                    type: 'boost',
+                    effectKey: key,
+                    particles: [],
+                    color: def.color
+                });
+            }
         }
     });
 
@@ -2942,6 +2986,58 @@ function setupCustomizationMenu() {
     });
 }
 
+// --- FUNCIONES AUXILIARES PARA EL SISTEMA DE DESBLOQUEO PROGRESIVO ---
+function getAvatarUnlockLevel(url) {
+    const match = url.match(/avatar_(\d+)\.png/);
+    if (!match) return 1;
+    const idx = parseInt(match[1]);
+    if (idx <= 20) return 1;
+    if (idx <= 40) return 5;
+    if (idx <= 60) return 10;
+    if (idx <= 80) return 20;
+    if (idx <= 90) return 35;
+    return 50;
+}
+
+function getBallUnlockLevel(url) {
+    const match = url.match(/ball_(\d+)\.png/);
+    if (!match) return 1;
+    const idx = parseInt(match[1]);
+    if (idx <= 10) return 1;
+    if (idx <= 20) return 4;
+    if (idx <= 30) return 8;
+    if (idx <= 35) return 15;
+    return 30;
+}
+
+function getBoostUnlockLevel(key) {
+    const levels = {
+        'classic': 1, 'bubble': 1, 'nature': 1,
+        'toxic': 3, 'ice': 3,
+        'neon': 6, 'fire': 6,
+        'plasma': 10, 'lava': 10,
+        'glitch': 15, 'cyber': 15,
+        'rainbow': 20, 'matrix': 20,
+        'void': 30, 'cosmic': 30,
+        'gold': 45
+    };
+    return levels[key] || 1;
+}
+
+function getExplosionUnlockLevel(key) {
+    const levels = {
+        'classic': 1, 'bubble': 1, 'blossom': 1,
+        'love': 4, 'frozen': 4,
+        'confetti': 8, 'ghost': 8,
+        'pixel': 12, 'magma': 12,
+        'lightning': 18, 'cyber': 18,
+        'gravity': 25, 'fireworks': 25,
+        'nuclear': 35, 'blackhole': 35,
+        'gold': 50
+    };
+    return levels[key] || 1;
+}
+
 function renderAvatars() {
     const container = document.getElementById('avatar-list');
     const pageInfo = document.getElementById('avatar-page-info');
@@ -2966,19 +3062,31 @@ function renderAvatars() {
 
     pageItems.forEach(url => {
         const item = document.createElement('div');
+        const requiredLevel = getAvatarUnlockLevel(url);
+        const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
+
         item.className = 'selectable-item' + (USER_CONFIG.playerAvatar === url ? ' selected' : '');
         item.tabIndex = 0;
-        // Aplicamos fondo personalizado
-        item.style.background = USER_CONFIG.playerAvatarBg;
 
-        item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
-        item.onclick = () => {
-            USER_CONFIG.playerAvatar = url;
-            saveUserConfig();
-            renderAvatars();
-            updatePlayerBanner();
-            playSound('menu_click');
-        };
+        if (isLocked) {
+            item.classList.add('locked-item');
+            item.innerHTML = `<img src="${url}" style="filter: brightness(0.2) grayscale(1); width: 85%; height: 85%; object-fit: contain;"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.onclick = () => {
+                showInGameNotification(`ESTE AVATAR SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
+                playSound('menu_error');
+            };
+        } else {
+            item.style.background = USER_CONFIG.playerAvatarBg;
+            item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
+            item.onclick = () => {
+                USER_CONFIG.playerAvatar = url;
+                saveUserConfig();
+                renderAvatars();
+                updatePlayerBanner();
+                playSound('menu_click');
+            };
+        }
+
         container.appendChild(item);
 
         if (USER_CONFIG.playerAvatar === url) {
@@ -3085,15 +3193,29 @@ function renderBallSelection() {
 
     pageItems.forEach(url => {
         const item = document.createElement('div');
+        const requiredLevel = getBallUnlockLevel(url);
+        const isLocked = (USER_CONFIG.stats.level || 1) < requiredLevel;
+
         item.className = 'selectable-item' + (USER_CONFIG.playerBall === url ? ' selected' : '');
         item.tabIndex = 0;
-        item.innerHTML = `<img src="${url}">`;
-        item.onclick = () => {
-            USER_CONFIG.playerBall = url;
-            saveUserConfig();
-            renderBallSelection();
-            playSound('menu_click');
-        };
+
+        if (isLocked) {
+            item.classList.add('locked-item');
+            item.innerHTML = `<img src="${url}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.onclick = () => {
+                showInGameNotification(`ESTE BALÓN SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
+                playSound('menu_error');
+            };
+        } else {
+            item.innerHTML = `<img src="${url}">`;
+            item.onclick = () => {
+                USER_CONFIG.playerBall = url;
+                saveUserConfig();
+                renderBallSelection();
+                playSound('menu_click');
+            };
+        }
+
         container.appendChild(item);
 
         if (USER_CONFIG.playerBall === url) {
