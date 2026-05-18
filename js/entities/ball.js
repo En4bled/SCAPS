@@ -118,6 +118,11 @@ export class Ball {
             // Bote elástico en el suelo (Balón pesado, menos bote)
             if (this.vz < -2) {
                 this.vz *= -0.45; // Factor de restitución vertical reducido (antes 0.65)
+                
+                // Fricción por impacto: chocar contra el suelo absorbe inercia horizontal (rebote más orgánico)
+                this.vx *= 0.82;
+                this.vy *= 0.82;
+                
                 // Sonido suave proporcional al bote, para no saturar
                 playSound('ball_hit', Math.min(0.3, Math.abs(this.vz) * 0.05));
             } else {
@@ -131,6 +136,21 @@ export class Ball {
         this.y += this.vy * timeScale; 
         this.vx *= Math.pow(currentFriction, timeScale); 
         this.vy *= Math.pow(currentFriction, timeScale);
+
+        // Fricción de rodadura extra a velocidades muy bajas para detener el balón de forma limpia
+        if (this.z === 0) {
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            if (speed > 0 && speed < 0.3) {
+                const stopFactor = Math.max(0, 1 - 0.08 * timeScale);
+                this.vx *= stopFactor;
+                this.vy *= stopFactor;
+                if (speed < 0.04) {
+                    this.vx = 0;
+                    this.vy = 0;
+                }
+            }
+        }
+
         const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         if (currentSpeed > CONST.CONFIG.BALL_MAX_SPEED) { 
             const factor = CONST.CONFIG.BALL_MAX_SPEED / currentSpeed; 

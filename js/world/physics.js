@@ -61,9 +61,10 @@ export function checkPolygonCollision(entity, polygon) {
             if (entity.onWallTimer !== undefined) {
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
-                // Añadir un pequeño bote en Z al chocar contra la pared
+                // Añadir un pequeño bote en Z al chocar contra la pared (más suave y controlado)
                 if (entity.vz !== undefined) {
-                    entity.vz += Math.abs(vNormalX * bounce + vNormalY * bounce) * 0.15 + 1.5;
+                    const wallBounceZ = Math.abs(vNormalX * bounce + vNormalY * bounce) * 0.04 + 0.3;
+                    entity.vz = Math.min(2.5, entity.vz + wallBounceZ);
                 }
                 if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
                 playSound('wall_hit', 0.5);
