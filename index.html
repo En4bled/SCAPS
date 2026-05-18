@@ -1044,17 +1044,19 @@
 
     <!-- Modal de Alerta Global (Reemplazo de Notificación HUD) -->
     <div id="modal-alert-overlay" class="hidden"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
-        <div id="modal-alert-icon" style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
+        <div class="pixel-border"
+            style="background: #0a0a19; padding: 40px; width: 450px; text-align: center; border: 3px solid #5ad !important; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(90, 173, 237, 0.4);">
+            <div id="modal-alert-icon" style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒</div>
+            <h2 id="modal-alert-title" class="pixel-title"
+                style="color: #fff; font-size: 24px; margin-bottom: 15px; letter-spacing: 3px;">AVISO DEL SISTEMA</h2>
+            <p id="modal-alert-message"
+                style="font-family: 'Share Tech Mono', monospace; color: #5ad; font-size: 16px; line-height: 1.5; margin-bottom: 30px; text-transform: uppercase;">
+                MENSAJE DE PRUEBA
+            </p>
+            <button id="btn-modal-alert-ok" class="menu-btn primary"
+                style="width: 200px; font-size: 18px; padding: 10px;">ACEPTAR</button>
         </div>
-        <h2 id="modal-alert-title" class="pixel-title"
-            style="color: #fff; font-size: 24px; margin-bottom: 15px; letter-spacing: 3px;">AVISO DEL SISTEMA</h2>
-        <p id="modal-alert-message"
-            style="font-family: 'Share Tech Mono', monospace; color: #5ad; font-size: 16px; line-height: 1.5; margin-bottom: 30px; text-transform: uppercase;">
-            MENSAJE DE PRUEBA
-        </p>
-        <button id="btn-modal-alert-ok" class="menu-btn primary"
-            style="width: 200px; font-size: 18px; padding: 10px;">ACEPTAR</button>
     </div>
     </div>
 

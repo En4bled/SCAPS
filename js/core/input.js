@@ -93,6 +93,31 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
     
     if (!gp) return;
 
+    // --- RESTRICCIÓN POR MODAL DE ALERTA GLOBAL ACTIVO ---
+    const alertOverlay = document.getElementById('modal-alert-overlay');
+    const isAlertOpen = alertOverlay && alertOverlay.style.display === 'flex' && !alertOverlay.classList.contains('hidden');
+
+    if (isAlertOpen) {
+        const okBtn = document.getElementById('btn-modal-alert-ok');
+        if (okBtn && document.activeElement !== okBtn) {
+            okBtn.focus();
+        }
+
+        const aPressed = gp.buttons[0].pressed;
+        if (aPressed && !lastButtonsState[0]) {
+            if (okBtn) {
+                okBtn.click();
+            }
+        }
+        lastButtonsState[0] = aPressed;
+
+        // Bloquear todos los demás botones del mando mientras la alerta está abierta
+        for (let i = 1; i < gp.buttons.length; i++) {
+            lastButtonsState[i] = gp.buttons[i].pressed;
+        }
+        return;
+    }
+
     // --- RESTRICCIÓN POR EDITOR DE FÍSICAS ACTIVO ---
     const physicsOverlay = document.getElementById('physics-editor-overlay');
     const isPhysicsOpen = physicsOverlay && !physicsOverlay.classList.contains('hidden') && physicsOverlay.style.display !== 'none';

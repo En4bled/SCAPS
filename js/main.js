@@ -3826,14 +3826,6 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
             };
         }
 
-        // Auto-cierre tras 3.5 segundos para no bloquear el flujo
-        setTimeout(() => {
-            if (overlay.style.display === 'flex') {
-                overlay.style.display = 'none';
-                if (lastFocus) lastFocus.focus();
-            }
-        }, 3500);
-
         playSound('menu_error');
     }
 }
