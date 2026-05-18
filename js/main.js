@@ -478,33 +478,16 @@ export function updateStatsUI() {
 function applyBannerPosition() {
     const banner = document.getElementById('song-notification');
     if (banner) {
-        banner.style.left = USER_CONFIG.bannerPos.left + 'px';
-        banner.style.bottom = USER_CONFIG.bannerPos.bottom + 'px';
+        banner.style.left = '20px';
+        banner.style.top = '20px';
+        banner.style.bottom = 'auto';
     }
 }
 
 
 
 function setupDraggableBanner() {
-    const banner = document.getElementById('song-notification');
-    if (!banner) return;
-    let isDragging = false, startX, startY;
-    banner.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX - banner.offsetLeft;
-        startY = e.clientY - (window.innerHeight - banner.offsetTop - banner.offsetHeight);
-        banner.style.transition = 'none';
-        e.preventDefault();
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        USER_CONFIG.bannerPos.left = e.clientX - startX;
-        USER_CONFIG.bannerPos.bottom = Math.max(0, window.innerHeight - e.clientY - 25);
-        applyBannerPosition();
-    });
-    window.addEventListener('mouseup', () => {
-        if (isDragging) { isDragging = false; banner.style.transition = 'opacity 1s ease-in-out, transform 0.2s'; saveUserConfig(); }
-    });
+    // Eliminada la opción de arrastrar el banner durante el juego a petición del usuario.
 }
 
 
