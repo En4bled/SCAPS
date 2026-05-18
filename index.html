@@ -52,7 +52,10 @@
                 <p>Se han tomado ideas, conceptos y mecánicas inspiradas en diversos títulos populares de la industria
                     para crear esta experiencia. No obstante, cualquier similitud directa con productos comerciales
                     existentes es meramente <strong>circunstancial y coincidencia absoluta</strong>.</p>
-                <div class="blink-text" style="margin-top:30px; display: flex; align-items: center; justify-content: center; gap: 0.25em;">PULSA <span style="color:#f90">ESPACIO</span> o <span class="gamepad-badge gp-start" style="margin: 0; width: 1.5em; height: 1.5em;"></span> PARA CONTINUAR</div>
+                <div class="blink-text"
+                    style="margin-top:30px; display: flex; align-items: center; justify-content: center; gap: 0.25em;">
+                    PULSA <span style="color:#f90">ESPACIO</span> o <span class="gamepad-badge gp-start"
+                        style="margin: 0; width: 1.5em; height: 1.5em;"></span> PARA CONTINUAR</div>
             </div>
         </div>
     </div>
@@ -110,7 +113,8 @@
                 <!-- Pestañas fuera del cuadro (Flotantes) -->
                 <div class="custom-tabs-container" style="display: flex; align-items: center;">
                     <!-- Badge LB para mando -->
-                    <span class="gamepad-badge gp-lb" style="width: 30px; height: 30px; margin: 0 10px 0 5px; flex-shrink: 0;"></span>
+                    <span class="gamepad-badge gp-lb"
+                        style="width: 30px; height: 30px; margin: 0 10px 0 5px; flex-shrink: 0;"></span>
 
                     <button class="custom-tab-btn active" data-tab="perfil">
                         <img src="recursos/ui/profile-selector-tab.gif" class="tab-icon-gif">
@@ -134,23 +138,28 @@
                     </button>
 
                     <!-- Badge RB para mando -->
-                    <span class="gamepad-badge gp-rb" style="width: 30px; height: 30px; margin: 0 15px 0 10px; flex-shrink: 0;"></span>
+                    <span class="gamepad-badge gp-rb"
+                        style="width: 30px; height: 30px; margin: 0 15px 0 10px; flex-shrink: 0;"></span>
 
                     <!-- Espaciador para separar el botón de cerrar -->
                     <div style="flex: 1;"></div>
 
                     <!-- Botón Descartar Cambios -->
-                    <button class="custom-tab-btn btn-discard-custom" onclick="window.tryDiscardCustomization()" style="position: relative;">
+                    <button class="custom-tab-btn btn-discard-custom" onclick="window.tryDiscardCustomization()"
+                        style="position: relative;">
                         <!-- Badge B para mando posicionado en el borde superior derecho -->
-                        <span class="gamepad-badge gp-b" style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
+                        <span class="gamepad-badge gp-b"
+                            style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
                         <i style="color: #f44; text-shadow: 0 0 10px #f44; margin: 0;">✖</i>
                         <span style="color: #f44; font-size: 10.5px;">DESCARTAR CAMBIOS</span>
                     </button>
 
                     <!-- Botón Cerrar (Separado) -->
-                    <button class="custom-tab-btn btn-close-custom" onclick="window.closeCustomization()" style="position: relative;">
+                    <button class="custom-tab-btn btn-close-custom" onclick="window.closeCustomization()"
+                        style="position: relative;">
                         <!-- Badge A para mando posicionado en el borde superior derecho -->
-                        <span class="gamepad-badge gp-a" style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
+                        <span class="gamepad-badge gp-a"
+                            style="position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; margin: 0; z-index: 100;"></span>
                         <i style="color: #2fb; text-shadow: 0 0 10px #2fb; margin: 0;">✔</i>
                         <span style="color: #2fb; font-size: 10.5px;">GUARDAR Y SALIR</span>
                     </button>
@@ -451,17 +460,25 @@
                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 9600; display: none; flex-direction: column; justify-content: center; align-items: center;">
                 <div class="pixel-border"
                     style="background: #0a0a19; padding: 30px; width: 450px; text-align: center; border: 3px solid #f33 !important; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-                    <h2 class="pixel-title" style="color: #f33; margin-bottom: 20px; font-size: 22px;">¿DESCARTAR CAMBIOS?</h2>
-                    <p style="color: #eee; font-family: 'Share Tech Mono', monospace; margin-bottom: 30px; font-size: 13px; line-height: 1.5;">Has realizado cambios en tu personalización. ¿Deseas descartarlos y volver al menú principal?</p>
+                    <h2 class="pixel-title" style="color: #f33; margin-bottom: 20px; font-size: 22px;">¿DESCARTAR
+                        CAMBIOS?</h2>
+                    <p
+                        style="color: #eee; font-family: 'Share Tech Mono', monospace; margin-bottom: 30px; font-size: 13px; line-height: 1.5;">
+                        Has realizado cambios en tu personalización. ¿Deseas descartarlos y volver al menú principal?
+                    </p>
                     <div style="display: flex; gap: 15px; justify-content: center;">
-                        <button id="btn-custom-discard-confirm" class="menu-btn" onclick="window.confirmDiscardCustomization()"
+                        <button id="btn-custom-discard-confirm" class="menu-btn"
+                            onclick="window.confirmDiscardCustomization()"
                             style="border-color: #f33; color: #f33; width: 180px; height: 38px !important; padding: 0 8px !important; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                            <span class="gamepad-badge gp-a" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            <span class="gamepad-badge gp-a"
+                                style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
                             DESCARTAR
                         </button>
-                        <button id="btn-custom-discard-cancel" class="menu-btn" onclick="window.cancelDiscardCustomization()"
+                        <button id="btn-custom-discard-cancel" class="menu-btn"
+                            onclick="window.cancelDiscardCustomization()"
                             style="width: 180px; height: 38px !important; padding: 0 8px !important; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                            <span class="gamepad-badge gp-b" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            <span class="gamepad-badge gp-b"
+                                style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
                             VOLVER
                         </button>
                     </div>
@@ -617,17 +634,24 @@
                 <div id="credits-scroll-container" class="pixel-border"
                     style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
 
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.7.0 - GAMEPAD, CARD FLIP & PHYSICS
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.7.0 - GAMEPAD, CARD FLIP &
+                        PHYSICS
                         (ACTUAL)</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
-                        <li>+ Soporte interactivo de Card Flip 3D con reverso de estadísticas oscurecido en los modos.</li>
-                        <li>+ Navegación D-PAD en Match Setup y flujo de confirmación "Select-to-Confirm" con START.</li>
-                        <li>+ Indicadores visuales y insignias físicas de mando (A, B, LT, RT, START) integradas en UI.</li>
-                        <li>+ Físicas pro: fricción lateral, impacto frontal zonal, drag de aire, efecto pinch y delta-time.</li>
-                        <li>+ Rediseño simétrico de Personalización 50/50 y estabilización de previsualizadores de Canvas.</li>
+                        <li>+ Soporte interactivo de Card Flip 3D con reverso de estadísticas oscurecido en los modos.
+                        </li>
+                        <li>+ Navegación D-PAD en Match Setup y flujo de confirmación "Select-to-Confirm" con START.
+                        </li>
+                        <li>+ Indicadores visuales y insignias físicas de mando (A, B, LT, RT, START) integradas en UI.
+                        </li>
+                        <li>+ Físicas pro: fricción lateral, impacto frontal zonal, drag de aire, efecto pinch y
+                            delta-time.</li>
+                        <li>+ Rediseño simétrico de Personalización 50/50 y estabilización de previsualizadores de
+                            Canvas.</li>
                     </ul>
 
-                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS</p>
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS
+                    </p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
                         <li>+ Implementación de Hit-Stop (micro-pausas) y Screen Shake selectivo.</li>
                         <li>+ Sistema de Post-procesado Bloom (resplandor) global y configurable.</li>
@@ -695,7 +719,8 @@
                             style="font-weight:bold; color:#fff;">SYSTEM SIMESIA</span> @ 2026</p>
                 </div>
 
-                <button id="btn-credits-back" class="menu-btn" style="width: fit-content; margin: 15px auto 0 auto; padding: 0.85em 2.5em; display: flex; align-items: center; justify-content: center; gap: 0.5em;">
+                <button id="btn-credits-back" class="menu-btn"
+                    style="width: fit-content; margin: 15px auto 0 auto; padding: 0.85em 2.5em; display: flex; align-items: center; justify-content: center; gap: 0.5em;">
                     <span class="gamepad-badge gp-b" style="margin: 0;"></span>
                     VOLVER
                 </button>
@@ -719,10 +744,10 @@
         <!-- Panel de Edición de Físicas (Tecla º) -->
         <div id="physics-editor-overlay" class="hidden"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9000; display: none; flex-direction: column; justify-content: flex-start; align-items: center; transition: background 0.3s ease, backdrop-filter 0.3s ease;">
-            
+
             <div id="physics-editor-wrapper"
                 style="position: absolute; top: 140px; left: 50%; transform: translateX(-50%); width: 640px; display: flex; flex-direction: column; gap: 0; z-index: 9100; pointer-events: auto;">
-                
+
                 <!-- Banner Superior de Estado Dockeado -->
                 <div id="physics-editor-header-banner" class="pixel-border"
                     style="background: #050515; width: 640px; border: 3px solid #a5f !important; border-bottom: none !important; padding: 10px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 12px; font-weight: bold; letter-spacing: 2px; text-align: center; box-shadow: 0 0 15px rgba(165, 85, 255, 0.4); box-sizing: border-box; transition: all 0.3s ease;">
@@ -732,7 +757,7 @@
                 <!-- Ventana Principal del Panel de Control -->
                 <div id="physics-editor-panel" class="pixel-border"
                     style="background: #0a0a19; padding: 20px 30px; width: 640px; display: flex; flex-direction: column; gap: 15px; border: 3px solid #a5f !important; max-height: 80vh; overflow: hidden; transform-origin: top; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease; box-sizing: border-box;">
-                    
+
                     <h2 class="pixel-title"
                         style="margin: 0; color: #fff; text-shadow: 0 0 10px rgba(255, 255, 255, 0.4); font-size: 24px; text-align:center;">
                         EDITOR DE FÍSICAS</h2>
@@ -745,19 +770,26 @@
                     <!-- Botones al mismo nivel que los sliders pero debajo -->
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 5px;">
                         <button id="btn-physics-export" class="menu-btn"
-                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">COPIAR AJUSTES AL PORTAPAPELES</button>
+                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">COPIAR
+                            AJUSTES AL PORTAPAPELES</button>
                         <button id="btn-physics-paste" class="menu-btn"
-                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">PEGAR AJUSTES DEL PORTAPAPELES</button>
+                            style="font-size: 11px; padding: 8px; margin: 0; border-color: #fff; color: #fff; height: auto;">PEGAR
+                            AJUSTES DEL PORTAPAPELES</button>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 5px; justify-items: center; width: 100%;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 5px; justify-items: center; width: 100%;">
                         <button id="btn-physics-apply" class="menu-btn primary"
                             style="background: #1b5e20; border-color: #0f3811; color: #fff; width: 100%; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                            <span class="gamepad-badge gp-start" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> GUARDAR
+                            <span class="gamepad-badge gp-start"
+                                style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            GUARDAR
                         </button>
                         <button id="btn-physics-reset" class="menu-btn"
                             style="width: 100%; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                            <span class="gamepad-badge gp-y" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> RESETEAR TODO
+                            <span class="gamepad-badge gp-y"
+                                style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                            RESETEAR TODO
                         </button>
                     </div>
                 </div>
@@ -770,18 +802,25 @@
             <div class="pixel-border"
                 style="background: #0a0a19; padding: 25px 35px; width: 420px; display: flex; flex-direction: column; gap: 20px; border: 3px solid #f33 !important; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
                 <div style="font-size: 40px; filter: drop-shadow(0 0 10px #f33);">⚠️</div>
-                <h2 class="pixel-title" style="margin: 0; color: #f33; text-shadow: 0 0 10px #f33; font-size: 20px;">RESTABLECER AJUSTES</h2>
-                <p style="color: #eee; font-family: 'Share Tech Mono', monospace; font-size: 13px; margin: 0; line-height: 1.5;">
-                    ¿Estás seguro de que deseas restablecer TODOS los parámetros del editor de físicas a sus valores originales?
+                <h2 class="pixel-title" style="margin: 0; color: #f33; text-shadow: 0 0 10px #f33; font-size: 20px;">
+                    RESTABLECER AJUSTES</h2>
+                <p
+                    style="color: #eee; font-family: 'Share Tech Mono', monospace; font-size: 13px; margin: 0; line-height: 1.5;">
+                    ¿Estás seguro de que deseas restablecer TODOS los parámetros del editor de físicas a sus valores
+                    originales?
                 </p>
                 <div style="display: flex; gap: 15px; justify-content: center; margin-top: 5px;">
                     <button id="btn-physics-confirm-reset" class="menu-btn primary"
                         style="background: #f33; border-color: #900; color: #fff; width: 160px; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                        <span class="gamepad-badge gp-a" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> RESETEAR
+                        <span class="gamepad-badge gp-a"
+                            style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                        RESETEAR
                     </button>
                     <button id="btn-physics-cancel-reset" class="menu-btn"
                         style="width: 160px; height: 38px !important; padding: 0 8px !important; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box;">
-                        <span class="gamepad-badge gp-b" style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span> CANCELAR
+                        <span class="gamepad-badge gp-b"
+                            style="width: 30px; height: 30px; margin: 0; margin-right: -2px; flex-shrink: 0;"></span>
+                        CANCELAR
                     </button>
                 </div>
             </div>
@@ -798,21 +837,25 @@
                 transform: translateX(0) !important;
             }
             #fullscreen-toggle:hover {
-                transform: scale(1.1);
+                transform: scale(1.15);
                 opacity: 1 !important;
             }
         </style>
-        
-        <!-- Botón Pantalla Completa (Debajo del mando, perfectamente centrado y con el mismo ancho) -->
+
+        <!-- Botón Pantalla Completa (Debajo del mando) -->
         <div id="fullscreen-toggle" title="PANTALLA COMPLETA"
-            style="position: absolute; top: 3.0em; right: 0.6em; z-index: 10000; width: 28px; height: 28px; opacity: 0.5; transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; background: none !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
-            <span id="fullscreen-icon" style="font-size: 28px; display: flex; align-items: center; justify-content: center; text-shadow: 0 0 10px rgba(0,0,0,0.5); width: 100%; height: 100%;">⛶</span>
+            style="position: absolute; top: 2.8em; right: 0.6em; z-index: 10000; opacity: 0.5; transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; pointer-events: auto; background: none !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
+            <span id="fullscreen-icon"
+                style="font-size: 28px; display: flex; align-items: center; justify-content: center; text-shadow: 0 0 10px rgba(0,0,0,0.5);">⛶</span>
         </div>
 
         <div id="gamepad-indicator" title="MANDO DESCONECTADO"
             style="position: absolute; top: 0.6em; right: 0.6em; z-index: 10000; filter: grayscale(100%); opacity: 0.5; transition: all 0.5s ease; cursor: help; display: flex; align-items: center; justify-content: flex-end; width: auto; height: auto; pointer-events: auto; background: none !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
-            <span id="gamepad-text" style="color: #ffffff; font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: bold; margin-right: 10px; opacity: 0; max-width: 0; transform: translateX(10px); transition: all 0.3s ease; white-space: nowrap; overflow: hidden; text-shadow: 0 0 5px rgba(0,0,0,0.8);">MANDO NO DETECTADO</span>
-            <span id="gamepad-icon" style="font-size: 28px; display: flex; align-items: center; justify-content: center; text-shadow: 0 0 10px rgba(0,0,0,0.5);">🎮</span>
+            <span id="gamepad-text"
+                style="color: #ffffff; font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: bold; margin-right: 10px; opacity: 0; max-width: 0; transform: translateX(10px); transition: all 0.3s ease; white-space: nowrap; overflow: hidden; text-shadow: 0 0 5px rgba(0,0,0,0.8);">MANDO
+                NO DETECTADO</span>
+            <span id="gamepad-icon"
+                style="font-size: 28px; display: flex; align-items: center; justify-content: center; text-shadow: 0 0 10px rgba(0,0,0,0.5);">🎮</span>
         </div>
         <div id="goal-text-overlay">¡GOL!</div>
         <div id="camera-mode-overlay"></div>
@@ -853,7 +896,8 @@
                     <div
                         style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.8em 1em 0.4em 1em;">
                         <!-- Indicador LT -->
-                        <div style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                        <div
+                            style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
                             <span class="gamepad-badge gp-lt" style="margin: 0;"></span>
                         </div>
 
@@ -863,7 +907,8 @@
                         </h2>
 
                         <!-- Indicador RT -->
-                        <div style="position: absolute; right: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                        <div
+                            style="position: absolute; right: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
                             <span class="gamepad-badge gp-rt" style="margin: 0;"></span>
                         </div>
                     </div>
@@ -878,7 +923,8 @@
                     <div
                         style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.8em 1em 0.4em 1em;">
                         <!-- Indicador D-PAD -->
-                        <div style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                        <div
+                            style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
                             <span class="gamepad-badge gp-dpad" style="margin: 0;"></span>
                         </div>
 
@@ -890,13 +936,13 @@
                     <div id="setup-mode-list"
                         style="display: flex; flex-direction: column; gap: 1.2em; padding: 0 1.0em; justify-content: center; flex: 1;">
                         <!-- Fila 1 (Principales) -->
-                        <div
-                            style="display: flex; justify-content: center; gap: 1.2em; width: 100%;">
+                        <div style="display: flex; justify-content: center; gap: 1.2em; width: 100%;">
                             <div class="mode-option" role="button" tabindex="0" data-mode="practica"
                                 style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
                                 <div class="mode-card-inner">
                                     <!-- Cara Frontal -->
-                                    <div class="mode-card-front pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <div class="mode-card-front pixel-border"
+                                        style="width: 100%; height: 100%; overflow: hidden;">
                                         <img src="recursos/modes/practica.png"
                                             style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
                                     </div>
@@ -928,7 +974,8 @@
                                 style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
                                 <div class="mode-card-inner">
                                     <!-- Cara Frontal -->
-                                    <div class="mode-card-front pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <div class="mode-card-front pixel-border"
+                                        style="width: 100%; height: 100%; overflow: hidden;">
                                         <img src="recursos/modes/2vs2comp.png"
                                             style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
                                     </div>
@@ -958,8 +1005,7 @@
                             </div>
                             <div class="mode-option locked" role="button" tabindex="0" data-mode="3vs3"
                                 style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; position: relative; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 100%; overflow: hidden;">
+                                <div class="pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
                                     <img src="recursos/modes/3vs3comp.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
                                 </div>
@@ -969,42 +1015,38 @@
                         <!-- Fila 2 (Secundarios más altos) -->
                         <div
                             style="display: flex; justify-content: center; gap: 1.0em; width: 100%; margin-top: 0.5em;">
-                        <div class="mode-option locked" role="button" tabindex="0" data-mode="torneo"
-                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
-                            <div class="pixel-border"
-                                style="width: 100%; height: 100%; overflow: hidden;">
-                                <img src="recursos/modes/campeonato.png"
-                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            <div class="mode-option locked" role="button" tabindex="0" data-mode="torneo"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                                <div class="pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <img src="recursos/modes/campeonato.png"
+                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </div>
-                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                        </div>
-                        <div class="mode-option locked" role="button" tabindex="0" data-mode="clasificacion"
-                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
-                            <div class="pixel-border"
-                                style="width: 100%; height: 100%; overflow: hidden;">
-                                <img src="recursos/modes/clasificacion.png"
-                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            <div class="mode-option locked" role="button" tabindex="0" data-mode="clasificacion"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                                <div class="pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <img src="recursos/modes/clasificacion.png"
+                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </div>
-                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                        </div>
-                        <div class="mode-option locked" role="button" tabindex="0" data-mode="online"
-                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
-                            <div class="pixel-border"
-                                style="width: 100%; height: 100%; overflow: hidden;">
-                                <img src="recursos/modes/online.png"
-                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            <div class="mode-option locked" role="button" tabindex="0" data-mode="online"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                                <div class="pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <img src="recursos/modes/online.png"
+                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </div>
-                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                        </div>
-                        <div class="mode-option locked" role="button" tabindex="0" data-mode="privadas"
-                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
-                            <div class="pixel-border"
-                                style="width: 100%; height: 100%; overflow: hidden;">
-                                <img src="recursos/modes/privadas.png"
-                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            <div class="mode-option locked" role="button" tabindex="0" data-mode="privadas"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                                <div class="pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                    <img src="recursos/modes/privadas.png"
+                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                </div>
+                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
                             </div>
-                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -1013,12 +1055,14 @@
                 style="width: 97.6em; display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 1em; align-items: stretch !important;">
                 <button id="setup-btn-exit" class="menu-btn"
                     style="border-color: #ff4444; color: #ff4444; width: 32em; font-size: 1.25em; padding: 0.42em 0.7em; margin: 0; display: flex; align-items: center; justify-content: center;">
-                    <span class="gamepad-badge gp-b" style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
+                    <span class="gamepad-badge gp-b"
+                        style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
                     VOLVER
                 </button>
                 <button id="setup-btn-play" class="menu-btn primary" disabled
                     style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 32em; font-size: 1.25em; padding: 0.42em 0.7em; margin: 0; display: flex; align-items: center; justify-content: center;">
-                    <span class="gamepad-badge gp-start" style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
+                    <span class="gamepad-badge gp-start"
+                        style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
                     CONFIRMAR Y JUGAR
                 </button>
             </div>
@@ -1027,45 +1071,59 @@
         <!-- PANTALLA DE FIN DE PARTIDA -->
         <div id="game-over-overlay"
             style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(12px); font-family: 'Share Tech Mono', monospace;">
-            
-            <div class="pixel-border" style="background: rgba(8, 10, 24, 0.9); padding: 40px; max-width: 650px; width: 90%; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 40px rgba(90, 170, 255, 0.25); border-image-source: linear-gradient(135deg, #5ad, #f90); border-image-slice: 1; border-width: 4px;">
-                
+
+            <div class="pixel-border"
+                style="background: rgba(8, 10, 24, 0.9); padding: 40px; max-width: 650px; width: 90%; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 40px rgba(90, 170, 255, 0.25); border-image-source: linear-gradient(135deg, #5ad, #f90); border-image-slice: 1; border-width: 4px;">
+
                 <h1 id="game-over-title"
                     style="color: #fff; font-size: 56px; text-shadow: 0 0 25px #5ad; margin: 0 0 10px 0; letter-spacing: 4px; font-weight: 900; text-transform: uppercase; text-align: center;">
                     ¡PARTIDA FINALIZADA!</h1>
-                
+
                 <div id="game-over-winner"
                     style="font-size: 28px; color: #f90; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px #f90; text-align: center;">
                     GANADOR: EQUIPO NARANJA</div>
-                
+
                 <!-- MARCADOR PREMIUM -->
-                <div style="display: flex; align-items: center; justify-content: space-around; width: 100%; margin-bottom: 35px; background: rgba(255,255,255,0.03); padding: 20px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 0 20px rgba(0,0,0,0.6);">
-                    
+                <div
+                    style="display: flex; align-items: center; justify-content: space-around; width: 100%; margin-bottom: 35px; background: rgba(255,255,255,0.03); padding: 20px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 0 20px rgba(0,0,0,0.6);">
+
                     <!-- EQUIPO AZUL -->
                     <div style="text-align: center; width: 35%;">
-                        <div style="font-size: 16px; color: #5ad; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">EQUIPO AZUL</div>
-                        <div id="final-score-blue" style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(90, 170, 255, 0.8);">0</div>
+                        <div
+                            style="font-size: 16px; color: #5ad; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">
+                            EQUIPO AZUL</div>
+                        <div id="final-score-blue"
+                            style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(90, 170, 255, 0.8);">
+                            0</div>
                     </div>
-                    
+
                     <!-- VS DIVIDER -->
-                    <div style="font-size: 32px; color: rgba(255,255,255,0.15); font-weight: bold; font-style: italic;">VS</div>
-                    
+                    <div style="font-size: 32px; color: rgba(255,255,255,0.15); font-weight: bold; font-style: italic;">
+                        VS</div>
+
                     <!-- EQUIPO NARANJA -->
                     <div style="text-align: center; width: 35%;">
-                        <div style="font-size: 16px; color: #f90; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">EQUIPO NARANJA</div>
-                        <div id="final-score-orange" style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(255, 153, 0, 0.8);">0</div>
+                        <div
+                            style="font-size: 16px; color: #f90; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">
+                            EQUIPO NARANJA</div>
+                        <div id="final-score-orange"
+                            style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(255, 153, 0, 0.8);">
+                            0</div>
                     </div>
                 </div>
 
                 <!-- ESTADÍSTICAS DEL PARTIDO -->
-                <div style="width: 100%; margin-bottom: 35px; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.4); padding: 15px 25px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="font-size: 14px; color: #888; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-weight: bold; text-transform: uppercase; text-align: center;">Tu Rendimiento</div>
-                    
+                <div
+                    style="width: 100%; margin-bottom: 35px; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.4); padding: 15px 25px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div
+                        style="font-size: 14px; color: #888; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-weight: bold; text-transform: uppercase; text-align: center;">
+                        Tu Rendimiento</div>
+
                     <div style="display: flex; justify-content: space-between; font-size: 16px; color: #ddd;">
                         <span>Goles Anotados:</span>
                         <span id="gameover-stats-goals" style="color: #5ad; font-weight: bold;">0</span>
                     </div>
-                    
+
                     <div style="display: flex; justify-content: space-between; font-size: 16px; color: #ddd;">
                         <span>Asistencias:</span>
                         <span id="gameover-stats-assists" style="color: #5ad; font-weight: bold;">0</span>
@@ -1079,16 +1137,20 @@
 
                 <!-- CONTROLES -->
                 <div class="menu-buttons" style="width: 100%; display: flex; gap: 20px;">
-                    <button id="btn-gameover-rematch" class="menu-btn primary" style="flex: 1; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
-                        <span class="gamepad-badge gp-a" style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
+                    <button id="btn-gameover-rematch" class="menu-btn primary"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
+                        <span class="gamepad-badge gp-a"
+                            style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
                         ¡REVANCHA!
                     </button>
-                    <button id="btn-gameover-exit" class="menu-btn" style="flex: 1; border-color: #f33; color: #f33; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
-                        <span class="gamepad-badge gp-b" style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
+                    <button id="btn-gameover-exit" class="menu-btn"
+                        style="flex: 1; border-color: #f33; color: #f33; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
+                        <span class="gamepad-badge gp-b"
+                            style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
                         SALIR AL MENÚ
                     </button>
                 </div>
-                
+
             </div>
         </div>
     </div>
@@ -1098,7 +1160,8 @@
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
         <div class="pixel-border"
             style="background: #0a0a19; padding: 40px; width: 450px; text-align: center; border: 3px solid #5ad !important; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(90, 173, 237, 0.4);">
-            <div id="modal-alert-icon" style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒</div>
+            <div id="modal-alert-icon"
+                style="font-size: 50px; margin-bottom: 15px; filter: drop-shadow(0 0 10px #5ad);">🔒</div>
             <h2 id="modal-alert-title" class="pixel-title"
                 style="color: #fff; font-size: 24px; margin-bottom: 15px; letter-spacing: 3px;">AVISO DEL SISTEMA</h2>
             <p id="modal-alert-message"
@@ -1206,26 +1269,32 @@
                 <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
                     <button id="btn-pause-prev" class="menu-btn"
                         style="flex: 1; height: 56px; padding: 4px 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                        <span style="font-size: 18px; line-height: 1;">⏮</span><span class="gamepad-badge gp-lt" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                        <span style="font-size: 18px; line-height: 1;">⏮</span><span class="gamepad-badge gp-lt"
+                            style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
                     </button>
                     <button id="btn-pause-play-pause" class="menu-btn"
                         style="flex: 1.5; height: 56px; padding: 4px 0; margin: 0; border-color: #fff !important; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                        <span id="btn-pause-play-pause-icon" style="font-size: 18px; line-height: 1;">⏯</span><span class="gamepad-badge gp-y" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                        <span id="btn-pause-play-pause-icon" style="font-size: 18px; line-height: 1;">⏯</span><span
+                            class="gamepad-badge gp-y"
+                            style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
                     </button>
                     <button id="btn-pause-next" class="menu-btn"
                         style="flex: 1; height: 56px; padding: 4px 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                        <span style="font-size: 18px; line-height: 1;">⏭</span><span class="gamepad-badge gp-rt" style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
+                        <span style="font-size: 18px; line-height: 1;">⏭</span><span class="gamepad-badge gp-rt"
+                            style="width: 22px; height: 22px; display: inline-block; background-size: contain; background-repeat: no-repeat;"></span>
                     </button>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
+                    <div
+                        style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
                         <span
                             style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #5ad; width: 40px;">MUS</span>
                         <input type="range" id="slider-pause-music" min="0" max="100" value="50"
                             style="flex: 1; accent-color: #5ad;">
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
+                    <div
+                        style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); box-sizing: border-box;">
                         <span
                             style="font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #f90; width: 40px;">SFX</span>
                         <input type="range" id="slider-pause-sfx" min="0" max="100" value="80"
@@ -1247,108 +1316,134 @@
             <!-- PANEL DE CONTROLES (GAMEPAD GUIDE) -->
             <div class="pixel-border" id="pause-gamepad-guide"
                 style="background: #050515; padding: 25px 30px; width: 100%; display: flex; flex-direction: column; gap: 15px; border: 4px solid var(--theme-color) !important; color: #fff; font-family: 'Share Tech Mono', monospace; box-sizing: border-box; box-shadow: 0 0 25px var(--theme-glow-strong);">
-                
+
                 <h2 class="pixel-title"
                     style="color: var(--theme-color); font-size: 24px; text-shadow: 0 0 15px var(--theme-color); margin: 0 0 5px; text-align: center; letter-spacing: 2px;">
                     CONTROLES DE JUEGO</h2>
 
                 <div class="neon-container pixel-border"
                     style="width: 100%; background: rgba(5, 5, 10, 0.9); padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 2px solid var(--theme-color) !important; box-sizing: border-box;">
-                    
+
                     <!-- Sección de Conducción -->
                     <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px;">
-                        <span style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">MOVIMIENTO</span>
+                        <span
+                            style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">MOVIMIENTO</span>
                     </div>
-                    
+
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <!-- Acelerar -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-rt" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-rt"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Gatillo Derecho (RT)</span>
                             </div>
-                            <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">ACELERAR</span>
+                            <span
+                                style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">ACELERAR</span>
                         </div>
-                        
+
                         <!-- Frenar -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-lt" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-lt"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Gatillo Izquierdo (LT)</span>
                             </div>
-                            <span style="color: #f33; font-weight: bold; font-size: 12px; letter-spacing: 1px;">FRENAR / REVERSA</span>
+                            <span style="color: #f33; font-weight: bold; font-size: 12px; letter-spacing: 1px;">FRENAR /
+                                REVERSA</span>
                         </div>
-                        
+
                         <!-- Dirección -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-lstick" style="width: 24px; height: 24px; margin-right: 6px;"></span>
-                                <span style="color: #aaa; font-size: 13px; font-family: sans-serif; margin-right: 6px; font-weight: bold;">/</span>
-                                <span class="gamepad-badge gp-dpad" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-lstick"
+                                    style="width: 24px; height: 24px; margin-right: 6px;"></span>
+                                <span
+                                    style="color: #aaa; font-size: 13px; font-family: sans-serif; margin-right: 6px; font-weight: bold;">/</span>
+                                <span class="gamepad-badge gp-dpad"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Stick Izquierdo / Cruceta</span>
                             </div>
-                            <span style="color: #5ad; font-weight: bold; font-size: 12px; letter-spacing: 1px;">GIRAR DIRECCIÓN</span>
+                            <span style="color: #5ad; font-weight: bold; font-size: 12px; letter-spacing: 1px;">GIRAR
+                                DIRECCIÓN</span>
                         </div>
                     </div>
 
                     <!-- Sección de Acciones Especiales -->
-                    <div style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; margin-top: 5px;">
-                        <span style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">ACCIONES ESPECIALES</span>
+                    <div
+                        style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px; margin-top: 5px;">
+                        <span
+                            style="color: var(--theme-color); font-size: 11px; font-weight: bold; letter-spacing: 2px;">ACCIONES
+                            ESPECIALES</span>
                     </div>
-                    
+
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <!-- Turbo -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-a" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-a"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Botón A / CROSS</span>
                             </div>
-                            <span style="color: #ff0; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,255,0,0.3);">TURBO (BOOST)</span>
+                            <span
+                                style="color: #ff0; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,255,0,0.3);">TURBO
+                                (BOOST)</span>
                         </div>
-                        
+
                         <!-- Freno Mano -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-x" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-x"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Botón X / SQUARE</span>
                             </div>
-                            <span style="color: #a5f; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(165,85,255,0.3);">DERRAPE (DRIFT)</span>
+                            <span
+                                style="color: #a5f; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(165,85,255,0.3);">DERRAPE
+                                (DRIFT)</span>
                         </div>
-                        
+
                         <!-- Cámara -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-y" style="width: 24px; height: 24px; margin-right: 10px;"></span>
+                                <span class="gamepad-badge gp-y"
+                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
                                 <span style="font-size: 13px; color: #eee;">Botón Y / TRIANGLE</span>
                             </div>
-                            <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">CAMBIAR CÁMARA</span>
+                            <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">CAMBIAR
+                                CÁMARA</span>
                         </div>
 
                         <!-- Marcadores -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-select" style="width: 20px; height: 20px; margin-right: 14px;"></span>
+                                <span class="gamepad-badge gp-select"
+                                    style="width: 20px; height: 20px; margin-right: 14px;"></span>
                                 <span style="font-size: 13px; color: #eee;">SELECT / SHARE</span>
                             </div>
-                            <span style="color: #f90; font-weight: bold; font-size: 12px; letter-spacing: 1px;">MOSTRAR MARCADORES</span>
+                            <span style="color: #f90; font-weight: bold; font-size: 12px; letter-spacing: 1px;">MOSTRAR
+                                MARCADORES</span>
                         </div>
 
                         <!-- Pausa -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-start" style="width: 20px; height: 20px; margin-right: 14px;"></span>
+                                <span class="gamepad-badge gp-start"
+                                    style="width: 20px; height: 20px; margin-right: 14px;"></span>
                                 <span style="font-size: 13px; color: #eee;">START / OPTIONS</span>
                             </div>
-                            <span style="color: #aaa; font-weight: bold; font-size: 12px; letter-spacing: 1px;">PAUSAR / CONTINUAR</span>
+                            <span style="color: #aaa; font-weight: bold; font-size: 12px; letter-spacing: 1px;">PAUSAR /
+                                CONTINUAR</span>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Estado en Tiempo Real -->
                 <div id="pause-gamepad-status"
                     style="background: rgba(0,0,0,0.4); padding: 10px; border: 1px solid var(--theme-color); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px; box-sizing: border-box;">
-                    <span id="pause-status-led" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #ff4444; box-shadow: 0 0 8px #ff4444;"></span>
-                    <span id="pause-status-text" style="color: #ff4444; font-weight: bold; letter-spacing: 1px;">TECLADO / MANDO DESCONECTADO</span>
+                    <span id="pause-status-led"
+                        style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #ff4444; box-shadow: 0 0 8px #ff4444;"></span>
+                    <span id="pause-status-text" style="color: #ff4444; font-weight: bold; letter-spacing: 1px;">TECLADO
+                        / MANDO DESCONECTADO</span>
                 </div>
             </div>
 
