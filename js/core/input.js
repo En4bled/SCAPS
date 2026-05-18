@@ -118,6 +118,29 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         return;
     }
 
+    // --- RESTRICCIÓN POR ESCENA: GAME OVER (FIN DE PARTIDA) ---
+    if (gameState === 'gameOver') {
+        const aPressed = gp.buttons[0].pressed;
+        if (aPressed && !lastButtonsState[0]) {
+            const btnRematch = document.getElementById('btn-gameover-rematch');
+            if (btnRematch) btnRematch.click();
+        }
+        lastButtonsState[0] = aPressed;
+
+        const bPressed = gp.buttons[1].pressed;
+        if (bPressed && !lastButtonsState[1]) {
+            const btnExit = document.getElementById('btn-gameover-exit');
+            if (btnExit) btnExit.click();
+        }
+        lastButtonsState[1] = bPressed;
+
+        // Bloquear todos los demás botones del mando en Game Over
+        for (let i = 2; i < gp.buttons.length; i++) {
+            lastButtonsState[i] = gp.buttons[i].pressed;
+        }
+        return;
+    }
+
     // --- RESTRICCIÓN POR EDITOR DE FÍSICAS ACTIVO ---
     const physicsOverlay = document.getElementById('physics-editor-overlay');
     const isPhysicsOpen = physicsOverlay && !physicsOverlay.classList.contains('hidden') && physicsOverlay.style.display !== 'none';

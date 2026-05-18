@@ -1015,29 +1015,69 @@
 
         <!-- PANTALLA DE FIN DE PARTIDA -->
         <div id="game-over-overlay"
-            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); font-family: 'Rajdhani', sans-serif;">
-            <h1 id="game-over-title"
-                style="color: #fff; font-size: 80px; text-shadow: 0 0 30px #5ad; margin-bottom: 10px; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
-                ¡PARTIDA FINALIZADA!</h1>
-            <div id="game-over-winner"
-                style="font-size: 40px; color: #f90; margin-bottom: 40px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px #f90;">
-                GANADOR: EQUIPO NARANJA</div>
-            <div
-                style="display: flex; gap: 40px; margin-bottom: 60px; background: rgba(255,255,255,0.05); padding: 30px 60px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <div style="text-align: center;">
-                    <div style="font-size: 14px; color: #5ad;">EQUIPO AZUL</div>
-                    <div id="final-score-blue" style="font-size: 64px; color: #fff;">0</div>
+            style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(12px); font-family: 'Share Tech Mono', monospace;">
+            
+            <div class="pixel-border" style="background: rgba(8, 10, 24, 0.9); padding: 40px; max-width: 650px; width: 90%; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 40px rgba(90, 170, 255, 0.25); border-image-source: linear-gradient(135deg, #5ad, #f90); border-image-slice: 1; border-width: 4px;">
+                
+                <h1 id="game-over-title"
+                    style="color: #fff; font-size: 56px; text-shadow: 0 0 25px #5ad; margin: 0 0 10px 0; letter-spacing: 4px; font-weight: 900; text-transform: uppercase; text-align: center;">
+                    ¡PARTIDA FINALIZADA!</h1>
+                
+                <div id="game-over-winner"
+                    style="font-size: 28px; color: #f90; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 15px #f90; text-align: center;">
+                    GANADOR: EQUIPO NARANJA</div>
+                
+                <!-- MARCADOR PREMIUM -->
+                <div style="display: flex; align-items: center; justify-content: space-around; width: 100%; margin-bottom: 35px; background: rgba(255,255,255,0.03); padding: 20px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 0 20px rgba(0,0,0,0.6);">
+                    
+                    <!-- EQUIPO AZUL -->
+                    <div style="text-align: center; width: 35%;">
+                        <div style="font-size: 16px; color: #5ad; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">EQUIPO AZUL</div>
+                        <div id="final-score-blue" style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(90, 170, 255, 0.8);">0</div>
+                    </div>
+                    
+                    <!-- VS DIVIDER -->
+                    <div style="font-size: 32px; color: rgba(255,255,255,0.15); font-weight: bold; font-style: italic;">VS</div>
+                    
+                    <!-- EQUIPO NARANJA -->
+                    <div style="text-align: center; width: 35%;">
+                        <div style="font-size: 16px; color: #f90; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px;">EQUIPO NARANJA</div>
+                        <div id="final-score-orange" style="font-size: 72px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(255, 153, 0, 0.8);">0</div>
+                    </div>
                 </div>
-                <div style="font-size: 48px; color: rgba(255,255,255,0.2);">VS</div>
-                <div style="text-align: center;">
-                    <div style="font-size: 14px; color: #f90;">EQUIPO NARANJA</div>
-                    <div id="final-score-orange" style="font-size: 64px; color: #fff;">0</div>
+
+                <!-- ESTADÍSTICAS DEL PARTIDO -->
+                <div style="width: 100%; margin-bottom: 35px; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.4); padding: 15px 25px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 14px; color: #888; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-weight: bold; text-transform: uppercase; text-align: center;">Tu Rendimiento</div>
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; color: #ddd;">
+                        <span>Goles Anotados:</span>
+                        <span id="gameover-stats-goals" style="color: #5ad; font-weight: bold;">0</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; color: #ddd;">
+                        <span>Asistencias:</span>
+                        <span id="gameover-stats-assists" style="color: #5ad; font-weight: bold;">0</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; color: #ddd;">
+                        <span>XP Ganada:</span>
+                        <span id="gameover-stats-xp" style="color: #f90; font-weight: bold;">+0 XP</span>
+                    </div>
                 </div>
-            </div>
-            <div class="menu-buttons" style="width: 400px; display: flex; flex-direction: column; gap: 15px;">
-                <button id="btn-gameover-rematch" class="menu-btn primary">¡REVANCHA!</button>
-                <button id="btn-gameover-exit" class="menu-btn" style="border-color: #f33; color: #f33;">SALIR AL
-                    MENÚ</button>
+
+                <!-- CONTROLES -->
+                <div class="menu-buttons" style="width: 100%; display: flex; gap: 20px;">
+                    <button id="btn-gameover-rematch" class="menu-btn primary" style="flex: 1; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
+                        <span class="gamepad-badge gp-a" style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
+                        ¡REVANCHA!
+                    </button>
+                    <button id="btn-gameover-exit" class="menu-btn" style="flex: 1; border-color: #f33; color: #f33; display: flex; align-items: center; justify-content: center; height: 50px; font-size: 18px; position: relative;">
+                        <span class="gamepad-badge gp-b" style="width: 1.8em !important; height: 1.8em !important; margin-right: 8px;"></span>
+                        SALIR AL MENÚ
+                    </button>
+                </div>
+                
             </div>
         </div>
     </div>

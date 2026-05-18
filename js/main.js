@@ -2544,19 +2544,32 @@ function showGameOver() {
             gameOverWinner.style.textShadow = `0 0 15px ${winnerColor}`;
         }
 
+        // --- ACTUALIZAR ESTADÍSTICAS INDIVIDUALES EN PANTALLA ---
+        let earnedXP = 500; // Base por partido terminado
+        if (player1) {
+            earnedXP += (player1.goals || 0) * 100;
+            earnedXP += (player1.assists || 0) * 50;
+        }
+        if (score.blue > score.orange) {
+            earnedXP += 250; // Victoria
+        }
+
+        const goalsEl = document.getElementById('gameover-stats-goals');
+        const assistsEl = document.getElementById('gameover-stats-assists');
+        const xpEl = document.getElementById('gameover-stats-xp');
+
+        if (goalsEl && player1) goalsEl.innerText = player1.goals || 0;
+        if (assistsEl && player1) assistsEl.innerText = player1.assists || 0;
+        if (xpEl) xpEl.innerText = `+${earnedXP} XP`;
+
         // --- ACTUALIZAR ESTADÍSTICAS PERSISTENTES ---
         if (USER_CONFIG.stats) {
             const stats = USER_CONFIG.stats;
             stats.totalMatches = (stats.totalMatches || 0) + 1;
-            stats.totalGoals = (stats.totalGoals || 0) + player1.goals;
-
-            let earnedXP = 500; // Base por partido terminado
-            earnedXP += player1.goals * 100;
-            earnedXP += player1.assists * 50;
+            stats.totalGoals = (stats.totalGoals || 0) + (player1 ? player1.goals : 0);
 
             if (score.blue > score.orange) {
                 stats.matchesWon = (stats.matchesWon || 0) + 1;
-                earnedXP += 250; // Bonus victoria
             } else if (score.orange > score.blue) {
                 stats.matchesLost = (stats.matchesLost || 0) + 1;
             }
