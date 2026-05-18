@@ -1345,25 +1345,41 @@ async function init() {
             showMenuScreen('initial');
         };
 
+        let lastModeClickTime = 0;
         document.querySelectorAll('.mode-option').forEach(btn => {
             btn.onclick = () => {
+                const now = Date.now();
+                if (now - lastModeClickTime < 300) {
+                    console.log("Ignorando click duplicado por antirebote 3D.");
+                    return;
+                }
+                lastModeClickTime = now;
+
                 if (btn.classList.contains('locked')) {
                     showInGameNotification("ACCESO DENEGADO: MODO EN DESARROLLO", "#f33", "🚫");
                     playSound('menu_error');
                     return;
                 }
-                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedMode = btn.dataset.mode;
-                playSound('menu_click');
-                validateMatchSetup();
                 
-                // Aplicar borde verde al botón de jugar si hay selección
-                const btnPlay = document.getElementById('setup-btn-play');
-                if (btnPlay) {
-                    btnPlay.style.border = '4px solid #2fb';
-                    btnPlay.style.boxShadow = '0 0 20px rgba(47, 255, 120, 0.4)';
+                const isAlreadySelected = btn.classList.contains('selected');
+                
+                // Limpiar selección de todos
+                document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
+                
+                if (isAlreadySelected) {
+                    // Deseleccionar
+                    selectedMode = null;
+                    playSound('menu_click');
+                    console.log("Modo deseleccionado.");
+                } else {
+                    // Seleccionar
+                    btn.classList.add('selected');
+                    selectedMode = btn.dataset.mode;
+                    playSound('menu_click');
+                    console.log("Modo seleccionado:", selectedMode);
                 }
+                
+                validateMatchSetup();
             };
         });
 
@@ -1384,7 +1400,8 @@ async function init() {
                 }
                 // Solo permitimos Escape (Botón B) para salir
                 if (e.code === 'Escape') {
-                    handleMenuBack();
+                    const btn = getEl('btn-credits-back');
+                    if (btn) btn.click();
                     e.preventDefault();
                 }
                 // Bloqueamos TODO lo demás mientras los créditos están abiertos
@@ -1465,17 +1482,15 @@ async function init() {
                     }
                 }
 
-                // LT (Q) y RT (E) para cambiar mapas (Directo a la lógica del carrusel)
+                // LT (Q) y RT (E) para cambiar mapas (Con transiciones 3D fluidas)
                 if (e.code === 'KeyQ') {
-                    currentMapPage--;
-                    loadSetupMaps();
+                    changeMap(currentMapPage - 1);
                     playSound('menu_click');
                     e.preventDefault();
                     return;
                 }
                 if (e.code === 'KeyE') {
-                    currentMapPage++;
-                    loadSetupMaps();
+                    changeMap(currentMapPage + 1);
                     playSound('menu_click');
                     e.preventDefault();
                     return;
@@ -1629,6 +1644,28 @@ async function init() {
 
         window.addEventListener('mousemove', (e) => {
             if (gameState === 'menu' || introPhase < 3) { mouseX = (e.clientX / window.innerWidth) - 0.5; mouseY = (e.clientY / window.innerHeight) - 0.5; }
+            
+            // Detección de Entrada Activa: RATÓN/TECLADO (evitando temblores accidentales)
+            if (Math.abs(e.movementX) > 1.5 || Math.abs(e.movementY) > 1.5) {
+                if (!document.body.classList.contains('input-method-mouse')) {
+                    document.body.classList.add('input-method-mouse');
+                    document.body.classList.remove('input-method-gamepad');
+                }
+            }
+        });
+
+        window.addEventListener('mousedown', () => {
+            if (!document.body.classList.contains('input-method-mouse')) {
+                document.body.classList.add('input-method-mouse');
+                document.body.classList.remove('input-method-gamepad');
+            }
+        });
+
+        window.addEventListener('keydown', () => {
+            if (!document.body.classList.contains('input-method-mouse')) {
+                document.body.classList.add('input-method-mouse');
+                document.body.classList.remove('input-method-gamepad');
+            }
         });
 
         // Listeners de Pausa
@@ -1797,6 +1834,30 @@ function gameLoop(timestamp) {
 
     // Actualizar estado del mando (Gamepad)
     pollGamepad(keysPressed, gameState, introPhase);
+
+    // Detección inteligente de actividad física en el mando en tiempo real
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let hasGamepadActivity = false;
+    for (const gp of gamepads) {
+        if (gp && gp.connected) {
+            // Evaluar botones presionados (con un margen para triggers analógicos)
+            if (gp.buttons.some(b => b.pressed || b.value > 0.15)) {
+                hasGamepadActivity = true;
+                break;
+            }
+            // Evaluar sticks analógicos fuera de la zona muerta estándar (0.22)
+            if (gp.axes.some(a => Math.abs(a) > 0.22)) {
+                hasGamepadActivity = true;
+                break;
+            }
+        }
+    }
+    if (hasGamepadActivity) {
+        if (!document.body.classList.contains('input-method-gamepad')) {
+            document.body.classList.add('input-method-gamepad');
+            document.body.classList.remove('input-method-mouse');
+        }
+    }
 
     // --- EFECTO JUICE: HIT-STOP ---
     // Si hay un impacto masivo, congelamos el tiempo y el render para dar sensación de brutalidad
@@ -3125,12 +3186,12 @@ async function loadSetupMaps(forcedDirection = '') {
             }
 
             // Estilos dinámicos para el efecto 3D
-            card.style.width = isCenter ? "15.6em" : "9.9em";
-            card.style.height = "19.8em"; // Altura compacta y uniforme para el mazo
+            card.style.width = isCenter ? "22em" : "14.5em";
+            card.style.height = "29em"; // Altura compacta y uniforme para el mazo
             card.style.minHeight = "0";
             card.style.zIndex = isCenter ? "10" : "5";
             card.style.opacity = isCenter ? "1" : "0.6";
-            card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+            card.style.transform = isCenter ? "scale(1) translateZ(0)" : `scale(0.9) translateZ(-100px) translateX(${offset * 3.0}em) rotateY(${offset * -20}deg)`;
             card.style.transition = "all 0.3s cubic-bezier(0.23, 1, 0.32, 1)"; // Transición ágil
             card.style.cursor = "pointer";
             card.style.background = "none"; /* Quitar fondos del contenedor principal para que los stack-back se encarguen */
@@ -3139,7 +3200,7 @@ async function loadSetupMaps(forcedDirection = '') {
             card.style.display = "flex";
             card.style.flexDirection = "column";
             card.style.boxSizing = "border-box";
-            card.style.margin = "0 -1.8em"; /* Mantener encabalgado de forma compacta en em */
+            card.style.margin = "0 -2.9em"; /* Mantener encabalgado de forma compacta en em */
             card.tabIndex = 0; // Enfocable para mando
 
             if (isCenter) {
@@ -3191,7 +3252,7 @@ async function loadSetupMaps(forcedDirection = '') {
                 // Hover reactivo con iluminación y acercamiento para tarjetas laterales (side)
                 card.onmouseenter = () => {
                     card.style.opacity = "1";
-                    card.style.transform = `scale(0.94) translateZ(-80px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+                    card.style.transform = `scale(0.94) translateZ(-80px) translateX(${offset * 3.0}em) rotateY(${offset * -20}deg)`;
                     
                     const front = card.querySelector('.card-stack-front');
                     if (front) {
@@ -3202,7 +3263,7 @@ async function loadSetupMaps(forcedDirection = '') {
  
                 card.onmouseleave = () => {
                     card.style.opacity = "0.6";
-                    card.style.transform = `scale(0.9) translateZ(-100px) translateX(${offset * 1.8}em) rotateY(${offset * -20}deg)`;
+                    card.style.transform = `scale(0.9) translateZ(-100px) translateX(${offset * 3.0}em) rotateY(${offset * -20}deg)`;
                     
                     const front = card.querySelector('.card-stack-front');
                     if (front) {
@@ -3543,23 +3604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listeners para Modos de Juego
-    document.querySelectorAll('.mode-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.classList.contains('locked')) {
-                showInGameNotification("MODO BLOQUEADO: PRÓXIMAMENTE", "#f90", "🔒");
-                return;
-            }
-
-            // Seleccionar modo válido
-            document.querySelectorAll('.mode-option').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            selectedMode = btn.getAttribute('data-mode');
-
-            playSound('menu_click');
-            validateMatchSetup();
-        });
-    });
+    // Toda la lógica de clics de modos se encuentra centralizada de forma segura en el manejador principal (línea 1348)
 
     const volIcon = document.getElementById('settings-vol-icon');
     if (volIcon) {

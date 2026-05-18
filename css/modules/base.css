@@ -6,6 +6,18 @@
 }
 
 /* --- BASE & VARIABLES GLOBALES --- */
+:root {
+    --theme-color: #5ad;
+    --theme-glow: rgba(90, 173, 237, 0.3);
+    --theme-glow-strong: rgba(90, 173, 237, 0.45);
+}
+
+body.theme-orange {
+    --theme-color: #f90;
+    --theme-glow: rgba(255, 153, 0, 0.3);
+    --theme-glow-strong: rgba(255, 153, 0, 0.45);
+}
+
 body {
     background-color: #000;
     color: white;
@@ -59,7 +71,7 @@ canvas {
 }
 
 .pixel-border {
-    border: 8px solid #5ad !important;
+    border: 8px solid var(--theme-color) !important;
     border-radius: 0 !important;
     position: relative;
     background-color: rgba(5, 5, 15, 0.7);
@@ -70,8 +82,19 @@ canvas {
         0 8px 0 -4px #0a0a19,
         -8px 0 0 -4px #0a0a19,
         8px 0 0 -4px #0a0a19,
-        0 0 40px rgba(90, 173, 237, 0.2);
+        0 0 40px var(--theme-glow);
     animation: pixel-neon-cycle 5s infinite alternate ease-in-out;
+}
+
+body.theme-orange .pixel-border {
+    border-color: var(--theme-color) !important;
+    box-shadow:
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19,
+        0 0 40px var(--theme-glow) !important;
+    animation: pixel-neon-cycle-orange 5s infinite alternate ease-in-out !important;
 }
 
 .pixel-title {
@@ -92,6 +115,18 @@ canvas {
             0 0 40px rgba(90, 173, 237, 0.3);
     }
     100% {
+        border-color: #33ccff !important;
+        box-shadow:
+            0 -8px 0 -4px #0a0a19,
+            0 8px 0 -4px #0a0a19,
+            -8px 0 0 -4px #0a0a19,
+            8px 0 0 -4px #0a0a19,
+            0 0 40px rgba(51, 204, 255, 0.3);
+    }
+}
+
+@keyframes pixel-neon-cycle-orange {
+    0% {
         border-color: #f90 !important;
         box-shadow:
             0 -8px 0 -4px #0a0a19,
@@ -100,22 +135,21 @@ canvas {
             8px 0 0 -4px #0a0a19,
             0 0 40px rgba(255, 153, 0, 0.3);
     }
+    100% {
+        border-color: #ffb84d !important;
+        box-shadow:
+            0 -8px 0 -4px #0a0a19,
+            0 8px 0 -4px #0a0a19,
+            -8px 0 0 -4px #0a0a19,
+            8px 0 0 -4px #0a0a19,
+            0 0 40px rgba(255, 184, 77, 0.3);
+    }
 }
 
 .neon-title {
-    animation: text-neon-cycle 5s infinite alternate ease-in-out;
+    color: var(--theme-color);
+    text-shadow: 0 0 10px var(--theme-color);
     font-family: 'Share Tech Mono', monospace !important;
-}
-
-@keyframes text-neon-cycle {
-    0% {
-        color: #5ad;
-        text-shadow: 0 0 10px #5ad;
-    }
-    100% {
-        color: #f90;
-        text-shadow: 0 0 10px #f90;
-    }
 }
 
 /* --- ESTILIZACIÓN DE SCROLLBARS (SCAPS THEME) --- */

@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-05-18 - *Gamepad Navigation, 3D Card Flip & Physics Polish*
+### Added
+- **Soporte de Card Flip 3D para Modos**:
+  - Implementado sistema de rotación 3D (giro de 180 grados) interactivo en las tarjetas de selección de modo al ser seleccionadas.
+  - Añadido reverso detallado a las tarjetas de modo con estadísticas de juego (modo, rival, duración, dificultad).
+  - Integradas imágenes de fondo oscurecidas mediante un degradado translúcido con el color temático (`#0b2e1b`) en la parte trasera de las tarjetas para mantener máxima legibilidad con estética premium.
+- **Navegación e Interacción por Mando (Gamepad)**:
+  - Navegación optimizada mediante D-PAD para la selección de modos y mapas en la pantalla Match Setup.
+  - Flujo de confirmación interactiva "Select-to-Confirm": las tarjetas de modo activas se iluminan en color dorado de foco al seleccionarse y requieren pulsar el botón START para iniciar la partida.
+  - Badges visuales de mandos (botones A, B, LT, RT, D-PAD, START) integrados nativamente en la UI de selección.
+  - Popups y modales de confirmación interactivos ("¿Salir del juego?", "Aviso de Modo Bloqueado") completamente controlables con el mando.
+- **Físicas de Conducción y Colisión Avanzadas**:
+  - Simulación de fricción lateral en neumáticos para mayor adherencia en curvas y deslizamiento realista.
+  - Dinámica zonal de impacto: choques con la defensa frontal transfieren una fuerza de impacto significativamente mayor al balón.
+  - Resistencia aerodinámica global (drag atmosférico) para evitar el movimiento perpetuo de las entidades.
+  - Efecto "Pinch" físico de alta velocidad cuando el balón es presionado fuertemente contra las paredes por un vehículo.
+  - Frame-rate independence garantizado: todas las físicas y simulaciones adaptadas al uso riguroso de delta-time (`timeScale`).
+- **Rediseño e Integración de Personalización**:
+  - Panel unificado de pestañas con distribución 50/50 simétrica y compacta para previsualizaciones en tiempo real (Boost y Explosiones).
+  - Integración del título general "SISTEMA DE PERSONALIZACIÓN" en un banner superior externo.
+  - Optimización de controles, espaciados y comportamiento responsivo de la cuadrícula de garaje y avatares.
+
+### Changed
+- **Estética de Selección unificada**: Sustitución de antiguos efectos de neón por un diseño de bordes pixelados azul/naranja premium y badges gamepad en la esquina inferior derecha.
+
+### Fixed
+- **Uniformidad de Tarjetas**: Corregido el problema de altura desigual en las tarjetas de la primera fila del Match Setup, forzando la consistencia en base a la proporción 1/1.23 mediante `.mode-card-front { height: 100% !important }`.
+- **Previsualización de Partículas**: Corregidos bucles infinitos de animación y fugas de memoria en los previsualizadores de Canvas en las pestañas de Boost/Explosión.
+
 ## [1.6.1] - 2026-05-17 - *Estandarización de Recursos y XAMPP Compatibility*
 ### Added
 - **Sanitización y Migración Automática de LocalStorage**: Nueva lógica en `loadUserConfig()` que intercepta configuraciones obsoletas almacenadas en el navegador (de versiones anteriores de SCAPS) y las migra de manera transparente a minúsculas y subcarpetas correctas. Esto previene de forma definitiva fallos visuales (estado *broken*) en usuarios recurrentes.

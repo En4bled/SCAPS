@@ -228,27 +228,28 @@
         0 0 30px #f90;
 }
 
-/* INDICADOR VISUAL BOTÓN 'A' PARA MANDO */
+/* INDICADOR VISUAL BOTÓN 'A' REAL PARA MANDO */
+/* INDICADOR VISUAL BOTÓN 'A' REAL PARA MANDO */
 .menu-btn:focus::after, .custom-tab-btn:focus::after, .subtab-btn:focus::after, .setup-map-item:focus::after {
-    content: "A";
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    background: #000;
-    color: #2fb;
-    border: 2px solid #2fb;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 0 10px rgba(47, 187, 47, 0.5);
-    z-index: 10;
+    content: "" !important;
+    position: absolute !important;
+    right: 0.6em !important; /* Alineación simétrica a la derecha */
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 2.2em !important;
+    height: 2.2em !important;
+    background-image: url('../../recursos/gamepad/T_X_A_Color_Alt_2.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
 }
 
 /* Ocultar indicador A en todos los botones de VOLVER/CANCELAR */
@@ -394,4 +395,387 @@ input[type="range"]::-moz-range-thumb {
     background: #5ad;
     border: 2px solid #000;
     border-radius: 0;
+}
+
+/* ==========================================================================
+   ESTILOS DE BOTONES DE MODO DE JUEGO ESTANDARIZADOS CON EL MENÚ CENTRAL
+   ========================================================================== */
+
+/* Contenedor del Botón de Modo (Estructura de caja del Lobby) */
+.mode-option {
+    border-radius: 0 !important;
+    padding: 0 !important; /* Permitir que el pixel-border llene la caja de forma limpia */
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: visible;
+}
+
+/* Caja de Imagen Retro-Pixelada: Adapta el pixel-border nativo a escala compacta de 4px para ambos temas */
+.mode-option .pixel-border {
+    border-width: 4px !important;
+    box-shadow:
+        0 -4px 0 -2px #0a0a19,
+        0 4px 0 -2px #0a0a19,
+        -4px 0 0 -2px #0a0a19,
+        4px 0 0 -2px #0a0a19 !important;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+/* Hover & Focus: Iluminación de escala de navegación táctil alineada con el juego */
+.mode-option:hover .pixel-border,
+.mode-option:focus .pixel-border {
+    background-color: rgba(90, 173, 237, 0.25) !important; /* Fondo azul ciberpunk de foco/hover */
+    box-shadow:
+        0 -4px 0 -2px #0a0a19,
+        0 4px 0 -2px #0a0a19,
+        -4px 0 0 -2px #0a0a19,
+        4px 0 0 -2px #0a0a19,
+        0 0 20px var(--theme-glow-strong) !important;
+}
+
+.mode-option:hover,
+.mode-option:focus {
+    outline: none;
+    transform: scale(1.04) !important;
+    z-index: 5;
+}
+
+/* --- ESTADOS SELECCIONADOS (Borde Verde Brillante #2fb de Confirmación) --- */
+
+.mode-option.selected .pixel-border {
+    border-color: #2fb !important; /* Verde ciberpunk premium para modos disponibles */
+    background-color: #0b2e1b !important; /* Fondo verde oscuro opaco y sólido */
+    box-shadow:
+        0 -4px 0 -2px #0a0a19,
+        0 4px 0 -2px #0a0a19,
+        -4px 0 0 -2px #0a0a19,
+        4px 0 0 -2px #0a0a19 !important; /* Reset de sombras exteriores (solo sombras negras pixel-border) */
+    animation: none !important; /* Detener la oscilación de neón para fijar el color verde de selección */
+}
+
+/* Escala de Confirmado sin sombras neón difusas */
+.mode-option.selected {
+    transform: scale(1.02) !important;
+}
+
+/* Modos de Juego Bloqueados con filtro atenuado premium y borde rojo */
+.mode-option.locked {
+    filter: brightness(0.65) grayscale(0.1) !important;
+    cursor: default !important;
+}
+
+.mode-option.locked .pixel-border {
+    border-color: #ff4444 !important; /* Rojo ciberpunk para modos bloqueados */
+    box-shadow:
+        0 -4px 0 -2px #0a0a19,
+        0 4px 0 -2px #0a0a19,
+        -4px 0 0 -2px #0a0a19,
+        4px 0 0 -2px #0a0a19,
+        0 0 15px rgba(255, 68, 68, 0.25) !important;
+    animation: none !important;
+}
+
+/* --- BOTÓN CONFIRMAR Y JUGAR EN MATCH SETUP --- */
+
+#setup-btn-play:not([disabled]) {
+    border-color: #2fb !important;
+    box-shadow:
+        0 -4px 0 -2px #0a0a19,
+        0 4px 0 -2px #0a0a19,
+        -4px 0 0 -2px #0a0a19,
+        4px 0 0 -2px #0a0a19 !important; /* Reset de sombras exteriores (solo sombras negras pixel-border) */
+    background: #0b2e1b !important; /* Fondo verde oscuro opaco y sólido */
+    color: #fff !important;
+    text-shadow: none !important;
+    transition: all 0.3s ease !important;
+}
+
+#setup-btn-play[disabled] {
+    border-color: #444 !important;
+    color: #666 !important;
+    background: rgba(20, 20, 20, 0.6) !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    transition: all 0.3s ease !important;
+}
+
+/* --- SOPORTE CARD FLIP 3D PARA MODOS DE JUEGO --- */
+
+.mode-option {
+    perspective: 1000px !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+/* Contenedor de Rotación Interna (Conserva preserve-3d libre de bugs de Grid/Flex) */
+.mode-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform-style: preserve-3d !important;
+    display: block !important; /* Forzar display block para evitar aplanamiento 3D en Chromium */
+}
+
+/* Cuando está seleccionada la tarjeta de modo, se da la vuelta 180 grados */
+.mode-option.selected .mode-card-inner {
+    transform: rotateY(180deg) !important;
+}
+
+/* Caras Frontal y Trasera con z-index e inmunidad al colapso */
+.mode-card-front, .mode-card-back {
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    border-radius: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Cara Frontal (En flujo relativo para dar la altura real de forma nativa) */
+.mode-card-front {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 2;
+    transform: rotateY(0deg);
+}
+
+/* Cara Trasera (Absoluta para superponerse exactamente sobre las dimensiones frontales) */
+.mode-card-back {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: rotateY(180deg) !important;
+    background-color: #0b2e1b !important; /* El color verde oscuro sólido del reverso */
+    border: 8px solid #2fb !important; /* Borde verde premium */
+    box-shadow:
+        0 -8px 0 -4px #0a0a19,
+        0 8px 0 -4px #0a0a19,
+        -8px 0 0 -4px #0a0a19,
+        8px 0 0 -4px #0a0a19 !important; /* Sombras pixeladas de bloque */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.2em 0.8em;
+    font-family: 'Share Tech Mono', monospace !important;
+    color: #fff;
+    text-align: left;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+/* Imagen de fondo oscurecida en el reverso de las tarjetas de modo */
+.mode-option[data-mode="practica"] .mode-card-back {
+    background-image: linear-gradient(rgba(11, 46, 27, 0.88), rgba(11, 46, 27, 0.88)), url('../../recursos/modes/practica.png') !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    image-rendering: crisp-edges !important;
+    image-rendering: pixelated !important;
+}
+
+.mode-option[data-mode="2vs2"] .mode-card-back {
+    background-image: linear-gradient(rgba(11, 46, 27, 0.88), rgba(11, 46, 27, 0.88)), url('../../recursos/modes/2vs2comp.png') !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    image-rendering: crisp-edges !important;
+    image-rendering: pixelated !important;
+}
+
+/* Contenido de la parte trasera de la tarjeta */
+.mode-card-back .card-back-title {
+    color: #2fb;
+    font-size: 1.25em;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 0.8em;
+    text-align: center;
+    width: 100%;
+    border-bottom: 2px solid rgba(47, 255, 120, 0.3);
+    padding-bottom: 0.3em;
+    text-transform: uppercase;
+}
+
+.mode-card-back .card-back-info {
+    font-size: 0.85em;
+    line-height: 1.6;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+}
+
+.mode-card-back .card-back-info div {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.mode-card-back .card-back-info span.label {
+    color: #888;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.mode-card-back .card-back-info span.value {
+    color: #fff;
+    font-weight: bold;
+    text-align: right;
+}
+
+/* Indicador A de mandos removido de los modos según preferencia de limpieza visual */
+
+/* --- CLASE UNIFICADA Y RESPONSIVE PARA INSIGNIAS DEL MANDO (.gamepad-badge) --- */
+.gamepad-badge {
+    display: inline-block;
+    width: 1.4em;
+    height: 1.4em;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle;
+    margin-right: 8px;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+}
+
+/* Escalado gigante de las insignias en botones del menú para ocupar casi todo el alto (solo menú principal) */
+#menu-initial .menu-btn .gamepad-badge,
+#btn-map-editor .gamepad-badge,
+#btn-credits .gamepad-badge {
+    width: 3.0em !important;
+    height: 3.0em !important;
+}
+
+/* Posición absoluta flotante en botones del menú principal (Ajustes, Changelog, Editor, Iniciales) */
+#menu-initial .menu-btn .gamepad-badge,
+#btn-map-editor .gamepad-badge,
+#btn-credits .gamepad-badge {
+    position: absolute !important;
+    left: 0.4em !important; /* Posicionado elegantemente y ajustado al borde izquierdo */
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-right: 0 !important;
+}
+
+
+
+/* Efecto hover y focus de micro-escala para los botones absolutos */
+#menu-initial .menu-btn:hover .gamepad-badge,
+#menu-initial .menu-btn:focus .gamepad-badge,
+#btn-map-editor:hover .gamepad-badge,
+#btn-map-editor:focus .gamepad-badge,
+#btn-credits:hover .gamepad-badge,
+#btn-credits:focus .gamepad-badge {
+    transform: translateY(-50%) scale(1.15) !important;
+}
+
+/* Efecto hover y focus de micro-escala para botones flex inline (Volver y Jugar en Match Setup) */
+#setup-btn-exit:hover .gamepad-badge,
+#setup-btn-exit:focus .gamepad-badge,
+#setup-btn-play:hover .gamepad-badge,
+#setup-btn-play:focus .gamepad-badge {
+    transform: scale(1.15) !important;
+}
+
+/* Mapeo de archivos PNG reales de la carpeta recursos/gamepad/ */
+.gamepad-badge.gp-a {
+    background-image: url('../../recursos/gamepad/T_X_A_Color_Alt_2.png');
+}
+.gamepad-badge.gp-b {
+    background-image: url('../../recursos/gamepad/T_X_B_Color_Alt_2.png');
+}
+.gamepad-badge.gp-x {
+    background-image: url('../../recursos/gamepad/T_X_X_Color_Alt_2.png');
+}
+.gamepad-badge.gp-y {
+    background-image: url('../../recursos/gamepad/T_X_Y_Color_Alt_2.png');
+}
+.gamepad-badge.gp-start {
+    background-image: url('../../recursos/gamepad/T_X_X_Alt_2.png'); /* Tres líneas (Start/Menú) */
+    width: 1.5em;
+}
+.gamepad-badge.gp-select {
+    background-image: url('../../recursos/gamepad/T_X_Share_Alt_2.png'); /* Dos cuadraditos (View/Select) */
+    width: 1.5em;
+}
+.gamepad-badge.gp-rt {
+    background-image: url('../../recursos/gamepad/T_X_RT_Alt_2.png');
+    width: 1.8em;
+}
+.gamepad-badge.gp-lt {
+    background-image: url('../../recursos/gamepad/T_X_LT_Alt_2.png');
+    width: 1.8em;
+}
+.gamepad-badge.gp-lb {
+    background-image: url('../../recursos/gamepad/T_X_LB_Alt_2.png');
+    width: 1.8em;
+}
+.gamepad-badge.gp-rb {
+    background-image: url('../../recursos/gamepad/T_X_RB_Alt_2.png');
+    width: 1.8em;
+}
+.gamepad-badge.gp-dpad {
+    background-image: url('../../recursos/gamepad/T_X_Dpad_Both.png');
+    width: 1.8em;
+    height: 1.8em;
+}
+
+/* Escalado Premium para los iconos LT, RT y D-Pad en el selector de mapa y modo */
+#setup-map-column .gamepad-badge.gp-lt,
+#setup-map-column .gamepad-badge.gp-rt,
+#setup-mode-column .gamepad-badge.gp-dpad {
+    width: 3.2em !important;
+    height: 3.2em !important;
+}
+
+/* --- SISTEMA INTELIGENTE DE DETECCIÓN DE ENTRADA ACTIVA (JS + CSS) --- */
+
+/* 1. Método Activo: RATÓN/TECLADO (Ocultar insignias de mando por defecto, excepto en la intro informativa) */
+body.input-method-mouse .gamepad-badge:not(#intro-slide-2 .gamepad-badge),
+body.input-method-mouse .mode-option:focus::after,
+body.input-method-mouse .mode-option.selected::after,
+body.input-method-mouse .menu-btn:focus::after,
+body.input-method-mouse .custom-tab-btn:focus::after,
+body.input-method-mouse .subtab-btn:focus::after,
+body.input-method-mouse .setup-map-item:focus::after {
+    display: none !important;
+}
+
+/* 2. Método Activo: MANDO (Mostrar insignias de mando e ignorar cursor) */
+body.input-method-gamepad .gamepad-badge {
+    display: inline-block !important;
+}
+body.input-method-gamepad .menu-btn .gamepad-badge {
+    display: block !important; /* Mantener la alineación absolute */
+}
+body.input-method-gamepad .mode-option:focus::after,
+body.input-method-gamepad .mode-option.selected::after,
+body.input-method-gamepad .menu-btn:focus::after,
+body.input-method-gamepad .custom-tab-btn:focus::after,
+body.input-method-gamepad .subtab-btn:focus::after,
+body.input-method-gamepad .setup-map-item:focus::after {
+    display: block !important;
+}
+
+/* Neutralización física del cursor durante navegación por mando */
+body.input-method-gamepad .menu-btn,
+body.input-method-gamepad .mode-option,
+body.input-method-gamepad .setup-map-item,
+body.input-method-gamepad .custom-tab-btn,
+body.input-method-gamepad .custom-save-btn,
+body.input-method-gamepad .custom-preview-btn {
+    pointer-events: none !important;
 }

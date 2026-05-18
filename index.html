@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body>
+<body class="input-method-mouse">
 
     <!-- Intro BRANDING + LEGAL -->
     <div id="intro-screen">
@@ -51,9 +51,7 @@
                 <p>Se han tomado ideas, conceptos y mecánicas inspiradas en diversos títulos populares de la industria
                     para crear esta experiencia. No obstante, cualquier similitud directa con productos comerciales
                     existentes es meramente <strong>circunstancial y coincidencia absoluta</strong>.</p>
-                <div class="blink-text" style="margin-top:30px;">PULSA <span style="color:#f90">ESPACIO</span> o <span
-                        style="color:#f90">START</span> PARA
-                    CONTINUAR</div>
+                <div class="blink-text" style="margin-top:30px; display: flex; align-items: center; justify-content: center; gap: 0.25em;">PULSA <span style="color:#f90">ESPACIO</span> o <span class="gamepad-badge gp-start" style="margin: 0; width: 1.5em; height: 1.5em;"></span> PARA CONTINUAR</div>
             </div>
         </div>
     </div>
@@ -69,11 +67,7 @@
             <div id="menu-initial" class="menu-buttons">
                 <button id="btn-play" class="menu-btn primary">Jugar</button>
                 <button id="btn-custom" class="menu-btn">Personalizar</button>
-                <button id="btn-settings" class="menu-btn" style="position: relative;">
-                    <span
-                        style="position: absolute; left: 1.2em; top: 50%; transform: translateY(-50%); background:#000; color:#fff; border-radius:4px; padding: 1.5px 5px; font-size:8px; border:1.5px solid #fff; font-family: Arial, sans-serif; font-weight: bold; letter-spacing: 0; line-height: 1;">START</span>
-                    Ajustes
-                </button>
+                <button id="btn-settings" class="menu-btn">Ajustes</button>
                 <button id="btn-exit" class="menu-btn">SALIR</button>
             </div>
 
@@ -96,16 +90,14 @@
             <!-- Botón Editor de Mapas (Encima de Notas de Desarrollo) -->
             <button id="btn-map-editor" class="menu-btn"
                 style="position: absolute; bottom: 7.5em; right: 4.5em; width: 17em; height: 3.5em; display: flex; align-items: center; justify-content: center; font-size: 0.8em; border-color: #f90; color: #f90; padding: 0; margin: 0;">
-                <span
-                    style="position: absolute; left: 1.2em; top: 50%; transform: translateY(-50%); width:18px; height:18px; background:#000; color:#ff0; border-radius:50%; font-size:12px; border:1.5px solid #ff0; font-family: Arial, sans-serif; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;">Y</span>
+                <span class="gamepad-badge gp-y"></span>
                 EDITOR DE MAPAS
             </button>
 
             <!-- Botón Notas de Desarrollo (Abajo derecha) -->
             <button id="btn-credits" class="menu-btn"
                 style="position: absolute; bottom: 3.2em; right: 4.5em; font-size: 0.8em; width: 17em; height: 3.5em; z-index: 2000; border-color: #5ad; color: #5ad; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center;">
-                <span
-                    style="position: absolute; left: 1.2em; top: 50%; transform: translateY(-50%); background:#000; color:#fff; border-radius:4px; padding: 1.5px 5px; font-size:8px; border:1.5px solid #fff; font-family: Arial, sans-serif; font-weight: bold; letter-spacing: 0; line-height: 1;">SELECT</span>
+                <span class="gamepad-badge gp-select"></span>
                 CHANGELOG
             </button>
 
@@ -592,8 +584,17 @@
                 <div id="credits-scroll-container" class="pixel-border"
                     style="background: rgba(0,0,0,0.6); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 13px; line-height: 1.6; max-height: 350px; overflow-y: auto; border: 2px solid rgba(90,173,237,0.3) !important; text-align: left;">
 
-                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS
+                    <p style="color: #f90; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.7.0 - GAMEPAD, CARD FLIP & PHYSICS
                         (ACTUAL)</p>
+                    <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
+                        <li>+ Soporte interactivo de Card Flip 3D con reverso de estadísticas oscurecido en los modos.</li>
+                        <li>+ Navegación D-PAD en Match Setup y flujo de confirmación "Select-to-Confirm" con START.</li>
+                        <li>+ Indicadores visuales y insignias físicas de mando (A, B, LT, RT, START) integradas en UI.</li>
+                        <li>+ Físicas pro: fricción lateral, impacto frontal zonal, drag de aire, efecto pinch y delta-time.</li>
+                        <li>+ Rediseño simétrico de Personalización 50/50 y estabilización de previsualizadores de Canvas.</li>
+                    </ul>
+
+                    <p style="color: #5ad; font-weight: bold; margin-bottom: 5px;">VERSIÓN 1.6.0 - GAME FEEL & PHYSICS</p>
                     <ul style="list-style: none; padding: 0; color: #eee; margin-bottom: 15px; font-size: 11px;">
                         <li>+ Implementación de Hit-Stop (micro-pausas) y Screen Shake selectivo.</li>
                         <li>+ Sistema de Post-procesado Bloom (resplandor) global y configurable.</li>
@@ -661,9 +662,8 @@
                             style="font-weight:bold; color:#fff;">SYSTEM SIMESIA</span> @ 2026</p>
                 </div>
 
-                <button id="btn-credits-back" class="menu-btn" style="width: 100%; margin: 0; padding: 10px;">
-                    <span
-                        style="display:inline-block; width:22px; height:22px; background:#000; color:#f33; border-radius:50%; line-height:22px; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                <button id="btn-credits-back" class="menu-btn" style="width: fit-content; margin: 15px auto 0 auto; padding: 0.85em 2.5em; display: flex; align-items: center; justify-content: center; gap: 0.5em;">
+                    <span class="gamepad-badge gp-b" style="margin: 0;"></span>
                     VOLVER
                 </button>
             </div>
@@ -768,140 +768,183 @@
 
         <!-- ESCENA DE SELECCIÓN (ESTILO FINAL CON FONDO DE ESTADIO) -->
         <div id="match-setup-overlay" class="hidden"
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif;">
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 5000; display: none; flex-direction: column; justify-content: center; align-items: center; font-family: 'Rajdhani', sans-serif; font-size: min(0.85vw, 1.6vh) !important;">
             <h1 class="neon-title pixel-title personalization-banner"
                 style="margin: 0 0 25px 0 !important; text-align: center;">
                 SELECCIÓN DE MAPA Y MODO</h1>
-            <div style="display: flex; gap: 1.2em; margin-bottom: 1.2em; align-items: stretch;">
+            <div style="display: flex; gap: 1.6em; margin-bottom: 1.6em; align-items: stretch;">
                 <!-- Columna Mapas -->
                 <div id="setup-map-column" class="neon-container pixel-border"
-                    style="width: 32.5em; height: 24.5em; border-radius: 0; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0.8em;">
+                    style="width: 48em; height: 36.5em; border-radius: 0; overflow: hidden; display: flex; flex-direction: column; padding-bottom: 0.8em;">
                     <div
-                        style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0 1em;">
+                        style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.8em 1em 0.4em 1em;">
                         <!-- Indicador LT -->
-                        <div style="position: absolute; left: 1em; display: flex; align-items: center; gap: 0.3em;">
-                            <span
-                                style="display:inline-block; width:2em; height:1.25em; background:#000; color:#fff; border-radius:4px; line-height:1.25em; font-size:12px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">LT</span>
+                        <div style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                            <span class="gamepad-badge gp-lt" style="margin: 0;"></span>
                         </div>
 
                         <h2 class="neon-title"
-                            style="margin: 0.5em 0 0.25em; font-size: 1.6em; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                            style="margin: 0.5em 0 0.25em; font-size: 2.1em; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
                             MAPAS
                         </h2>
 
                         <!-- Indicador RT -->
-                        <div style="position: absolute; right: 3em; display: flex; align-items: center; gap: 0.3em;">
-                            <span
-                                style="display:inline-block; width:2em; height:1.25em; background:#000; color:#fff; border-radius:4px; line-height:1.25em; font-size:12px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">RT</span>
+                        <div style="position: absolute; right: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                            <span class="gamepad-badge gp-rt" style="margin: 0;"></span>
                         </div>
                     </div>
                     <div id="setup-map-list"
-                        style="display: flex; justify-content: center; align-items: center; height: 21em; padding: 0.5em 1em; flex: 1; overflow: visible;">
+                        style="display: flex; justify-content: center; align-items: center; height: 32.5em; padding: 0.5em 1em; flex: 1; overflow: visible;">
                     </div>
                 </div>
                 <!-- Columna Modos -->
                 <div id="setup-mode-column" class="neon-container pixel-border"
-                    style="width: 32.5em; height: 24.5em; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0 0 0.5em 0;">
+                    style="width: 48em; height: 36.5em; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0 0 0.5em 0;">
 
                     <div
-                        style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0 1em;">
+                        style="position: relative; display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.8em 1em 0.4em 1em;">
                         <!-- Indicador D-PAD -->
-                        <div style="position: absolute; left: 1em; display: flex; align-items: center; gap: 0.3em;">
-                            <span
-                                style="display:inline-block; width:1.6em; height:1.6em; background:#000; color:#fff; border-radius:50%; line-height:1.4em; font-size:18px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; text-align: center;">+</span>
+                        <div style="position: absolute; left: 3.5em; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 0.3em;">
+                            <span class="gamepad-badge gp-dpad" style="margin: 0;"></span>
                         </div>
 
                         <h2 class="neon-title"
-                            style="margin: 0.5em 0 0.25em; font-size: 1.6em; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
+                            style="margin: 0.5em 0 0.25em; font-size: 2.1em; letter-spacing: 5px; font-weight: 900; text-transform: uppercase;">
                             MODOS
                         </h2>
                     </div>
                     <div id="setup-mode-list"
-                        style="display: flex; flex-direction: column; gap: 0.5em; padding: 0 1em; justify-content: center; flex: 1;">
+                        style="display: flex; flex-direction: column; gap: 1.2em; padding: 0 1.0em; justify-content: center; flex: 1;">
                         <!-- Fila 1 (Principales) -->
                         <div
-                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8em; justify-items: center;">
-                            <button class="mode-option" data-mode="practica"
-                                style="border-radius: 0; padding: 4px; width: 8.6em; transition: all 0.3s; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 10.4em; overflow: hidden;">
-                                    <img src="recursos/modes/practica.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            style="display: flex; justify-content: center; gap: 1.2em; width: 100%;">
+                            <div class="mode-option" role="button" tabindex="0" data-mode="practica"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
+                                <div class="mode-card-inner">
+                                    <!-- Cara Frontal -->
+                                    <div class="mode-card-front pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                        <img src="recursos/modes/practica.png"
+                                            style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                    </div>
+                                    <!-- Cara Trasera -->
+                                    <div class="mode-card-back">
+                                        <div class="card-back-title">PRÁCTICA</div>
+                                        <div class="card-back-info">
+                                            <div>
+                                                <span class="label">MODO:</span>
+                                                <span class="value" style="color: #2fb;">ENTRENAMIENTO</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">RIVAL:</span>
+                                                <span class="value">NINGUNO</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">DURACIÓN:</span>
+                                                <span class="value">INFINITA</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">BOOST:</span>
+                                                <span class="value" style="color: #2fb;">ILIMITADO</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </button>
-                            <button class="mode-option" data-mode="2vs2"
-                                style="border-radius: 0; padding: 4px; width: 8.6em; transition: all 0.3s; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 10.4em; overflow: hidden;">
-                                    <img src="recursos/modes/2vs2comp.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            </div>
+                            <div class="mode-option" role="button" tabindex="0" data-mode="2vs2"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
+                                <div class="mode-card-inner">
+                                    <!-- Cara Frontal -->
+                                    <div class="mode-card-front pixel-border" style="width: 100%; height: 100%; overflow: hidden;">
+                                        <img src="recursos/modes/2vs2comp.png"
+                                            style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                                    </div>
+                                    <!-- Cara Trasera -->
+                                    <div class="mode-card-back">
+                                        <div class="card-back-title">COMPETITIVO</div>
+                                        <div class="card-back-info">
+                                            <div>
+                                                <span class="label">MODO:</span>
+                                                <span class="value" style="color: #2fb;">2 VS 2</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">RIVAL:</span>
+                                                <span class="value">BOTS IA</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">DURACIÓN:</span>
+                                                <span class="value">1 MINUTO</span>
+                                            </div>
+                                            <div>
+                                                <span class="label">DIFICULTAD:</span>
+                                                <span class="value" style="color: #2fb;">AVANZADA</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </button>
-                            <button class="mode-option locked" data-mode="3vs3"
-                                style="border-radius: 0; padding: 4px; width: 8.6em; transition: all 0.3s; position: relative; background: transparent;">
+                            </div>
+                            <div class="mode-option locked" role="button" tabindex="0" data-mode="3vs3"
+                                style="border-radius: 0; padding: 4px; width: calc((100% - 2 * 1.2em) / 3); transition: all 0.3s; position: relative; background: transparent; aspect-ratio: 1 / 1.23; cursor: pointer; display: block; box-sizing: border-box;">
                                 <div class="pixel-border"
-                                    style="width: 100%; height: 10.4em; overflow: hidden;">
+                                    style="width: 100%; height: 100%; overflow: hidden;">
                                     <img src="recursos/modes/3vs3comp.png"
                                         style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
                                 </div>
                                 <div class="mode-soon-badge">PRÓXIMAMENTE</div>
-                            </button>
+                            </div>
                         </div>
                         <!-- Fila 2 (Secundarios más altos) -->
                         <div
-                            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5em; justify-items: center; margin-top: 0.3em;">
-                            <button class="mode-option locked" data-mode="torneo"
-                                style="border-radius: 0; padding: 4px; width: 6.8em; transition: all 0.3s; position: relative; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 6.8em; overflow: hidden;">
-                                    <img src="recursos/modes/campeonato.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
-                                </div>
-                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                            </button>
-                            <button class="mode-option locked" data-mode="clasificacion"
-                                style="border-radius: 0; padding: 4px; width: 6.8em; transition: all 0.3s; position: relative; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 6.8em; overflow: hidden;">
-                                    <img src="recursos/modes/clasificacion.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
-                                </div>
-                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                            </button>
-                            <button class="mode-option locked" data-mode="online"
-                                style="border-radius: 0; padding: 4px; width: 6.8em; transition: all 0.3s; position: relative; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 6.8em; overflow: hidden;">
-                                    <img src="recursos/modes/online.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
-                                </div>
-                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                            </button>
-                            <button class="mode-option locked" data-mode="privadas"
-                                style="border-radius: 0; padding: 4px; width: 6.8em; transition: all 0.3s; position: relative; background: transparent;">
-                                <div class="pixel-border"
-                                    style="width: 100%; height: 6.8em; overflow: hidden;">
-                                    <img src="recursos/modes/privadas.png"
-                                        style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
-                                </div>
-                                <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
-                            </button>
+                            style="display: flex; justify-content: center; gap: 1.0em; width: 100%; margin-top: 0.5em;">
+                        <div class="mode-option locked" role="button" tabindex="0" data-mode="torneo"
+                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                            <div class="pixel-border"
+                                style="width: 100%; height: 100%; overflow: hidden;">
+                                <img src="recursos/modes/campeonato.png"
+                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            </div>
+                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
+                        </div>
+                        <div class="mode-option locked" role="button" tabindex="0" data-mode="clasificacion"
+                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                            <div class="pixel-border"
+                                style="width: 100%; height: 100%; overflow: hidden;">
+                                <img src="recursos/modes/clasificacion.png"
+                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            </div>
+                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
+                        </div>
+                        <div class="mode-option locked" role="button" tabindex="0" data-mode="online"
+                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                            <div class="pixel-border"
+                                style="width: 100%; height: 100%; overflow: hidden;">
+                                <img src="recursos/modes/online.png"
+                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            </div>
+                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
+                        </div>
+                        <div class="mode-option locked" role="button" tabindex="0" data-mode="privadas"
+                            style="border-radius: 0; padding: 4px; width: calc((100% - 3 * 1.0em) / 4); transition: all 0.3s; position: relative; background: transparent; cursor: pointer; display: block; box-sizing: border-box; aspect-ratio: 1 / 1;">
+                            <div class="pixel-border"
+                                style="width: 100%; height: 100%; overflow: hidden;">
+                                <img src="recursos/modes/privadas.png"
+                                    style="width:100%; height:100%; object-fit: fill; image-rendering: crisp-edges; image-rendering: pixelated;">
+                            </div>
+                            <div class="mode-soon-badge small">PRÓXIMAMENTE</div>
+                        </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="menu-buttons"
-                style="width: 66em; display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 1em; align-items: stretch !important;">
+                style="width: 97.6em; display: flex !important; flex-direction: row !important; justify-content: space-between !important; margin-top: 1em; align-items: stretch !important;">
                 <button id="setup-btn-exit" class="menu-btn"
-                    style="border-color: #ff4444; color: #ff4444; width: 20em; font-size: 1.1em; padding: 0.6em; margin: 0; display: flex; align-items: center; justify-content: center;">
-                    <span
-                        style="display:inline-block; width:1.25em; height:1.25em; background:#000; color:#f33; border-radius:50%; line-height:1.25em; font-size:14px; margin-right:10px; border:2px solid #f33; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle;">B</span>
+                    style="border-color: #ff4444; color: #ff4444; width: 32em; font-size: 1.25em; padding: 0.42em 0.7em; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <span class="gamepad-badge gp-b" style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
                     VOLVER
                 </button>
                 <button id="setup-btn-play" class="menu-btn primary" disabled
-                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 20em; font-size: 1.1em; padding: 0.6em; margin: 0; display: flex; align-items: center; justify-content: center;">
-                    <span
-                        style="display:inline-block; background:#000; color:#fff; border-radius:6px; padding: 2px 8px; font-size:12px; margin-right:15px; border:2px solid #fff; font-family: Arial, sans-serif; font-weight: bold; vertical-align: middle; letter-spacing: 0;">START</span>
+                    style="background: #4CAF50; border-color: #2e7d32; color: #fff; width: 32em; font-size: 1.25em; padding: 0.42em 0.7em; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <span class="gamepad-badge gp-start" style="margin-right: 10px; width: 2.2em !important; height: 2.2em !important;"></span>
                     CONFIRMAR Y JUGAR
                 </button>
             </div>

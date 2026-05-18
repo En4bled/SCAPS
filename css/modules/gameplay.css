@@ -163,43 +163,7 @@
     opacity: 1;
 }
 
-/* --- CONFIGURACIÓN DE PARTIDOS (MODOS Y MAPAS) --- */
-.mode-option {
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: visible;
-}
-
-.mode-option:hover:not(.locked) {
-    transform: scale(1.05);
-}
-
-.mode-option.selected .pixel-border {
-    border-color: #000 !important;
-    background: #2fb !important;
-    box-shadow: 0 0 20px rgba(47, 255, 120, 0.4) !important;
-}
-
-.mode-option:focus .pixel-border {
-    border-color: #000 !important;
-    background: #5ad !important;
-}
-
-.mode-option.locked:focus .pixel-border {
-    background: #f33 !important;
-    border-color: #000 !important;
-}
-
-.mode-option.locked {
-    filter: brightness(0.7);
-    cursor: default;
-}
+/* --- CONFIGURACIÓN DE PARTIDOS (MODOS Y MAPAS - COMPONENTES REMOVIDOS PARA EVITAR CONFLICTOS) --- */
 
 #setup-btn-play:disabled {
     opacity: 0.3;
@@ -227,28 +191,6 @@
 .setup-map-item .pixel-border {
     filter: none !important;
     -webkit-font-smoothing: subpixel-antialiased;
-}
-
-/* Indicador A específico para los modos (Abajo Derecha) */
-.mode-option:focus::after, .mode-option.selected::after {
-    content: "A";
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    width: 22px;
-    height: 22px;
-    background: #000;
-    color: #2fb;
-    border: 2px solid #2fb;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 0 10px rgba(47, 187, 47, 0.5);
-    z-index: 100;
 }
 
 /* Ajuste específico para mapas */

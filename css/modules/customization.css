@@ -2085,7 +2085,7 @@ body.theme-orange #btn-exit {
     background: #0a0a19 !important;
     z-index: 5;
     transform: translateZ(0);
-    padding: 10px;
+    padding: 0.6em;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -2095,14 +2095,14 @@ body.theme-orange #btn-exit {
 /* Primera carta apilada debajo (Capa intermedia, desplazada verticalmente hacia arriba y en profundidad Z) */
 .setup-map-item .card-stack-back-1 {
     position: absolute;
-    top: -6px; /* Desplazamiento hacia arriba para el apilado */
-    left: 4px;
-    right: 4px;
+    top: -0.4em; /* Desplazamiento hacia arriba para el apilado */
+    left: 0.25em;
+    right: 0.25em;
     height: 100%;
     background: #060610 !important;
     border: 2px solid #22223a !important;
     z-index: 3;
-    transform: translateZ(-20px) scale(0.98);
+    transform: translateZ(-1.3em) scale(0.98);
     opacity: 0.8;
     pointer-events: none;
     box-sizing: border-box;
@@ -2112,14 +2112,14 @@ body.theme-orange #btn-exit {
 /* Segunda carta apilada debajo (Capa del fondo, más desplazada hacia arriba, pequeña y oscura) */
 .setup-map-item .card-stack-back-2 {
     position: absolute;
-    top: -12px; /* Mayor desplazamiento para el mazo */
-    left: 8px;
-    right: 8px;
+    top: -0.8em; /* Mayor desplazamiento para el mazo */
+    left: 0.5em;
+    right: 0.5em;
     height: 100%;
     background: #030308 !important;
     border: 2px solid #111122 !important;
     z-index: 1;
-    transform: translateZ(-40px) scale(0.96);
+    transform: translateZ(-2.6em) scale(0.96);
     opacity: 0.55;
     pointer-events: none;
     box-sizing: border-box;
@@ -2128,12 +2128,12 @@ body.theme-orange #btn-exit {
 
 /* Efecto de paralaje interactivo en hover de la carta central: El mazo apilado acompaña con profundidad real */
 .setup-map-item.center:hover .card-stack-back-1 {
-    transform: translateZ(-12px) scale(0.985) translateY(-3px);
+    transform: translateZ(-0.8em) scale(0.985) translateY(-0.2em);
     opacity: 0.9;
 }
 
 .setup-map-item.center:hover .card-stack-back-2 {
-    transform: translateZ(-24px) scale(0.97) translateY(-6px);
+    transform: translateZ(-1.6em) scale(0.97) translateY(-0.4em);
     opacity: 0.7;
 }
 
@@ -2221,11 +2221,11 @@ body.theme-orange #btn-exit {
     width: 100%;
     height: 100%;
     background: #000005 !important;
-    padding: 8px !important;
+    padding: 0.5em !important;
     display: flex;
     flex-direction: column;
     justify-content: space-between; /* Cabecera arriba, información abajo */
-    gap: 8px;
+    gap: 0.5em;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -2236,16 +2236,16 @@ body.theme-orange #btn-exit {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: 30px;
-    gap: 6px;
+    height: 2.0em;
+    gap: 0.4em;
     z-index: 5;
     position: relative;
 }
 
 /* Gema Rombo Izquierda de Cristal */
 .tcg-icon-left {
-    width: 20px;
-    height: 20px;
+    width: 1.4em;
+    height: 1.4em;
     border: 2px solid rgba(74, 74, 96, 0.8);
     background: rgba(17, 17, 30, 0.7);
     backdrop-filter: blur(4px);
@@ -2258,8 +2258,8 @@ body.theme-orange #btn-exit {
     box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
 }
 .tcg-diamond-inner {
-    width: 8px;
-    height: 8px;
+    width: 0.55em;
+    height: 0.55em;
     background: #5ad;
     box-shadow: 0 0 8px rgba(90,173,237,0.8);
 }
@@ -2267,7 +2267,7 @@ body.theme-orange #btn-exit {
 /* Banner de Título de Cristal Traslúcido */
 .tcg-title-banner {
     flex: 1;
-    height: 24px;
+    height: 1.6em;
     background: rgba(32, 32, 48, 0.75);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -2275,13 +2275,13 @@ body.theme-orange #btn-exit {
     display: flex;
     align-items: center;
     justify-content: center;
-    clip-path: polygon(6px 0%, calc(100% - 6px) 0%, 100% 50%, calc(100% - 6px) 100%, 6px 100%, 0% 50%);
+    clip-path: polygon(0.4em 0%, calc(100% - 0.4em) 0%, 100% 50%, calc(100% - 0.4em) 100%, 0.4em 100%, 0% 50%);
 }
 .tcg-map-name {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
+    font-size: 0.85em;
     font-weight: 900;
-    letter-spacing: 2px;
+    letter-spacing: 0.15em;
     color: #fff;
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     text-transform: uppercase;
@@ -2289,8 +2289,8 @@ body.theme-orange #btn-exit {
 
 /* Gema Hexagonal Derecha de Cristal */
 .tcg-icon-right {
-    width: 20px;
-    height: 20px;
+    width: 1.4em;
+    height: 1.4em;
     border: 2px solid rgba(74, 74, 96, 0.8);
     background: rgba(17, 17, 30, 0.7);
     backdrop-filter: blur(4px);
@@ -2303,8 +2303,8 @@ body.theme-orange #btn-exit {
     box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
 }
 .tcg-hexagon-inner {
-    width: 10px;
-    height: 10px;
+    width: 0.7em;
+    height: 0.7em;
     background: #5ad;
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     box-shadow: 0 0 8px rgba(90,173,237,0.8);
@@ -2387,26 +2387,26 @@ body.theme-orange #btn-exit {
     border: 2px solid rgba(90, 173, 237, 0.25);
     display: flex;
     flex-direction: column;
-    padding: 6px 8px;
+    padding: 0.4em 0.5em;
     box-sizing: border-box;
     justify-content: space-between;
     z-index: 5; /* Al frente */
     position: relative;
-    height: 105px; /* Altura fija elegante */
+    height: 7.2em; /* Altura responsiva en em */
 }
 
 .tcg-info-border-line {
     width: 100%;
-    height: 2px;
+    height: 0.12em;
     background: rgba(30, 30, 45, 0.6);
-    margin-bottom: 4px;
+    margin-bottom: 0.25em;
 }
 
 /* Estadísticas del Mapa */
 .tcg-stats-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25em;
 }
 
 .tcg-stat-row {
@@ -2414,14 +2414,14 @@ body.theme-orange #btn-exit {
     justify-content: space-between;
     align-items: center;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 11px;
+    font-size: 0.75em;
     font-weight: 700;
     color: #a0a0c0;
     border-bottom: 1px dotted rgba(30, 30, 45, 0.6);
-    padding-bottom: 2px;
+    padding-bottom: 0.15em;
 }
 .tcg-stat-label {
-    letter-spacing: 1px;
+    letter-spacing: 0.05em;
     color: #8a8ab0;
 }
 .tcg-stat-value {
@@ -2434,18 +2434,18 @@ body.theme-orange #btn-exit {
     display: flex;
     justify-content: space-between;
     font-family: monospace;
-    font-size: 9px;
+    font-size: 0.6em;
     color: #6a6a80;
-    margin-top: 4px;
+    margin-top: 0.25em;
     border-top: 1px solid rgba(30, 30, 45, 0.6);
-    padding-top: 4px;
+    padding-top: 0.25em;
 }
 .tcg-serial {
     color: #5ad;
     font-weight: bold;
 }
 .tcg-author {
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
 }
 
 /* Ocultar estadísticas y pie de página en tarjetas laterales para evitar sobrecarga */
@@ -2464,7 +2464,7 @@ body.theme-orange #btn-exit {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 35px; /* Súper compacta */
+    height: 2.2em; /* Súper compacta y responsiva */
     margin-top: auto; /* Alinear en la base */
 }
 
