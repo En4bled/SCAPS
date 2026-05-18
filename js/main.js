@@ -1400,6 +1400,7 @@ async function init() {
         if (btnExitGameOver) btnExitGameOver.onclick = () => {
             if (gameOverOverlay) gameOverOverlay.style.display = 'none';
             gameState = 'menu';
+            showMenuScreen('initial');
             if (mainMenuEl) {
                 mainMenuEl.classList.remove('hidden');
                 mainMenuEl.style.display = 'flex';
@@ -2323,6 +2324,9 @@ function updateAll(dt) {
     
     const maxConfetti = Math.round(200 * lodMultiplier);
     if (confettiParticles.length > maxConfetti) confettiParticles.splice(0, confettiParticles.length - maxConfetti);
+
+    const maxSkidMarks = Math.round(350 * lodMultiplier);
+    if (skidMarks.length > maxSkidMarks) skidMarks.splice(0, skidMarks.length - maxSkidMarks);
 
     animationFrameCounter++;
     updateAudio();
