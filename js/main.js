@@ -3777,9 +3777,16 @@ async function changeMap(targetPage) {
 
 async function loadSetupMaps(forcedDirection = '') {
     if (!mapListContainer) return;
+    let maps = [];
     try {
-        const resp = await fetch('php/get_maps.php');
-        let maps = await resp.json();
+        try {
+            const resp = await fetch('php/get_maps.php');
+            if (resp.ok) {
+                maps = await resp.json();
+            }
+        } catch (fetchErr) {
+            console.warn("SCAPS: Entorno estático detectado, usando fallback local para mapas.");
+        }
 
         // Asegurar al menos 10 mapas para la demostración de paginación si faltan
         while (maps.length < 10) maps.push(`MAPA ${maps.length + 1}`);
