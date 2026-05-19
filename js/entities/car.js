@@ -141,8 +141,15 @@ export class Car {
         
         if (this.speed !== 0) {
             let turnDirection = 0;
-            if (keys[this.controls.left]) { turnDirection = -1; isTurning = true; }
-            if (keys[this.controls.right]) { turnDirection = 1; isTurning = true; }
+            
+            // Prioridad a la entrada analógica del joystick del mando si existe y supera la zona muerta
+            if (typeof keys['analogSteer'] === 'number' && keys['analogSteer'] !== 0) {
+                turnDirection = keys['analogSteer'];
+                isTurning = true;
+            } else {
+                if (keys[this.controls.left]) { turnDirection = -1; isTurning = true; }
+                if (keys[this.controls.right]) { turnDirection = 1; isTurning = true; }
+            }
             
             let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
             

@@ -732,8 +732,11 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
     });
 
     // --- Procesar Joystick Izquierdo (Ejes) ---
-    const stickLeft = gp.axes[0] < -deadzone;
-    const stickRight = gp.axes[0] > deadzone;
+    const axisX = gp.axes[0];
+    keysPressed['analogSteer'] = (Math.abs(axisX) > deadzone) ? axisX : 0;
+
+    const stickLeft = axisX < -deadzone;
+    const stickRight = axisX > deadzone;
 
     if (stickLeft && !lastButtonsState['stickLeft']) {
         window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', key: 'ArrowLeft', bubbles: true, cancelable: true }));
