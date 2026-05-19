@@ -3932,6 +3932,7 @@ async function loadSetupMaps(forcedDirection = '') {
                 
                 <!-- Capa 1: Carta frontal (Diseño TCG Premium de alta fidelidad) -->
                 <div class="card-stack-front tcg-card-design pixel-border" style="border-radius: 0px !important; border: ${isCenter ? '4px solid var(--theme-color)' : '2px solid #333'} !important;">
+                    ${m !== 'URBAN' ? `<div class="tcg-coming-soon-banner">PRÓXIMAMENTE</div>` : ''}
                     
                     <!-- Brillo de Foil Holográfico TCG (Flotante y Personalizado por Elemento) -->
                     <div class="tcg-shine shine-${displayName.toLowerCase()}"></div>
@@ -3995,17 +3996,26 @@ async function loadSetupMaps(forcedDirection = '') {
                 </div>
             `;
 
-            const selectMap = () => {
+            const selectMap = (silent = false) => {
+                if (m !== 'URBAN') {
+                    selectedMap = null;
+                    validateMatchSetup();
+                    if (!silent) {
+                        playSound('menu_error');
+                        showInGameNotification("ESTE ESTADIO ESTARÁ DISPONIBLE PRÓXIMAMENTE EN LA VERSIÓN COMPLETA DE SCAPS.", "#ff4d4d", "🔒");
+                    }
+                    return;
+                }
                 selectedMap = m;
                 validateMatchSetup();
-                playSound('menu_click');
+                if (!silent) playSound('menu_click');
             };
 
             card.onfocus = () => {
                 if (!isCenter) {
                     changeMap(idx + 1);
                 } else {
-                    selectMap();
+                    selectMap(true);
                 }
             };
 
@@ -4013,12 +4023,12 @@ async function loadSetupMaps(forcedDirection = '') {
                 if (!isCenter) {
                     changeMap(idx + 1);
                 }
-                selectMap();
+                selectMap(false);
             };
 
             card.onkeydown = (e) => {
                 if (e.code === 'Enter' || e.code === 'Space') {
-                    selectMap();
+                    selectMap(false);
                 }
             };
 
@@ -4032,7 +4042,7 @@ function validateMatchSetup() {
     const currentMap = String(selectedMap).toLowerCase();
     const currentMode = String(selectedMode).toLowerCase();
 
-    const validMaps = ['urban', 'atlantis', 'volcano', 'winter'];
+    const validMaps = ['urban'];
     const isValidMap = validMaps.includes(currentMap);
     const isValidMode = (currentMode === '2vs2' || currentMode === 'practica');
 

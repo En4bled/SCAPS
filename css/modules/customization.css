@@ -2642,4 +2642,25 @@ input[type="range"].tint-slider:focus {
     border-color: #5ad !important;
 }
 
+/* Cartel diagonal de Próximamente para cartas TCG bloqueadas */
+.tcg-coming-soon-banner {
+    position: absolute;
+    top: 40px;
+    right: -55px;
+    width: 200px;
+    background: linear-gradient(135deg, #f33 0%, #900 100%) !important;
+    color: #fff !important;
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: bold;
+    font-size: 0.95em;
+    text-align: center;
+    padding: 6px 0;
+    transform: rotate(45deg);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 0 5px rgba(255,255,255,0.4) !important;
+    border: 1px solid #ff4d4d !important;
+    text-shadow: 0 0 5px rgba(255,255,255,0.6) !important;
+    letter-spacing: 2px;
+    z-index: 99 !important;
+}
+
 
