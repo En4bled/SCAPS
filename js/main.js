@@ -4142,11 +4142,11 @@ function syncSettingsAudioUI() {
     const paused = isMusicPaused();
 
     if (paused) {
-        btnPP.innerHTML = `⏸ <span style="display:block; font-size:10px; margin-top:5px; border:2px solid #ff0; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:auto; margin-right:auto; color:#ff0;">Y</span>`;
+        btnPP.innerHTML = `⏸ <span class="gamepad-badge gp-y" style="margin: 0; width: 1.4em !important; height: 1.4em !important;"></span>`;
         btnPP.style.borderColor = '#f33'; // Rojo
         btnPP.style.color = '#f33';
     } else {
-        btnPP.innerHTML = `▶ <span style="display:block; font-size:10px; margin-top:5px; border:2px solid #ff0; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:auto; margin-right:auto; color:#ff0;">Y</span>`;
+        btnPP.innerHTML = `▶ <span class="gamepad-badge gp-y" style="margin: 0; width: 1.4em !important; height: 1.4em !important;"></span>`;
         btnPP.style.borderColor = '#2fb'; // Verde
         btnPP.style.color = '#2fb';
     }

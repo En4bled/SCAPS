@@ -80,7 +80,10 @@ export function toggleMusic() {
 }
 
 export function togglePlayPause() {
-    if (!musicAudio) return false;
+    if (!musicAudio) {
+        initAudio();
+        return true;
+    }
     if (musicAudio.paused) {
         musicAudio.play().catch(e => console.log("Playback error:", e));
         return true;

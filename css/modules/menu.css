@@ -787,3 +787,9 @@ body.input-method-gamepad .custom-save-btn,
 body.input-method-gamepad .custom-preview-btn {
     pointer-events: none !important;
 }
+
+/* Exclusión especial para que las insignias de mando en el reproductor MP3 de Ajustes y Pausa estén siempre visibles como guías */
+body.input-method-mouse #menu-settings .gamepad-badge,
+body.input-method-mouse #pause-menu .gamepad-badge {
+    display: inline-block !important;
+}
