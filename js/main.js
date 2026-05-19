@@ -1250,6 +1250,7 @@ async function init() {
                 const vol = parseInt(e.target.value);
                 if (volLabel) volLabel.innerText = vol + '%';
                 setMusicVolume(vol / 100);
+                USER_CONFIG.musicVolume = vol;
                 settingsChanged = true;
             };
         }
@@ -1263,6 +1264,7 @@ async function init() {
                 const vol = parseInt(e.target.value);
                 if (sfxLabel) sfxLabel.innerText = vol + '%';
                 setSFXVolume(vol / 100);
+                USER_CONFIG.sfxVolume = vol;
                 settingsChanged = true;
             };
         }
@@ -2024,9 +2026,23 @@ async function init() {
         if (pNext) pNext.onclick = () => { nextSong(); syncPauseMenuAudioUI(); };
 
         const psMusic = getEl('slider-pause-music');
-        if (psMusic) psMusic.oninput = (e) => { setMusicVolume(e.target.value / 100); };
+        if (psMusic) {
+            psMusic.oninput = (e) => {
+                const vol = parseInt(e.target.value);
+                setMusicVolume(vol / 100);
+                USER_CONFIG.musicVolume = vol;
+                saveUserConfig();
+            };
+        }
         const psSFX = getEl('slider-pause-sfx');
-        if (psSFX) psSFX.oninput = (e) => { setSFXVolume(e.target.value / 100); };
+        if (psSFX) {
+            psSFX.oninput = (e) => {
+                const vol = parseInt(e.target.value);
+                setSFXVolume(vol / 100);
+                USER_CONFIG.sfxVolume = vol;
+                saveUserConfig();
+            };
+        }
 
         const pMusic = getEl('btn-toggle-music-pause');
         const syncMuteUI = (muted) => {
@@ -2041,9 +2057,11 @@ async function init() {
         const volValue = getEl('music-vol-value');
         if (volSlider) {
             volSlider.oninput = (e) => {
-                const val = e.target.value;
+                const val = parseInt(e.target.value);
                 if (volValue) volValue.innerText = val + '%';
                 setMusicVolume(val / 100);
+                USER_CONFIG.musicVolume = val;
+                saveUserConfig();
             };
         }
 
