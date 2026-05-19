@@ -1649,6 +1649,30 @@ async function init() {
                 }
 
                 if (window.customizationActiveMenuMode) {
+                    // Manejo especial para desplegables (SELECT) con mando
+                    const activeEl = document.activeElement;
+                    if (activeEl && activeEl.tagName === 'SELECT') {
+                        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+                            const dir = (e.code === 'ArrowRight') ? 1 : -1;
+                            const nextIdx = (activeEl.selectedIndex + dir + activeEl.options.length) % activeEl.options.length;
+                            activeEl.selectedIndex = nextIdx;
+                            activeEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                            playSound('menu_click');
+                            e.preventDefault();
+                            return;
+                        }
+                        if (e.code === 'Enter') {
+                            const nextIdx = (activeEl.selectedIndex + 1) % activeEl.options.length;
+                            activeEl.selectedIndex = nextIdx;
+                            activeEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            activeEl.dispatchEvent(new Event('input', { bubbles: true }));
+                            playSound('menu_click');
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+
                     // --- MODO NAVEGACIÓN LIBRE POR EL PANEL ACTIVO ---
                     if (e.code === 'ArrowDown' || e.code === 'ArrowRight' || e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
                         if (focusables.length > 0) {
