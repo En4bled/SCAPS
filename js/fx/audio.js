@@ -48,11 +48,24 @@ let playlistOrder = [];
 let playlistPointer = 0;
 
 function shufflePlaylist() {
+    // Las canciones son del 1 al 8.
+    // GRAVITY SHIFT es la canción 6 (índice 5 de songMetadata).
     playlistOrder = Array.from({length: TOTAL_SONGS}, (_, i) => i + 1);
+    
+    // Quitamos la canción 6 temporalmente para mezclar el resto
+    const gsIndex = playlistOrder.indexOf(6);
+    if (gsIndex > -1) {
+        playlistOrder.splice(gsIndex, 1);
+    }
+    
+    // Mezclamos las 7 canciones restantes
     for (let i = playlistOrder.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [playlistOrder[i], playlistOrder[j]] = [playlistOrder[j], playlistOrder[i]];
     }
+    
+    // Colocamos GRAVITY SHIFT (canción 6) siempre en el primer puesto (índice 0)
+    playlistOrder.unshift(6);
 }
 shufflePlaylist();
 let playerCarRef = null;
