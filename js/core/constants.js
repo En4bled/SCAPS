@@ -65,16 +65,16 @@ export const CONFIG = {
     CAR_DRIFT_TURN_MULTIPLIER: 2.8,
     CAR_CAR_PUSHBACK_BASE: 3.0,
     CAR_CAR_PUSHBACK_VEL_FACTOR: 1.2,
-    CAR_WALL_BOUNCE: 0.8,
+    CAR_WALL_BOUNCE: 0.3,
     
     // Decoupled Physics & Acrobatics
     CAR_LATERAL_GRIP_NORMAL: 0.68,     // Agarre lateral en conducción normal (multiplicador por frame, menor = más agarre)
     CAR_LATERAL_GRIP_DRIFT: 0.92,      // Agarre lateral reducido al derrapar (multiplicador por frame, mayor = más deslizamiento)
-    CAR_ELASTICITY: 0.55,              // Elasticidad en colisión coche-coche (restitución)
+    CAR_ELASTICITY: 0.45,              // Elasticidad en colisión coche-coche (restitución)
     CAR_WALL_RESTITUTION: 0.6,         // Elasticidad al chocar contra las paredes
     CAR_JUMP_FORCE: 4.6,               // Fuerza inicial de salto vertical en Z
     CAR_GRAVITY: 0.22,                 // Gravedad aplicada al coche en Z
-    CAR_FLIP_IMPULSE: 1.85,            // Impulso horizontal añadido por el Front Flip (aumentado para mayor empuje)
+    CAR_FLIP_IMPULSE: 2.0,            // Impulso horizontal añadido por el Front Flip (aumentado para mayor empuje)
     CAR_FLIP_DURATION: 26,             // Duración en frames del Front Flip (animación y Power Shot)
 
     // Físicas de Balón

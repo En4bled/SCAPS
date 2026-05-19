@@ -76,7 +76,12 @@ export class Car {
     draw(ctx) {
         if (this.isExploded) return; // No dibujar si ha explotado
 
-        const scaleY = this.isFlipping ? Math.cos(this.flipVisualAngle) : 1.0;
+        let scaleX = 1.0;
+        let scaleY = 1.0;
+        if (this.isFlipping) {
+            scaleY = Math.cos(this.flipVisualAngle);
+            scaleX = 1.0 + (1.0 - Math.abs(scaleY)) * 0.12; // Squash & Stretch
+        }
 
         // 1. DIBUJAR SOMBRA DINÁMICA EN EL SUELO
         ctx.save();
@@ -95,9 +100,9 @@ export class Car {
         ctx.translate(this.x, this.y - this.z); // Trasladar en Y vertical hacia arriba
         ctx.rotate(this.angle);
 
-        // Si está haciendo un Front Flip, simular voltereta frontal
+        // Si está haciendo un Front Flip, simular voltereta frontal con Squash & Stretch
         if (this.isFlipping) {
-            ctx.scale(1.0, scaleY);
+            ctx.scale(scaleX, scaleY);
         }
 
         // Efecto visual Supersónico (Vibración/Brillo opcional aquí)
@@ -249,6 +254,9 @@ export class Car {
                 this.vx += Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
                 this.vy -= Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
                 
+                // Impulso vertical snappy inicial (cancela caída, da sustentación rápida)
+                this.vz = 1.0;
+                
                 playSound('flip');
             }
         }
@@ -256,7 +264,9 @@ export class Car {
         // Gravedad y actualización del vuelo Z
         if (this.z > 0) {
             this.z += this.vz * timeScale;
-            this.vz -= CONST.CONFIG.CAR_GRAVITY * timeScale;
+            // Durante la voltereta, la gravedad afecta MENOS para dar sensación de planeo aerodinámico
+            const gravityMultiplier = this.isFlipping ? 0.35 : 1.0;
+            this.vz -= CONST.CONFIG.CAR_GRAVITY * gravityMultiplier * timeScale;
             
             if (this.z <= 0) {
                 this.z = 0;
@@ -268,13 +278,18 @@ export class Car {
             }
         }
 
-        // Animación de Voltereta
+        // Animación de Voltereta (Ease-Out para movimiento rápido al inicio y suave al final)
         if (this.isFlipping) {
             this.flipTimer -= timeScale;
-            this.flipVisualAngle = (1.0 - (this.flipTimer / CONST.CONFIG.CAR_FLIP_DURATION)) * Math.PI * 2;
+            const t = Math.max(0, Math.min(1, 1.0 - (this.flipTimer / CONST.CONFIG.CAR_FLIP_DURATION)));
+            const easedT = Math.sin(t * Math.PI / 2);
+            this.flipVisualAngle = easedT * Math.PI * 2;
+            
             if (this.flipTimer <= 0) {
                 this.isFlipping = false;
                 this.flipVisualAngle = 0;
+                // Impulso de caída al terminar (sensación de peso al recuperar control)
+                this.vz = Math.min(this.vz, -1.2);
             }
         }
 

@@ -188,11 +188,15 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             ball.vx += Math.cos(angle) * impulse;
             ball.vy += Math.sin(angle) * impulse;
             
-            // ELEVACIÓN EJE Z (Efecto aéreo de balón pesado)
+            // ELEVACIÓN EJE Z (Efecto aéreo para juego aéreo fluido)
             if (ball.vz !== undefined) {
                 ball.vz += impulse * 0.15 + (zLift * 0.7);
-                if (ball.vz > 7) ball.vz = 7; // Límite de altura más bajo y pesado
+                if (ball.vz > 10.5) ball.vz = 10.5; // Límite de altura elevado para mejores saltos
             }
+
+            // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
+            const hitAngleDifference = angle - car.angle;
+            ball.spin = Math.sin(hitAngleDifference) * (impulse * 0.08);
             
             // Guía direccional
             ball.vx += forwardX * (carSpeedMag * 0.3) * timeScale;
@@ -222,6 +226,11 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
 
 export function checkCarCarCollision(carA, carB, explosionParticles) {
     if (carA.isExploded || carB.isExploded) return;
+
+    // --- VERIFICACIÓN DE ALTURA EN EJE Z ---
+    // Si un coche salta por encima del otro, no colisionan horizontalmente
+    const heightDiff = Math.abs(carA.z - carB.z);
+    if (heightDiff > 40) return;
 
     const dx = carB.x - carA.x;
     const dy = carB.y - carA.y;

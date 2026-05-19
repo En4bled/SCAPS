@@ -10,7 +10,7 @@ export class Ball {
         this.radius = CONST.CONFIG.BALL_BASE_RADIUS; 
         this.vx = 0; this.vy = 0; this.vz = 0;
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
-        this.rotationAngle = 0; this.isFireball = false; this.fireballTimer = 0; 
+        this.rotationAngle = 0; this.spin = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.type = 'ball';
         this.img = null;
         if (imgPath) {
@@ -115,9 +115,9 @@ export class Ball {
         
         if (this.z < 0) {
             this.z = 0;
-            // Bote elástico en el suelo (Balón pesado, menos bote)
+            // Bote elástico en el suelo (Balón pesado, bote de fútbol real)
             if (this.vz < -2) {
-                this.vz *= -0.45; // Factor de restitución vertical reducido (antes 0.65)
+                this.vz *= -0.55; // Factor de restitución vertical ajustado para mejor jugabilidad (fútbol estándar)
                 
                 // Fricción por impacto: chocar contra el suelo absorbe inercia horizontal (rebote más orgánico)
                 this.vx *= 0.82;
@@ -156,7 +156,19 @@ export class Ball {
             const factor = CONST.CONFIG.BALL_MAX_SPEED / currentSpeed; 
             this.vx *= factor; this.vy *= factor; 
         }
-        this.rotationAngle += this.vx * 0.05 * timeScale; 
+
+        // Rotación física e inercial de la pelota (rodamiento + spin)
+        if (this.z > 0) {
+            // En el aire: la rotación sigue el spin con una leve fricción del aire
+            this.rotationAngle += this.spin * timeScale;
+            this.spin *= Math.pow(0.995, timeScale);
+        } else {
+            // En el suelo: la rotación depende del rodamiento direccional + spin
+            const rollSpin = (this.vx + this.vy * 0.5) * 0.05;
+            this.rotationAngle += (rollSpin + this.spin) * timeScale;
+            this.spin *= Math.pow(0.95, timeScale); // El spin se disipa rápido al rozar el césped
+        }
+
         if (this.onWallTimer > 0) { 
             this.onWallTimer -= timeScale; 
         } else { 
