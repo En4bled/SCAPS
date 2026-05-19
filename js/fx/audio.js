@@ -132,6 +132,18 @@ export function initAudio(playerCar = null, allCars = null) {
 
     if (!allCars) return;
 
+    // Detener y desconectar osciladores existentes antes de sobrescribir para evitar fugas de sonido en el menú
+    if (motorAudios.length > 0) {
+        motorAudios.forEach(item => {
+            try {
+                item.gain.gain.cancelScheduledValues(audioCtx.currentTime);
+                item.osc.stop();
+                item.osc.disconnect();
+            } catch(e) {}
+        });
+        motorAudios = [];
+    }
+
     // Motores Sintéticos de Alta Fidelidad
     motorAudios = [];
     allCars.forEach(car => {
@@ -157,6 +169,9 @@ export function initAudio(playerCar = null, allCars = null) {
 }
 
 export function stopAllMotors() {
+    // Detener boost sound si está activo
+    setBoostSound(false);
+
     motorAudios.forEach(item => {
         try {
             item.gain.gain.cancelScheduledValues(audioCtx.currentTime);
