@@ -160,6 +160,8 @@ window.discardCustomization = () => {
         if (typeof renderBoostSelection === 'function') renderBoostSelection();
         if (typeof renderExplosionSelection === 'function') renderExplosionSelection();
         if (typeof updatePlayerBanner === 'function') updatePlayerBanner();
+        if (typeof setupTitleSelect === 'function') setupTitleSelect();
+        if (typeof setupAdvancedBannerDropdowns === 'function') setupAdvancedBannerDropdowns();
         
         // Restaurar sliders de tinte del coche en el DOM
         const hueSlider = document.getElementById('slider-car-hue');
@@ -302,6 +304,15 @@ function loadUserConfig() {
 
     selectedCarP1 = USER_CONFIG.playerCar;
     setupTitleSelect(); // Activar títulos
+    setupAdvancedBannerDropdowns(); // Activar Relleno y Patrón
+
+    // Cerrar desplegables al hacer click fuera
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-dropdown-content').forEach(c => {
+            c.style.display = 'none';
+        });
+    });
+
     updatePlayerBanner();
 
     applyBloomSetting();
@@ -1703,12 +1714,15 @@ async function init() {
                             e.preventDefault();
                             return;
                         }
-                        // 2. Cerrar dropdown de título si está abierto
-                        const openDropdown = document.querySelector('.custom-dropdown-content');
-                        if (openDropdown && openDropdown.style.display === 'block') {
+                        // 2. Cerrar dropdown (título, relleno, patrón) si está abierto
+                        const openDropdown = Array.from(document.querySelectorAll('.custom-dropdown-content')).find(c => c.style.display === 'block');
+                        if (openDropdown) {
                             openDropdown.style.display = 'none';
-                            const dropdownBtn = document.getElementById('custom-title-dropdown-btn');
-                            if (dropdownBtn) dropdownBtn.focus();
+                            const dropdownContainer = openDropdown.closest('.custom-dropdown');
+                            if (dropdownContainer) {
+                                const dropdownBtn = dropdownContainer.querySelector('.custom-dropdown-btn');
+                                if (dropdownBtn) dropdownBtn.focus();
+                            }
                             playSound('menu_click');
                             e.preventDefault();
                             return;
@@ -3388,10 +3402,11 @@ function setupTitleSelect() {
             
             // Cerrar menú y marcar activo
             dropdownContent.style.display = 'none';
-            document.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
+            dropdownContent.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
             
             playSound('menu_click');
+            dropdownBtn.focus();
         };
         dropdownContent.appendChild(item);
     });
@@ -3400,14 +3415,120 @@ function setupTitleSelect() {
     dropdownBtn.onclick = (e) => {
         e.stopPropagation();
         const isOpen = dropdownContent.style.display === 'block';
+        
+        // Cerrar todos los demás dropdowns
+        document.querySelectorAll('.custom-dropdown-content').forEach(c => {
+            if (c !== dropdownContent) c.style.display = 'none';
+        });
+
         dropdownContent.style.display = isOpen ? 'none' : 'block';
         playSound('menu_click');
     };
+}
 
-    // Cerrar si se hace click fuera
-    document.addEventListener('click', () => {
-        dropdownContent.style.display = 'none';
-    });
+function setupAdvancedBannerDropdowns() {
+    // 1. Relleno Dropdown
+    const typeBtn = document.getElementById('custom-banner-type-btn');
+    const typeText = document.getElementById('custom-banner-type-text');
+    const typeContent = document.getElementById('custom-banner-type-content');
+    if (typeBtn && typeContent) {
+        const types = [
+            { value: 'solid', label: 'SÓLIDO' },
+            { value: 'gradient', label: 'LINEAL' },
+            { value: 'radial', label: 'RADIAL' }
+        ];
+        const activeType = USER_CONFIG.bannerType || 'gradient';
+        const found = types.find(t => t.value === activeType) || types[0];
+        if (typeText) typeText.innerText = found.label;
+
+        typeContent.innerHTML = '';
+        types.forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'custom-dropdown-item' + (activeType === t.value ? ' active' : '');
+            item.innerText = t.label;
+            item.tabIndex = 0;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                USER_CONFIG.bannerType = t.value;
+                saveUserConfig();
+                updatePlayerBanner();
+                if (typeText) typeText.innerText = t.label;
+                typeContent.style.display = 'none';
+                
+                typeContent.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                playSound('menu_click');
+                typeBtn.focus();
+            };
+            typeContent.appendChild(item);
+        });
+
+        typeBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = typeContent.style.display === 'block';
+            
+            // Cerrar todos los demás dropdowns
+            document.querySelectorAll('.custom-dropdown-content').forEach(c => {
+                if (c !== typeContent) c.style.display = 'none';
+            });
+
+            typeContent.style.display = isOpen ? 'none' : 'block';
+            playSound('menu_click');
+        };
+    }
+
+    // 2. Patrón Dropdown
+    const patternBtn = document.getElementById('custom-banner-pattern-btn');
+    const patternText = document.getElementById('custom-banner-pattern-text');
+    const patternContent = document.getElementById('custom-banner-pattern-content');
+    if (patternBtn && patternContent) {
+        const patterns = [
+            { value: 'none', label: 'NINGUNO' },
+            { value: 'grid', label: 'REJILLA' },
+            { value: 'diagonal', label: 'DIAGONAL' },
+            { value: 'dots', label: 'PUNTOS' },
+            { value: 'cross', label: 'CRUCES' },
+            { value: 'chevron', label: 'CHEVRÓN' }
+        ];
+        const activePattern = USER_CONFIG.bannerPattern || 'none';
+        const found = patterns.find(p => p.value === activePattern) || patterns[0];
+        if (patternText) patternText.innerText = found.label;
+
+        patternContent.innerHTML = '';
+        patterns.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'custom-dropdown-item' + (activePattern === p.value ? ' active' : '');
+            item.innerText = p.label;
+            item.tabIndex = 0;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                USER_CONFIG.bannerPattern = p.value;
+                saveUserConfig();
+                updatePlayerBanner();
+                if (patternText) patternText.innerText = p.label;
+                patternContent.style.display = 'none';
+                
+                patternContent.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                playSound('menu_click');
+                patternBtn.focus();
+            };
+            patternContent.appendChild(item);
+        });
+
+        patternBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = patternContent.style.display === 'block';
+            
+            // Cerrar todos los demás dropdowns
+            document.querySelectorAll('.custom-dropdown-content').forEach(c => {
+                if (c !== patternContent) c.style.display = 'none';
+            });
+
+            patternContent.style.display = isOpen ? 'none' : 'block';
+            playSound('menu_click');
+        };
+    }
 }
 
 

@@ -258,32 +258,35 @@
                                             </div>
                                         </div>
                                         <!-- Col 3: Estilo -->
-                                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                                            <h4 class="custom-label-small"
-                                                style="color: #f90; border-bottom: 1px solid #f90; padding-bottom: 2px; font-size: 0.7em; margin: 0;">
-                                                ESTILO</h4>
-                                            <div class="custom-input-group" style="margin: 0; padding: 0;"><label
-                                                    class="custom-label-tiny"
-                                                    style="font-size: 0.6em; margin: 0;">RELLENO</label><select
-                                                    id="select-banner-type" class="custom-select-small"
-                                                    style="height: 25px; font-size: 0.8em; margin: 0;">
-                                                    <option value="solid">SÓLIDO</option>
-                                                    <option value="gradient">LINEAL</option>
-                                                    <option value="radial">RADIAL</option>
-                                                </select></div>
-                                            <div class="custom-input-group" style="margin: 0; padding: 0;"><label
-                                                    class="custom-label-tiny"
-                                                    style="font-size: 0.6em; margin: 0;">PATRÓN</label><select
-                                                    id="select-banner-pattern" class="custom-select-small"
-                                                    style="height: 25px; font-size: 0.8em; margin: 0;">
-                                                    <option value="none">NINGUNO</option>
-                                                    <option value="grid">REJILLA</option>
-                                                    <option value="diagonal">DIAGONAL</option>
-                                                    <option value="dots">PUNTOS</option>
-                                                    <option value="cross">CRUCES</option>
-                                                    <option value="chevron">CHEVRÓN</option>
-                                                </select></div>
-                                        </div>
+                                         <div style="display: flex; flex-direction: column; gap: 4px;">
+                                             <h4 class="custom-label-small"
+                                                 style="color: #f90; border-bottom: 1px solid #f90; padding-bottom: 2px; font-size: 0.7em; margin: 0;">
+                                                 ESTILO</h4>
+                                             <div class="custom-input-group" style="margin: 0; padding: 0;">
+                                                 <label class="custom-label-tiny" style="font-size: 0.6em; margin: 0;">RELLENO</label>
+                                                 <div id="custom-banner-type-dropdown" class="custom-dropdown">
+                                                     <button id="custom-banner-type-btn" class="custom-dropdown-btn" type="button" style="height: 25px; font-size: 0.75em; padding: 0 5px; margin: 0;">
+                                                         <span id="custom-banner-type-text">SÓLIDO</span>
+                                                         <span class="custom-dropdown-arrow" style="font-size: 0.7em;">▼</span>
+                                                     </button>
+                                                     <div id="custom-banner-type-content" class="custom-dropdown-content" style="display: none; max-height: 120px;">
+                                                         <!-- Opciones cargadas por JS -->
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                             <div class="custom-input-group" style="margin: 0; padding: 0;">
+                                                 <label class="custom-label-tiny" style="font-size: 0.6em; margin: 0;">PATRÓN</label>
+                                                 <div id="custom-banner-pattern-dropdown" class="custom-dropdown">
+                                                     <button id="custom-banner-pattern-btn" class="custom-dropdown-btn" type="button" style="height: 25px; font-size: 0.75em; padding: 0 5px; margin: 0;">
+                                                         <span id="custom-banner-pattern-text">NINGUNO</span>
+                                                         <span class="custom-dropdown-arrow" style="font-size: 0.7em;">▼</span>
+                                                     </button>
+                                                     <div id="custom-banner-pattern-content" class="custom-dropdown-content" style="display: none; max-height: 120px;">
+                                                         <!-- Opciones cargadas por JS -->
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
                                     </div>
                                     <div
                                         style="display: flex; flex-direction: column; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
