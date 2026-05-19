@@ -688,14 +688,14 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
     const deadzone = 0.3;
 
     // --- Definición de Mapeo Dinámico ---
-    const mapping = {
-        12: 'ArrowUp',
-        13: 'ArrowDown',
-        14: 'ArrowLeft',
-        15: 'ArrowRight'
-    };
+    const mapping = {};
 
-    if (gameState === 'menu' || gameState === 'settings') {
+    if (gameState === 'menu' || gameState === 'settings' || gameState === 'customization') {
+        mapping[12] = 'ArrowUp';
+        mapping[13] = 'ArrowDown';
+        mapping[14] = 'ArrowLeft';
+        mapping[15] = 'ArrowRight';
+        
         mapping[0] = 'Enter';
         mapping[1] = 'Escape';
         mapping[2] = 'KeyX';
@@ -707,13 +707,19 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         mapping[8] = 'KeyC';
         mapping[9] = 'Space';
     } else {
-        mapping[7] = 'ArrowUp';    // RT -> Acelerar (Solo en juego)
-        mapping[6] = 'ArrowDown';  // LT -> Frenar (Solo en juego)
-        mapping[0] = 'Space';
-        mapping[2] = 'ShiftLeft';
-        mapping[3] = 'KeyV';
-        mapping[9] = 'Escape';
-        mapping[8] = 'Tab';        // SELECT -> Tab (Marcadores)
+        mapping[12] = 'KeyW';      // Cruceta Arriba -> KeyW
+        mapping[13] = 'KeyS';      // Cruceta Abajo -> KeyS
+        mapping[14] = 'KeyA';      // Cruceta Izquierda -> KeyA
+        mapping[15] = 'KeyD';      // Cruceta Derecha -> KeyD
+        
+        mapping[7] = 'KeyW';       // RT -> Acelerar (KeyW)
+        mapping[6] = 'KeyS';       // LT -> Frenar/Reversa (KeyS)
+        mapping[0] = 'Space';      // A -> Salto (Space)
+        mapping[4] = 'ShiftLeft';  // LB -> Boost (ShiftLeft)
+        mapping[2] = 'KeyE';       // X -> Derrape (KeyE)
+        mapping[3] = 'KeyV';       // Y -> Toggle Cámara
+        mapping[9] = 'Escape';     // START -> Pausa
+        mapping[8] = 'Tab';        // SELECT -> Marcadores
     }
 
     // --- Procesar Botones ---
@@ -731,7 +737,7 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         lastButtonsState[btnIndex] = isPressed;
     });
 
-    // --- Procesar Joystick Izquierdo (Ejes) ---
+    // --- Procesar Joystick Izquierdo (Ejes mapped to WASD) ---
     const axisX = gp.axes[0];
     keysPressed['analogSteer'] = (Math.abs(axisX) > deadzone) ? axisX : 0;
 
@@ -739,20 +745,20 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
     const stickRight = axisX > deadzone;
 
     if (stickLeft && !lastButtonsState['stickLeft']) {
-        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', key: 'ArrowLeft', bubbles: true, cancelable: true }));
-        keysPressed['ArrowLeft'] = true;
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', key: 'a', bubbles: true, cancelable: true }));
+        keysPressed['KeyA'] = true;
     } else if (!stickLeft && lastButtonsState['stickLeft']) {
-        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowLeft', key: 'ArrowLeft', bubbles: true, cancelable: true }));
-        keysPressed['ArrowLeft'] = false;
+        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyA', key: 'a', bubbles: true, cancelable: true }));
+        keysPressed['KeyA'] = false;
     }
     lastButtonsState['stickLeft'] = stickLeft;
 
     if (stickRight && !lastButtonsState['stickRight']) {
-        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', key: 'ArrowRight', bubbles: true, cancelable: true }));
-        keysPressed['ArrowRight'] = true;
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD', key: 'd', bubbles: true, cancelable: true }));
+        keysPressed['KeyD'] = true;
     } else if (!stickRight && lastButtonsState['stickRight']) {
-        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowRight', key: 'ArrowRight', bubbles: true, cancelable: true }));
-        keysPressed['ArrowRight'] = false;
+        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyD', key: 'd', bubbles: true, cancelable: true }));
+        keysPressed['KeyD'] = false;
     }
     lastButtonsState['stickRight'] = stickRight;
 }

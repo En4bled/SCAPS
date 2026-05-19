@@ -1190,11 +1190,11 @@ async function init() {
         });
 
         // Crear entidades usando posiciones del mapa (se cargarán de verdad en resetAfterGoal)
-        player1 = new Car(0, 0, '#5ad', { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'Space', drift: 'ShiftLeft', isPlayer: true }, "JUGADOR 1", 'recursos/cars/car1.png');
+        player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'KeyE', jump: 'Space', isPlayer: true }, "JUGADOR 1", 'recursos/cars/car1.png');
         player1.isPlayer = true;
-        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Chiclanaman", 'recursos/cars/car2.png');
-        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Aitawer", 'recursos/cars/car3.png');
-        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift' }, "BOT Croquetas", 'recursos/cars/car4.png');
+        player1_teammate = new Car(0, 0, '#5ad', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift', jump: 'jump' }, "BOT Chiclanaman", 'recursos/cars/car2.png');
+        player2 = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift', jump: 'jump' }, "BOT Aitawer", 'recursos/cars/car3.png');
+        player2_teammate = new Car(0, 0, '#f90', { up: 'up', down: 'down', left: 'left', right: 'right', boost: 'boost', drift: 'drift', jump: 'jump' }, "BOT Croquetas", 'recursos/cars/car4.png');
 
         // Inicializar objetos de teclas para los bots y asignar roles
         player1_teammate.aiState = { role: 'defender', targetBoostPad: null };
@@ -2524,8 +2524,8 @@ function spawnGoalEffects(x, y, teamColor, styleKey = 'classic') {
 
 function updateUI(dt) {
     if (gameState === 'zooming') {
-        // Factor de 0.006 para una duración algo más ágil pero fluida
-        currentZoom += (targetZoom - currentZoom) * 0.006;
+        // Factor de 0.04 para una duración ágil, dinámica y fluida (~1.5 segundos)
+        currentZoom += (targetZoom - currentZoom) * 0.04;
         if (Math.abs(targetZoom - currentZoom) < 0.001) {
             currentZoom = targetZoom;
             gameState = 'panning';

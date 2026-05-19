@@ -2,6 +2,7 @@ import * as CONST from '../core/constants.js';
 import { getAssetPath } from '../core/constants.js';
 import { Particle, SkidMark } from '../fx/particles.js';
 import { checkPolygonCollision } from '../world/physics.js';
+import { playSound } from '../fx/audio.js';
 
 export class Car {
     constructor(x, y, color, controls, name, imgPath = null, hue = 0, saturate = 100) {
@@ -38,11 +39,21 @@ export class Car {
         // Efectos y Personalización
         this.boostType = 'classic';
         
-        // Estado de Supervivencia
+        // Estado de Supervivencia y Físicas 3D/Z
         this.isExploded = false;
         this.respawnTimer = 0;
         this.isSupersonic = false;
         this.trailTimer = 0;
+        
+        // Eje Z y Acrobacias
+        this.z = 0;
+        this.vz = 0;
+        this.isJumping = false;
+        this.isFlipping = false;
+        this.canDoubleJump = true;
+        this.flipTimer = 0;
+        this.flipVisualAngle = 0;
+        this.flipCooldownTimer = 0;
     }
 
     setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
@@ -65,9 +76,29 @@ export class Car {
     draw(ctx) {
         if (this.isExploded) return; // No dibujar si ha explotado
 
+        const scaleY = this.isFlipping ? Math.cos(this.flipVisualAngle) : 1.0;
+
+        // 1. DIBUJAR SOMBRA DINÁMICA EN EL SUELO
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
+        
+        const shadowScale = Math.max(0.45, 1.0 - (this.z / 250));
+        ctx.beginPath();
+        ctx.ellipse(0, 4, (this.width / 2.2) * shadowScale, (this.height / 2.2) * shadowScale, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
+        ctx.fill();
+        ctx.restore();
+
+        // 2. DIBUJAR COCHE ELEVADO EN EL EJE Z
+        ctx.save();
+        ctx.translate(this.x, this.y - this.z); // Trasladar en Y vertical hacia arriba
+        ctx.rotate(this.angle);
+
+        // Si está haciendo un Front Flip, simular voltereta frontal
+        if (this.isFlipping) {
+            ctx.scale(1.0, scaleY);
+        }
 
         // Efecto visual Supersónico (Vibración/Brillo opcional aquí)
         if (this.isSupersonic) {
@@ -76,17 +107,19 @@ export class Car {
         }
 
         if (this.img && this.img.complete) {
-            // Aplicar tinte si es necesario
-            if (this.hue !== 0 || this.saturate !== 100) {
+            // Si el coche está boca abajo (scaleY < 0), mostrar silueta oscura (chasis)
+            if (scaleY < 0) {
+                ctx.filter = 'brightness(0.12) contrast(1.1)';
+            } else if (this.hue !== 0 || this.saturate !== 100) {
                 ctx.filter = `hue-rotate(${this.hue}deg) saturate(${this.saturate}%)`;
             }
             ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
             ctx.filter = 'none'; // Resetear para el resto del frame
         } else {
-            // Fallback ultra-simple (Rectángulo de color)
-            ctx.fillStyle = this.color;
+            // Fallback ultra-simple (Rectángulo de color o chasis negro)
+            ctx.fillStyle = (scaleY < 0) ? '#151515' : this.color;
             ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = (scaleY < 0) ? '#333' : 'white';
             ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
         }
         ctx.restore();
@@ -98,7 +131,6 @@ export class Car {
             this.respawnTimer--;
             if (this.respawnTimer <= 0) {
                 this.isExploded = false;
-                // El posicionamiento real se hace en main.js o mediante un evento
             }
             return;
         }
@@ -107,42 +139,65 @@ export class Car {
         let isAccelerating = false; 
 
         this.isBoosting = keys[this.controls.boost] && this.boost > 0 && (gameState === 'playing' || gameState === 'goalScored'); 
-        this.isDrifting = keys[this.controls.drift] && !this.isBoosting && Math.abs(this.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.3 && (keys[this.controls.left] || keys[this.controls.right]);
+        this.isDrifting = keys[this.controls.drift] && (gameState === 'playing' || gameState === 'goalScored');
         
-        if (gameState === 'goalScored' || gameState === 'gameOver') {
-            // Permitir movimiento limitado (sin boost o con aceleración reducida)
-            // No retornamos early para permitir que el jugador se mueva en la celebración
-        }
-
         let currentAccel = this.isBoosting ? CONST.CONFIG.CAR_BOOST_ACCEL : CONST.CONFIG.CAR_ACCEL;
         let maxSpeed = this.isBoosting ? CONST.CONFIG.CAR_MAX_BOOST_SPEED : CONST.CONFIG.CAR_MAX_SPEED;
 
         if (gameState === 'countdown') {
-            if (keys[this.controls.up]) isAccelerating = true;
-            // Bloqueamos la rotación en cuenta atrás (el coche debe estar en movimiento para girar)
             this.speed = 0; this.vx = 0; this.vy = 0;
+            this.z = 0; this.vz = 0;
+            this.isJumping = false; this.isFlipping = false; this.canDoubleJump = true;
             return;
         }
 
-        if (keys[this.controls.up]) { 
-            this.speed += currentAccel * timeScale; isAccelerating = true;
-        } 
-        else if (keys[this.controls.down]) { 
-            if (this.speed > -maxSpeed / 2) {
-                this.speed -= CONST.CONFIG.CAR_REVERSE_ACCEL * timeScale; 
-            }
-        } 
-        
-        if (!isAccelerating && !keys[this.controls.down]) {
-            this.speed *= Math.pow(CONST.CONFIG.CAR_FRICTION, timeScale); 
-        } else {
-            if (isAccelerating && this.speed > maxSpeed) this.speed = maxSpeed; 
+        // --- ACTUALIZAR COOLDOWN DEL FLIP ---
+        if (this.flipCooldownTimer > 0) {
+            this.flipCooldownTimer -= timeScale;
         }
-        
-        if (this.speed !== 0) {
+
+        // --- ACELERACIÓN / REVERSA VECTORIAL (Bloqueadas durante el Front Flip) ---
+        if (!this.isFlipping) {
+            if (keys[this.controls.up]) { 
+                this.vx += Math.sin(this.angle) * currentAccel * timeScale;
+                this.vy -= Math.cos(this.angle) * currentAccel * timeScale;
+                isAccelerating = true;
+            } 
+            else if (keys[this.controls.down]) { 
+                this.vx -= Math.sin(this.angle) * CONST.CONFIG.CAR_REVERSE_ACCEL * timeScale;
+                this.vy += Math.cos(this.angle) * CONST.CONFIG.CAR_REVERSE_ACCEL * timeScale;
+            } 
+            
+            // --- DRAG Y FRICCIÓN VECTORIAL ---
+            const currentSpeed = Math.sqrt(this.vx**2 + this.vy**2);
+            if (!isAccelerating && !keys[this.controls.down]) {
+                // Solo si está en el suelo (this.z === 0) se aplica la fricción del suelo
+                if (this.z === 0) {
+                    this.vx *= Math.pow(CONST.CONFIG.CAR_FRICTION, timeScale); 
+                    this.vy *= Math.pow(CONST.CONFIG.CAR_FRICTION, timeScale); 
+                }
+            } else {
+                // Límite de velocidad
+                if (currentSpeed > maxSpeed) {
+                    const scale = maxSpeed / currentSpeed;
+                    this.vx *= scale;
+                    this.vy *= scale;
+                }
+            }
+        }
+
+        // Velocidad lineal proyectada (para sonidos y lógica externa compatible)
+        const currentSpeed = Math.sqrt(this.vx**2 + this.vy**2);
+        const forwardX = Math.sin(this.angle);
+        const forwardY = -Math.cos(this.angle);
+        const forwardVel = this.vx * forwardX + this.vy * forwardY;
+        this.speed = forwardVel;
+
+        // --- DIRECCIÓN Y GIRO (Bloqueadas durante el Front Flip) ---
+        if (!this.isFlipping && currentSpeed > 0.05) {
             let turnDirection = 0;
             
-            // Prioridad a la entrada analógica del joystick del mando si existe y supera la zona muerta
+            // Prioridad a la entrada analógica
             if (typeof keys['analogSteer'] === 'number' && keys['analogSteer'] !== 0) {
                 turnDirection = keys['analogSteer'];
                 isTurning = true;
@@ -151,29 +206,76 @@ export class Car {
                 if (keys[this.controls.right]) { turnDirection = 1; isTurning = true; }
             }
             
-            let steerAngle = (this.speed > 0) ? turnDirection : -turnDirection;
-            
-            // --- NUEVA LÓGICA DE GIRO DINÁMICO ---
-            let maxTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
-            
-            // 1. Reducir giro según la velocidad (a más velocidad, arco más amplio)
-            let speedFactor = Math.min(1.0, Math.abs(this.speed) / CONST.CONFIG.CAR_MAX_SPEED);
-            
-            // Los coches giran mejor a velocidades medias. 
-            // Baseline del 80% de giro para evitar que se sientan "bloqueados" a alta velocidad.
-            let dynamicTurnSpeed = maxTurnSpeed * (0.8 + 0.2 * (1 - Math.abs(speedFactor - 0.5) * 2));
-            
-            // 2. Reducir giro extra si estamos usando BOOST
-            if (this.isBoosting) {
-                dynamicTurnSpeed *= 0.5; // Giro a la mitad en boost
+            if (turnDirection !== 0) {
+                let steerAngle = (forwardVel >= 0) ? turnDirection : -turnDirection;
+                let maxTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
+                
+                // Giro según la velocidad
+                let speedFactor = Math.min(1.0, currentSpeed / CONST.CONFIG.CAR_MAX_SPEED);
+                let dynamicTurnSpeed = maxTurnSpeed * (0.8 + 0.2 * (1 - Math.abs(speedFactor - 0.5) * 2));
+                
+                if (this.isBoosting) {
+                    dynamicTurnSpeed *= 0.5;
+                }
+                
+                if (this.isDrifting) {
+                    steerAngle *= 1.45; // Trazado más cerrado en drift
+                }
+                
+                this.angle += steerAngle * dynamicTurnSpeed * timeScale; 
             }
-            
-            // 3. Aumentar giro si estamos DERRAPANDO (Drift)
-            if (this.isDrifting) {
-                steerAngle *= CONST.CONFIG.CAR_DRIFT_TURN_MULTIPLIER;
+        }
+
+        // --- SISTEMA DE SALTO Y FRONT FLIP (EJE Z) ---
+        const jumpPressed = !!keys[this.controls.jump];
+        const jumpJustPressed = jumpPressed && !this.jumpKeyPressedLastFrame;
+        this.jumpKeyPressedLastFrame = jumpPressed;
+
+        if (jumpJustPressed) {
+            if (this.z === 0) { // Salto inicial
+                this.vz = CONST.CONFIG.CAR_JUMP_FORCE;
+                this.z = 0.1;
+                this.isJumping = true;
+                this.canDoubleJump = true;
+                playSound('jump');
+            } else if (this.z > 0 && this.canDoubleJump && !this.isFlipping && this.flipCooldownTimer <= 0) { // Voltereta Frontal (Front Flip)
+                this.isFlipping = true;
+                this.flipTimer = CONST.CONFIG.CAR_FLIP_DURATION;
+                this.canDoubleJump = false;
+                this.flipVisualAngle = 0;
+                this.flipCooldownTimer = 60; // 1 segundo (60 frames a 60fps)
+                
+                // Impulso horizontal en dirección del chasis
+                this.vx += Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                this.vy -= Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                
+                playSound('flip');
             }
+        }
+
+        // Gravedad y actualización del vuelo Z
+        if (this.z > 0) {
+            this.z += this.vz * timeScale;
+            this.vz -= CONST.CONFIG.CAR_GRAVITY * timeScale;
             
-            this.angle += steerAngle * dynamicTurnSpeed; 
+            if (this.z <= 0) {
+                this.z = 0;
+                this.vz = 0;
+                this.isJumping = false;
+                this.isFlipping = false;
+                this.canDoubleJump = true;
+                this.flipVisualAngle = 0;
+            }
+        }
+
+        // Animación de Voltereta
+        if (this.isFlipping) {
+            this.flipTimer -= timeScale;
+            this.flipVisualAngle = (1.0 - (this.flipTimer / CONST.CONFIG.CAR_FLIP_DURATION)) * Math.PI * 2;
+            if (this.flipTimer <= 0) {
+                this.isFlipping = false;
+                this.flipVisualAngle = 0;
+            }
         }
 
         if (gameState === 'playing' && this.isBoosting) {
@@ -181,23 +283,24 @@ export class Car {
         }
 
         // --- ESTADO SUPERSÓNICO ---
-        this.isSupersonic = (this.speed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.92);
+        this.isSupersonic = (currentSpeed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.9);
 
-        if (Math.abs(this.speed) < 0.01) this.speed = 0;
-        this.vx = Math.sin(this.angle) * this.speed;
-        this.vy = -Math.cos(this.angle) * this.speed;
-
-        if (gameState === 'playing' || gameState === 'countdown') { 
-            this.move();
+        if (gameState === 'playing' || gameState === 'goalScored') { 
+            this.move(timeScale);
             if (this.skidMarkTimer > 0) this.skidMarkTimer--;
             
-            // Efectos visuales (humo y huellas)
-            if (isTurning && Math.abs(this.speed) > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
-                if(this.skidMarkTimer <= 0) { this.spawnSkidMark(skidMarks); this.skidMarkTimer = 4; }
-                if(this.isDrifting) this.spawnDriftSmoke(particles);
+            // Efectos visuales de huellas y humo (solo en el suelo)
+            if (this.z === 0) {
+                if (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
+                    if (this.skidMarkTimer <= 0) { this.spawnSkidMark(skidMarks); this.skidMarkTimer = 4; }
+                    if (this.isDrifting) this.spawnDriftSmoke(particles);
+                }
+                if (this.isBoosting) this.spawnParticles(5, this.boostType, particles);
+                else if (currentSpeed > 0.5 && isAccelerating) this.spawnParticles(1, 'smoke', particles);
+            } else {
+                // Si está en el aire con Boost, igual soltar partículas de propulsión
+                if (this.isBoosting) this.spawnParticles(3, this.boostType, particles);
             }
-            if (this.isBoosting) this.spawnParticles(5, this.boostType, particles);
-            else if (Math.abs(this.speed) > 0.5 && isAccelerating) this.spawnParticles(1, 'smoke', particles);
         }
     }
 
@@ -209,50 +312,42 @@ export class Car {
 
     checkWallCollision() {
         // Colisiones con las porterías (Cajas de colisión dinámicas)
-        // Añadimos un pequeño margen (buffer) para facilitar la entrada y evitar rebotes en los bordes
         const goalBuffer = 40; 
         const inGoalLeft = (Math.abs(this.y - CONST.CONFIG.GOAL_TOP.y) < (CONST.CONFIG.GOAL_TOP.w/2 + 10) && this.x < (CONST.CONFIG.GOAL_TOP.x + goalBuffer));
         const inGoalRight = (Math.abs(this.y - CONST.CONFIG.GOAL_BOTTOM.y) < (CONST.CONFIG.GOAL_BOTTOM.w/2 + 10) && this.x > (CONST.CONFIG.GOAL_BOTTOM.x - goalBuffer));
+        const bounce = CONST.CONFIG.CAR_WALL_RESTITUTION;
 
         if (inGoalLeft) {
             const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
             const bottom = CONST.CONFIG.GOAL_TOP.y + CONST.CONFIG.GOAL_TOP.w/2;
             const back = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.d;
-            const bounce = CONST.CONFIG.CAR_WALL_BOUNCE;
             if (this.y - this.radius < top) { 
                 this.y = top + this.radius; 
-                this.vy = Math.abs(this.vy) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vy = Math.abs(this.vy) * bounce; 
             }
             if (this.y + this.radius > bottom) { 
                 this.y = bottom - this.radius; 
-                this.vy = -Math.abs(this.vy) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vy = -Math.abs(this.vy) * bounce; 
             }
             if (this.x - this.radius < back) { 
                 this.x = back + this.radius; 
-                this.vx = Math.abs(this.vx) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vx = Math.abs(this.vx) * bounce; 
             }
         } else if (inGoalRight) {
             const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
             const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
             const back = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.d;
-            const bounce = CONST.CONFIG.CAR_WALL_BOUNCE;
             if (this.y - this.radius < top) { 
                 this.y = top + this.radius; 
-                this.vy = Math.abs(this.vy) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vy = Math.abs(this.vy) * bounce; 
             }
             if (this.y + this.radius > bottom) { 
                 this.y = bottom - this.radius; 
-                this.vy = -Math.abs(this.vy) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vy = -Math.abs(this.vy) * bounce; 
             }
             if (this.x + this.radius > back) { 
                 this.x = back - this.radius; 
-                this.vx = -Math.abs(this.vx) * (1 + bounce); 
-                this.speed *= -0.5;
+                this.vx = -Math.abs(this.vx) * bounce; 
             }
         } else {
             // Solo si no estamos en zona de portería, aplicamos la colisión con los muros del campo

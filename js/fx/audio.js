@@ -237,7 +237,40 @@ export function updateAudio() {
 export function playSound(type, intensity = 1.0) {
     if (!isInitialized || audioCtx.state !== 'running') return;
 
-    // Límite de voces y sistema de prioridades de audio sintético
+    // 1. Sonidos que usan muestras de audio pregrabadas (Audio HTML5) - Retornar antes de crear osciladores
+    if (type === 'menu_click') {
+        const clickSnd = new Audio(getAssetPath('recursos/sound/modern2.wav'));
+        clickSnd.volume = 0.4 * sfxVolume;
+        clickSnd.play().catch(e => {});
+        return;
+    } 
+    if (type === 'menu_hover') {
+        const hoverSnd = new Audio(getAssetPath('recursos/sound/minimalist8.wav'));
+        hoverSnd.volume = 0.3 * sfxVolume;
+        hoverSnd.play().catch(e => {});
+        return;
+    }
+    if (type === 'menu_error') {
+        const errorSnd = new Audio(getAssetPath('recursos/sound/modern2.wav'));
+        errorSnd.volume = 0.45 * sfxVolume;
+        errorSnd.playbackRate = 0.7; // Tono más grave/lento para indicar error
+        errorSnd.play().catch(e => {});
+        return;
+    }
+    if (type === 'countdown') {
+        const cdSnd = new Audio(getAssetPath('recursos/sound/countdown.mp3'));
+        cdSnd.volume = 0.6 * sfxVolume;
+        cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
+        return;
+    }
+    if (type === 'goal') {
+        const goalSnd = new Audio(getAssetPath('recursos/sound/car-explosion.mp3'));
+        goalSnd.volume = 0.8 * sfxVolume;
+        goalSnd.play().catch(e => console.log("Goal sound blocked:", e));
+        return;
+    }
+
+    // 2. Sonidos Sintéticos (Web Audio API)
     const isSynthetic = ['boost_pickup', 'car_hit', 'ball_hit', 'wall_hit'].includes(type);
     if (isSynthetic) {
         if (activeSynthVoicesCount >= MAX_SYNTH_VOICES) {
@@ -260,12 +293,26 @@ export function playSound(type, intensity = 1.0) {
         };
     }
 
-    if (type === 'menu_click') {
-        const clickSnd = new Audio(getAssetPath('recursos/sound/modern2.wav'));
-        clickSnd.volume = 0.4 * sfxVolume;
-        clickSnd.play().catch(e => {});
+    if (type === 'jump') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(420, now + 0.12);
+        gainNode.gain.setValueAtTime(0.18 * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
         return;
-    } 
+    }
+    if (type === 'flip') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.22);
+        gainNode.gain.setValueAtTime(0.24 * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.22);
+        return;
+    }
     if (type === 'boost_pickup') {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(300, now);
@@ -284,18 +331,6 @@ export function playSound(type, intensity = 1.0) {
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
         osc.start(now);
         osc.stop(now + 0.1);
-        return;
-    }
-    if (type === 'countdown') {
-        const cdSnd = new Audio(getAssetPath('recursos/sound/countdown.mp3'));
-        cdSnd.volume = 0.6 * sfxVolume;
-        cdSnd.play().catch(e => console.log("Countdown sound blocked:", e));
-        return;
-    }
-    if (type === 'menu_hover') {
-        const hoverSnd = new Audio(getAssetPath('recursos/sound/minimalist8.wav'));
-        hoverSnd.volume = 0.3 * sfxVolume;
-        hoverSnd.play().catch(e => {});
         return;
     }
     else if (type === 'ball_hit') {
