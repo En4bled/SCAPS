@@ -67,7 +67,7 @@ export function checkPolygonCollision(entity, polygon) {
             let friction = 0.95;
 
             if (isBall) {
-                bounce = Math.min(0.9, (CONST.CONFIG.BALL_BOUNCINESS || 0.88) * 0.45);
+                bounce = Math.min(0.9, (CONST.CONFIG.BALL_BOUNCINESS || 0.88) * 0.26);
                 friction = 0.90; // Añadimos fricción contra la pared para que pierda velocidad al rebotar o arrastrarse
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 if (Math.abs(vNormal) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(vNormal) * 0.1));
@@ -176,7 +176,7 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
     const dy = ball.y - car.y;
     
     // Calcular dz real + un pequeño offset de sustentación para que no vaya 100% raso, pero sin lanzarlo a las nubes
-    let dz = (ball.z - car.z) + 12;
+    let dz = (ball.z - car.z) + 4.5;
 
     const distance3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
     const minDistance = car.radius + ball.radius;
@@ -243,7 +243,7 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
 
         ball.vx += (jX / ball.mass) + (nx * extraArcadeImpulse);
         ball.vy += (jY / ball.mass) + (ny * extraArcadeImpulse);
-        ball.vz += (jZ / ball.mass) + (nz * extraArcadeImpulse * 0.5);
+        ball.vz += (jZ / ball.mass) + (nz * extraArcadeImpulse * 0.2);
 
         if (ball.onWallTimer > 0) {
             ball.vx *= 1.35;

@@ -112,63 +112,65 @@ export class Ball {
         
         // Trasladar en Y hacia arriba para simular la altura Z
         ctx.translate(0, -this.z);
-        ctx.rotate(this.rotationAngle); // Spin del eje Z (rosca)
         
         // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
         const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
         const renderRadius = this.visualRadius * zoomScale;
         
-        // Guardamos el contexto antes del rodamiento 3D (para que la escala de rodamiento no afecte al sombreado circular final)
-        ctx.save();
+        // --- 1. MÁSCARA DE RECORTE ESFÉRICA PERFECTA ---
+        ctx.save(); // Para contener la máscara de recorte (clipping)
+        ctx.beginPath();
+        ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
+        ctx.clip(); // Limita todo el dibujo a la silueta circular de la esfera
         
-        // Aplicar el Rodamiento 3D (giro visual sobre el eje de movimiento)
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (speed > 0.1) {
-            const moveAngle = Math.atan2(this.vy, this.vx);
-            // Rotamos el eje X hacia la dirección del movimiento para aplicar el aplastamiento de rodadura
-            ctx.rotate(moveAngle - this.rotationAngle);
-            ctx.scale(Math.cos(this.rollDistance / this.radius), 1.0);
-            ctx.rotate(-(moveAngle - this.rotationAngle));
-        }
-
+        // Rotación del eje Z (spin / rosca)
+        ctx.rotate(this.rotationAngle);
+        
+        // Desplazamiento orbital dinámico de la textura interna (rodamiento 3D)
+        const shiftAmp = renderRadius * 0.28;
+        const shiftX = Math.sin(this.rollDistance / this.radius) * shiftAmp;
+        const shiftY = Math.cos(this.rollDistance / this.radius) * shiftAmp;
+        
+        // Escalamos un poco más la textura interna (1.5x) para que al desplazarse por rodadura nunca exponga bordes transparentes
+        const texSize = renderRadius * 1.5;
+        
         if (this.img && this.img.complete) {
-            ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
+            ctx.drawImage(this.img, -texSize + shiftX, -texSize + shiftY, texSize * 2, texSize * 2);
         } else {
+            // Fallback con formas vectoriales
             ctx.beginPath();
-            ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
+            ctx.arc(shiftX, shiftY, renderRadius, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(0, 0, renderRadius * 0.9, 0, Math.PI * 2);
+            ctx.arc(shiftX, shiftY, renderRadius * 0.9, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(0,0,0,0.1)';
             ctx.fill();
             ctx.fillStyle = '#222';
-            ctx.beginPath(); ctx.arc(0, -renderRadius / 2, renderRadius / 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(shiftX, -renderRadius / 2 + shiftY, renderRadius / 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(renderRadius / 2 + shiftX, renderRadius / 3 + shiftY, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(-renderRadius / 2 + shiftX, renderRadius / 3 + shiftY, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
         }
         
-        ctx.restore(); // Restauramos al estado antes de la escala de rodadura
+        ctx.restore(); // Eliminamos la máscara de recorte (mantiene la traslación de Z)
 
-        // --- OVERLAY DE SOMBREADO ESFÉRICO FIJO (NO ROTA CON EL BALÓN) ---
-        // Deshacemos la rotación local del balón para aplicar el sombreado 3D fijo con luz desde arriba-izquierda
-        ctx.rotate(-this.rotationAngle);
-
+        // --- 2. OVERLAY DE SOMBREADO ESFÉRICO FIJO ---
+        // Sombreado radial fijo de alta definición que le da el relieve volumétrico 3D a la esfera
         const shadingGrad = ctx.createRadialGradient(
             -renderRadius * 0.18, -renderRadius * 0.18, renderRadius * 0.05,
             0, 0, renderRadius
         );
-        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz en 3D
-        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición suave
+        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz
+        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición
         shadingGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
-        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión ambiental en los bordes
+        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión en los bordes
 
         ctx.fillStyle = shadingGrad;
         ctx.beginPath();
         ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.restore(); 
+        ctx.restore(); // Restaura la traslación inicial de Z 
     }
 
     drawFireball(ctx, animationFrameCounter) {
@@ -200,13 +202,13 @@ export class Ball {
         // Gravedad y físicas del eje Z
         if (this.z > 0) {
             this.z += this.vz * timeScale;
-            this.vz -= CONST.CONFIG.CAR_GRAVITY * 0.85 * timeScale; // Gravedad similar a los coches
+            this.vz -= CONST.CONFIG.CAR_GRAVITY * 1.25 * timeScale; // Gravedad aumentada para reducir la flotación
             
             if (this.z <= 0) {
                 this.z = 0;
-                // Rebote elástico contra el suelo
+                // Rebote elástico reducido contra el suelo
                 if (this.vz < -0.4) {
-                    this.vz *= -0.65;
+                    this.vz *= -0.48;
                     this.vx *= 0.95;
                     this.vy *= 0.95;
                     playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
