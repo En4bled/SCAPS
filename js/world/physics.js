@@ -92,10 +92,14 @@ export function checkPolygonCollision(entity, polygon) {
         const slopeFactor = 0.65;
         const maxPenetration = 30;
         
-        // Si el coche está haciendo un flip, está saltando o viene volando sin tracción previa,
-        // rebota limpiamente contra el muro en lugar de incrustarse en la colisión.
+        // Calcular velocidad normal del impacto
+        const vNormal = (entity.vx !== undefined) ? (entity.vx * nx + entity.vy * ny) : 0;
         const isJumpingIntoWall = entity.isJumping || (z > 1.0 && (entity.wallTractionTimer || 0) <= 0);
-        if (entity.isFlipping || isJumpingIntoWall) {
+        // Chocar conduciendo directamente contra el muro (velocidad normal fuerte hacia el muro)
+        const isHardImpact = vNormal < -0.85;
+
+        // Si el coche choca fuerte de frente, hace un flip, o salta al muro, rebota elásticamente hacia atrás
+        if (entity.isFlipping || isJumpingIntoWall || isHardImpact) {
             const isOnWall = (closestDist < entity.radius);
             if (isOnWall) {
                 // Resolver colisión empujando fuera de la pared por completo (sin allowedPenetration)
@@ -103,28 +107,28 @@ export function checkPolygonCollision(entity, polygon) {
                 entity.y += ny * overlap;
                 
                 if (entity.vx !== undefined) {
-                    const vNormal = entity.vx * nx + entity.vy * ny;
-                    if (vNormal < 0) {
-                        const tx = -ny;
-                        const ty = nx;
-                        const vTangent = entity.vx * tx + entity.vy * ty;
-                        
-                        // Rebote horizontal limpio y elástico siguiendo la trayectoria reflejada
-                        const bounce = 0.40;
-                        const reboundedNormal = -vNormal * bounce;
-                        entity.vx = reboundedNormal * nx + vTangent * 0.88 * tx;
-                        entity.vy = reboundedNormal * ny + vTangent * 0.88 * ty;
-                        
-                        // Cancelar flip/salto e impulsarse verticalmente (elevación) en proporción al impacto
-                        entity.isFlipping = false;
-                        entity.isJumping = false;
-                        
-                        const liftForce = -vNormal * 0.45 + 1.5;
-                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
-                        
-                        addScreenShake(Math.abs(vNormal) * 0.45);
-                        playSound('wall_hit', 0.5);
-                    }
+                    const tx = -ny;
+                    const ty = nx;
+                    const vTangent = entity.vx * tx + entity.vy * ty;
+                    
+                    // Rebote horizontal limpio y elástico siguiendo la trayectoria reflejada
+                    const bounce = 0.40;
+                    const reboundedNormal = -vNormal * bounce;
+                    entity.vx = reboundedNormal * nx + vTangent * 0.88 * tx;
+                    entity.vy = reboundedNormal * ny + vTangent * 0.88 * ty;
+                    
+                    // Cancelar flip/salto
+                    entity.isFlipping = false;
+                    entity.isJumping = false;
+                    
+                    // Si estaba en el suelo, forzar que despegue ligeramente para que dibuje la parábola hacia atrás
+                    if (entity.z === 0) entity.z = 0.1;
+                    
+                    const liftForce = -vNormal * 0.45 + 1.5;
+                    entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
+                    
+                    addScreenShake(Math.abs(vNormal) * 0.45);
+                    playSound('wall_hit', 0.5);
                 }
                 entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
                 return;
@@ -328,11 +332,29 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             ball.vx = ballTangentX + Math.cos(angle) * newNormalVel;
             ball.vy = ballTangentY + Math.sin(angle) * newNormalVel;
             
-            // ELEVACIÓN EJE Z (Efecto aéreo para juego aéreo fluido)
+            // ELEVACIÓN EJE Z (Efecto aéreo realista dependiente de la altura del balón sobre el chasis del coche)
             if (ball.vz !== undefined) {
-                // Usar Math.max no aditivo para evitar la elevación infinita por toques consecutivos
-                const hitLift = impulse * 0.11 + (zLift * 0.55);
-                ball.vz = Math.max(ball.vz || 0, Math.min(6.5, hitLift));
+                const heightDiff = ball.z - car.z; // Positivo si el balón está por encima
+                let verticalFactor = 0.0;
+                
+                if (car.isFlipping) {
+                    verticalFactor = 1.0;
+                } else if (car.isJumping) {
+                    verticalFactor = 0.8;
+                } else {
+                    // Elevación progresiva si el balón está por encima de la mitad del chasis
+                    verticalFactor = Math.max(0, Math.min(1.0, (heightDiff + 8) / 45));
+                }
+
+                const hitLift = (impulse * 0.10 + (zLift * 0.50)) * verticalFactor;
+                
+                if (heightDiff < -8 && !car.isFlipping) {
+                    // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
+                    ball.vz = Math.min(ball.vz || 0, -1.0);
+                } else {
+                    // Capped a un valor moderado para evitar vuelos infinitos
+                    ball.vz = Math.max(ball.vz || 0, Math.min(5.5, hitLift));
+                }
             }
 
             // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
@@ -358,7 +380,13 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             }
             
             ball.onWallTimer = 8; 
-            playSound('ball_hit', 1.0);
+            
+            // Evitar saturación y distorsión sonora cuando múltiples coches impactan a la vez
+            const nowTime = Date.now();
+            if (!ball.lastSoundTime || nowTime - ball.lastSoundTime > 120) {
+                playSound('ball_hit', 1.0);
+                ball.lastSoundTime = nowTime;
+            }
         }
         touchHistory.push({ car, time: gameTime });
         if (touchHistory.length > 10) touchHistory.shift();

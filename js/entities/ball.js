@@ -61,8 +61,8 @@ export class Ball {
         ctx.translate(0, -this.z);
         ctx.rotate(this.rotationAngle); 
         
-        // El radio visual crece un poco al elevarse para dar efecto 3D
-        const renderRadius = this.visualRadius * (1 + this.z / 400);
+        // Mantener el tamaño visual constante para evitar distorsiones al ganar altura en Z
+        const renderRadius = this.visualRadius;
         
         if (this.img && this.img.complete) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
