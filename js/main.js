@@ -2596,6 +2596,7 @@ function resetAfterGoal() {
 
 function showGameOver() {
     gameState = 'gameOver';
+    stopAllMotors();
     if (gameOverOverlay) {
         gameOverOverlay.style.display = 'flex';
 
@@ -2624,11 +2625,9 @@ function showGameOver() {
         if (scoreboardList) {
             scoreboardList.innerHTML = '';
             
-            // Ordenar por participación (goles x2 + asistencias)
+            // Ordenar por puntuación individual
             const sortedCars = [...allCars].sort((a, b) => {
-                const aScore = (a.goals || 0) * 2 + (a.assists || 0);
-                const bScore = (b.goals || 0) * 2 + (b.assists || 0);
-                return bScore - aScore;
+                return (b.score || 0) - (a.score || 0);
             });
             
             sortedCars.forEach(car => {
@@ -2638,10 +2637,11 @@ function showGameOver() {
                 const bgStyle = isPlayer ? `background: rgba(255,255,255,0.15); border-left: 3px solid ${color};` : `border-left: 3px solid transparent;`;
                 
                 const html = `
-                    <div style="display: flex; font-size: 14px; padding: 6px 10px; border-radius: 4px; ${bgStyle} transition: background 0.3s;">
+                    <div style="display: flex; font-size: 14px; padding: 6px 10px; border-radius: 4px; ${bgStyle} transition: background 0.3s; align-items: center;">
                         <div style="flex: 2; ${nameStyle} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px;">
                             ${isPlayer ? '<span style="font-size:10px; background:#2fb; color:#000; padding:1px 4px; border-radius:2px;">TÚ</span>' : ''} ${car.name || 'JUGADOR'}
                         </div>
+                        <div style="flex: 1; text-align: center; color: #2fb; font-weight: bold;">${car.score || 0}</div>
                         <div style="flex: 1; text-align: center; color: #fff; font-weight: bold;">${car.goals || 0}</div>
                         <div style="flex: 1; text-align: center; color: #ccc;">${car.assists || 0}</div>
                     </div>
