@@ -334,8 +334,8 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                 const e = CONST.CONFIG.BALL_BOUNCINESS || 0.65;
                 let newNormalVel = carNormalVel - e * relSpeedNormal;
 
-                // Añadir impulso de golpe activo
-                let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 1.0) * timeScale;
+                // Añadir impulso de golpe activo: El usuario pidió que rebote al doble de velocidad
+                let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 2.0) * timeScale;
                 
                 // --- PINCH LOGIC ---
                 if (ball.onWallTimer > 0) {
@@ -380,9 +380,10 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                 }
             } else {
                 // Toque continuo / Deslizamiento pasivo (mantenimiento de contacto)
-                // Se resuelve de manera puramente elástica pasiva con restitución moderada para evitar jitter y no sentirse pegajoso
-                const e = 0.22;
-                const newNormalVel = carNormalVel - e * relSpeedNormal;
+                // Se resuelve de manera altamente repulsiva para evitar que el coche pueda arrastrar el balón
+                const e = 2.0; // Restitución exagerada (rebote) para despegarse del coche
+                let pushAway = Math.max(0, carNormalVel) * 2.0; // Empuje extra al doble de velocidad
+                const newNormalVel = carNormalVel - e * relSpeedNormal + pushAway;
 
                 ball.vx = ballTangentX + nx * newNormalVel;
                 ball.vy = ballTangentY + ny * newNormalVel;
