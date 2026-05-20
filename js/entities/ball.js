@@ -14,6 +14,7 @@ export class Ball {
         this.type = 'ball';
         this.mass = 15;
         this.img = null;
+        this.cachedPattern = null;
         if (imgPath) {
             this.setAppearance(imgPath);
         }
@@ -24,7 +25,11 @@ export class Ball {
             const resolvedPath = getAssetPath(imgPath);
             if (!this.img || !this.img.src.includes(resolvedPath)) {
                 this.img = new Image();
+                this.img.onload = () => {
+                    this.cachedPattern = null;
+                };
                 this.img.src = resolvedPath;
+                this.cachedPattern = null;
             }
         }
     }
@@ -147,9 +152,11 @@ export class Ball {
             // 3. Rotar según el spin (rosca Z)
             ctx.rotate(this.rotationAngle);
             
-            // Crear el patrón repetitivo rectangular infinito
-            const pattern = ctx.createPattern(this.img, 'repeat');
-            ctx.fillStyle = pattern;
+            // Usar patrón cacheado para optimizar el rendimiento y evitar lag
+            if (!this.cachedPattern) {
+                this.cachedPattern = ctx.createPattern(this.img, 'repeat');
+            }
+            ctx.fillStyle = this.cachedPattern;
             
             // Rellenar un área grande que cubra con creces la esfera clipada
             const fillSize = (renderRadius * 4) / patternScale;
