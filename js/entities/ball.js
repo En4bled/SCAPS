@@ -134,6 +134,25 @@ export class Ball {
             ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
         }
+
+        // --- OVERLAY DE SOMBREADO ESFÉRICO FIJO (NO ROTA CON EL BALÓN) ---
+        // Deshacemos la rotación local del balón para aplicar el sombreado 3D fijo con luz desde arriba-izquierda
+        ctx.rotate(-this.rotationAngle);
+
+        const shadingGrad = ctx.createRadialGradient(
+            -renderRadius * 0.18, -renderRadius * 0.18, renderRadius * 0.05,
+            0, 0, renderRadius
+        );
+        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz en 3D
+        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición suave
+        shadingGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
+        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión ambiental en los bordes
+
+        ctx.fillStyle = shadingGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore(); 
     }
 
