@@ -2872,6 +2872,7 @@ async function startIntro() {
     // Crear lista de recursos a precargar
     const coreAssets = [
         'recursos/stadiums/estadio1.png',
+        'recursos/cars/Car1-down.png',
         ...Array.from({ length: 10 }, (_, i) => `recursos/cars/car${i + 1}.png`),
         ...Array.from({ length: 12 }, (_, i) => `recursos/balls/ball_${i + 1}.png`),
         ...Array.from({ length: 14 }, (_, i) => `recursos/avatar/avatar_${i + 1}.png`),

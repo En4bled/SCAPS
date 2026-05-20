@@ -25,6 +25,7 @@ export class Car {
         this.mass = 100;
         
         this.img = null;
+        this.imgDown = null;
         if (imgPath) {
             this.setAppearance(imgPath, hue, saturate);
         }
@@ -69,6 +70,10 @@ export class Car {
                 this.img = new Image();
                 this.img.src = resolvedPath;
             }
+        }
+        if (!this.imgDown) {
+            this.imgDown = new Image();
+            this.imgDown.src = getAssetPath('recursos/cars/Car1-down.png');
         }
     }
 
@@ -155,10 +160,19 @@ export class Car {
                     }
                     ctx.filter = filters.join(' ');
 
-                    ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+                    let currentImg = this.img;
+                    let drawManualWheels = false;
+                    if (scaleY < 0 && i === 0) {
+                        if (this.imgDown && this.imgDown.complete) {
+                            currentImg = this.imgDown;
+                        } else {
+                            drawManualWheels = true;
+                        }
+                    }
+                    ctx.drawImage(currentImg, -this.width / 2, -this.height / 2, this.width, this.height);
 
-                    // 3. Si es la capa base (i === 0) y el coche está boca abajo (scaleY < 0), dibujamos las 4 ruedas en el chasis
-                    if (i === 0 && scaleY < 0) {
+                    // 3. Si es la capa base (i === 0) y el coche está boca abajo (scaleY < 0), dibujamos las 4 ruedas en el chasis si no tenemos cargada la imagen del subchasis
+                    if (i === 0 && scaleY < 0 && drawManualWheels) {
                         ctx.fillStyle = '#0a0a0a'; // Negro goma
                         ctx.strokeStyle = '#222';  // Borde oscuro
                         ctx.lineWidth = 1.5;
