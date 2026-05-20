@@ -181,7 +181,7 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
     const dy = ball.y - car.y;
     
     // Calcular dz real + un pequeño offset de sustentación para que no vaya 100% raso, pero sin lanzarlo a las nubes
-    let dz = (ball.z - car.z) + 4.5;
+    let dz = (ball.z - car.z) + 2.2;
 
     const distance3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
     const minDistance = car.radius + ball.radius;
@@ -215,7 +215,7 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             // Proyectar el balón radialmente hacia afuera
             ball.vx = car.vx + nx * impulseMag;
             ball.vy = car.vy + ny * impulseMag;
-            ball.vz = Math.max(ball.vz, 3.5 + Math.abs(nz) * 6.5);
+            ball.vz = Math.max(ball.vz, 2.0 + Math.abs(nz) * 3.0);
 
             if (typeof ball.triggerImpactSquash === 'function') {
                 ball.triggerImpactSquash(nx, ny, impulseMag);

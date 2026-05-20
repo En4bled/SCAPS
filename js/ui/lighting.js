@@ -38,10 +38,11 @@ export function drawDynamicShadows(ctx, entities, lights) {
                     
                     if (shadowOpacity > 0.01) {
                         ctx.save();
-                        const lightHeight = 320;
-                        const projScale = zVal / Math.max(10, lightHeight - zVal);
-                        const shadowOffsetX = dx * projScale;
-                        const shadowOffsetY = dy * projScale;
+                        const nx = dx / (dist || 1);
+                        const ny = dy / (dist || 1);
+                        const maxDisplacement = Math.min(120, zVal * 0.65);
+                        const shadowOffsetX = nx * maxDisplacement;
+                        const shadowOffsetY = ny * maxDisplacement;
                         
                         ctx.translate(entity.x + shadowOffsetX, entity.y + shadowOffsetY);
                         ctx.scale(1, 0.5);

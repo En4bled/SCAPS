@@ -129,7 +129,7 @@ export class Ball {
         // Aplastamiento y vibración elástica por impactos (suelo/pared/coche)
         ctx.scale(this.squashX, this.squashY);
 
-        const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
+        const zoomScale = 1.0 + (this.z / 200.0) * 0.55;
         const renderRadius = this.visualRadius * zoomScale;
         
         // Dibujar textura/gráfico del balón rotado
