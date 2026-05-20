@@ -92,11 +92,13 @@ export function checkPolygonCollision(entity, polygon) {
         const slopeFactor = 0.65;
         const maxPenetration = 30;
         
-        // Si el coche está haciendo un flip y colisiona con la pared, rebota limpiamente sin quedarse atascado
-        if (entity.isFlipping) {
+        // Si el coche está haciendo un flip, está saltando o viene volando sin tracción previa,
+        // rebota limpiamente contra el muro en lugar de incrustarse en la colisión.
+        const isJumpingIntoWall = entity.isJumping || (z > 1.0 && (entity.wallTractionTimer || 0) <= 0);
+        if (entity.isFlipping || isJumpingIntoWall) {
             const isOnWall = (closestDist < entity.radius);
             if (isOnWall) {
-                // Resolver colisión empujando fuera de la pared por completo
+                // Resolver colisión empujando fuera de la pared por completo (sin allowedPenetration)
                 entity.x += nx * overlap;
                 entity.y += ny * overlap;
                 
@@ -107,18 +109,21 @@ export function checkPolygonCollision(entity, polygon) {
                         const ty = nx;
                         const vTangent = entity.vx * tx + entity.vy * ty;
                         
-                        // Rebote fuerte y limpio siguiendo la trayectoria reflejada
-                        const bounce = 0.45;
+                        // Rebote horizontal limpio y elástico siguiendo la trayectoria reflejada
+                        const bounce = 0.40;
                         const reboundedNormal = -vNormal * bounce;
-                        entity.vx = reboundedNormal * nx + vTangent * 0.85 * tx;
-                        entity.vy = reboundedNormal * ny + vTangent * 0.85 * ty;
+                        entity.vx = reboundedNormal * nx + vTangent * 0.88 * tx;
+                        entity.vy = reboundedNormal * ny + vTangent * 0.88 * ty;
                         
-                        // Cancelar el flip y aplicar un pequeño rebote vertical
+                        // Cancelar flip/salto e impulsarse verticalmente (elevación) en proporción al impacto
                         entity.isFlipping = false;
-                        entity.vz = CONST.CONFIG.CAR_JUMP_FORCE * 0.35;
+                        entity.isJumping = false;
                         
-                        addScreenShake(Math.abs(vNormal) * 0.5);
-                        playSound('wall_hit', 0.6);
+                        const liftForce = -vNormal * 0.45 + 1.5;
+                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
+                        
+                        addScreenShake(Math.abs(vNormal) * 0.45);
+                        playSound('wall_hit', 0.5);
                     }
                 }
                 entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
