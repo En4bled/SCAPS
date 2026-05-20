@@ -761,4 +761,9 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         keysPressed['KeyD'] = false;
     }
     lastButtonsState['stickRight'] = stickRight;
+
+    // Registrar los ejes Y analógicos para el control de flips en el aire (sin provocar aceleración/frenado en el suelo)
+    const axisY = gp.axes[1];
+    keysPressed['stickUp'] = axisY < -deadzone;
+    keysPressed['stickDown'] = axisY > deadzone;
 }

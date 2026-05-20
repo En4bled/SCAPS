@@ -265,19 +265,33 @@ export class Car {
                 this.flipVisualAngle = 0;
                 this.flipCooldownTimer = 60; // 1 segundo (60 frames a 60fps)
                 
-                const pressUp = !!keys[this.controls.up];
-                const pressDown = !!keys[this.controls.down];
+                // Determinar la dirección del flip priorizando el stick analógico sobre gatillos/botones de acelerador (W/S)
+                const hasAnalogFlipInput = !!keys['stickUp'] || !!keys['stickDown'];
+                let pressUp = false;
+                let pressDown = false;
                 
-                if (pressUp) {
+                if (hasAnalogFlipInput) {
+                    pressUp = !!keys['stickUp'];
+                    pressDown = !!keys['stickDown'];
+                } else {
+                    pressUp = !!keys[this.controls.up];
+                    pressDown = !!keys[this.controls.down];
+                }
+                
+                if (pressDown) {
+                    this.flipDirection = -1; // Back Flip
+                    // Si el coche está acelerando o tiene velocidad de avance, reducimos drásticamente
+                    // el impulso horizontal hacia atrás para evitar que anule la trayectoria del avance.
+                    const isAccelerating = !!keys[this.controls.up] || !!keys['stickUp'];
+                    const impulseMultiplier = (forwardVel > 0.4 || isAccelerating) ? 0.25 : 1.0;
+                    
+                    this.vx -= Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE * impulseMultiplier;
+                    this.vy += Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE * impulseMultiplier;
+                } else if (pressUp) {
                     this.flipDirection = 1; // Front Flip
                     // Impulso horizontal en dirección del chasis
                     this.vx += Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
                     this.vy -= Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
-                } else if (pressDown) {
-                    this.flipDirection = -1; // Back Flip
-                    // Impulso horizontal en dirección contraria
-                    this.vx -= Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
-                    this.vy += Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
                 } else {
                     this.flipDirection = 1; // Static Flip (animación de front flip parado)
                     // Sin impulso horizontal
