@@ -146,7 +146,7 @@ export function applyGlobalFriction(ball, cars, timeScale) {
 }
 
 export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale = 1.0) {
-    if (car.isExploded || ball.onWallTimer > 15) return;
+    if (car.isExploded) return;
 
     // --- VERIFICACIÓN DE ALTURA EN EJE Z ---
     const carZ = car.z || 0;
@@ -207,8 +207,18 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                 addHitStop(3);
             }
 
-            ball.vx += Math.cos(angle) * impulse;
-            ball.vy += Math.sin(angle) * impulse;
+            // Descomponer la velocidad actual del balón
+            const ballNormalVel = ball.vx * Math.cos(angle) + ball.vy * Math.sin(angle);
+            const ballTangentX = ball.vx - ballNormalVel * Math.cos(angle);
+            const ballTangentY = ball.vy - ballNormalVel * Math.sin(angle);
+
+            // Velocidad del coche en la dirección del impacto
+            const carNormalVel = car.vx * Math.cos(angle) + car.vy * Math.sin(angle);
+
+            // Establecer la nueva velocidad normal del balón como la del coche más el impulso de rebote (evita arrastres)
+            const newNormalVel = carNormalVel + impulse;
+            ball.vx = ballTangentX + Math.cos(angle) * newNormalVel;
+            ball.vy = ballTangentY + Math.sin(angle) * newNormalVel;
             
             // ELEVACIÓN EJE Z (Efecto aéreo para juego aéreo fluido)
             if (ball.vz !== undefined) {

@@ -56,6 +56,7 @@ export class Car {
         this.flipCooldownTimer = 0;
         this.wallTractionTimer = 0;
         this.lastWallNormal = null;
+        this.flipDirection = 1;
     }
 
     setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
@@ -245,16 +246,30 @@ export class Car {
                 this.isJumping = true;
                 this.canDoubleJump = true;
                 playSound('jump');
-            } else if (this.z > 0 && this.canDoubleJump && !this.isFlipping && this.flipCooldownTimer <= 0) { // Voltereta Frontal (Front Flip)
+            } else if (this.z > 0 && this.canDoubleJump && !this.isFlipping && this.flipCooldownTimer <= 0) { // Voltereta (Flip)
                 this.isFlipping = true;
                 this.flipTimer = CONST.CONFIG.CAR_FLIP_DURATION;
                 this.canDoubleJump = false;
                 this.flipVisualAngle = 0;
                 this.flipCooldownTimer = 60; // 1 segundo (60 frames a 60fps)
                 
-                // Impulso horizontal en dirección del chasis
-                this.vx += Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
-                this.vy -= Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                const pressUp = !!keys[this.controls.up];
+                const pressDown = !!keys[this.controls.down];
+                
+                if (pressUp) {
+                    this.flipDirection = 1; // Front Flip
+                    // Impulso horizontal en dirección del chasis
+                    this.vx += Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                    this.vy -= Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                } else if (pressDown) {
+                    this.flipDirection = -1; // Back Flip
+                    // Impulso horizontal en dirección contraria
+                    this.vx -= Math.sin(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                    this.vy += Math.cos(this.angle) * CONST.CONFIG.CAR_FLIP_IMPULSE;
+                } else {
+                    this.flipDirection = 1; // Static Flip (animación de front flip parado)
+                    // Sin impulso horizontal
+                }
                 
                 // Impulso vertical snappy inicial (cancela caída, da sustentación rápida)
                 this.vz = 1.0;
@@ -285,7 +300,7 @@ export class Car {
             this.flipTimer -= timeScale;
             const t = Math.max(0, Math.min(1, 1.0 - (this.flipTimer / CONST.CONFIG.CAR_FLIP_DURATION)));
             const easedT = Math.sin(t * Math.PI / 2);
-            this.flipVisualAngle = easedT * Math.PI * 2;
+            this.flipVisualAngle = easedT * Math.PI * 2 * (this.flipDirection || 1);
             
             if (this.flipTimer <= 0) {
                 this.isFlipping = false;
