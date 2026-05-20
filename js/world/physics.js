@@ -381,34 +381,56 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
     if (dist < minDist) {
         const angle = Math.atan2(dy, dx);
         
-        // --- LÓGICA DE DEMOLICIÓN ---
-        // Si A es supersónico y B no es del mismo equipo (o fuego amigo desactivado), B explota.
-        // Simplificamos: si alguien es supersónico, el otro explota (SOLO RIVALES)
-        if (carA.isSupersonic && !carB.isSupersonic && carA.color !== carB.color) {
-            demolishCar(carB, explosionParticles);
-            addFeedMessage('demolition', carA, carB); // Añadimos mensaje al feed
-            if (carA.isPlayer || carB.isPlayer) {
-                addScreenShake(15);
-                if (carA.isPlayer) addHitStop(4); // Hit-stop solo si yo exploto a alguien
-            }
-            carA.speed *= 0.6;
-            return;
-        } else if (carB.isSupersonic && !carA.isSupersonic && carA.color !== carB.color) {
-            demolishCar(carA, explosionParticles);
-            addFeedMessage('demolition', carB, carA);
-            if (carA.isPlayer || carB.isPlayer) {
-                addScreenShake(15);
-                if (carB.isPlayer) addHitStop(4);
-            }
-            carB.speed *= 0.6;
-            return;
-        }
-
         const overlap = (minDist - dist) / 2;
         const nx = Math.cos(angle);
         const ny = Math.sin(angle);
 
-        // Separación física
+        // --- LÓGICA DE DEMOLICIÓN DE RIVALES (Regla del 80% de velocidad con boost) ---
+        const speedA = Math.sqrt(carA.vx * carA.vx + carA.vy * carA.vy);
+        const speedB = Math.sqrt(carB.vx * carB.vx + carB.vy * carB.vy);
+        const combinedSpeed = speedA + speedB;
+        const maxBoostSpeed = CONST.CONFIG.CAR_MAX_BOOST_SPEED;
+        const demoThreshold = maxBoostSpeed * 0.80; // 80% de la velocidad máxima con boost
+        
+        const isRival = (carA.color !== carB.color);
+        const relVx = carA.vx - carB.vx;
+        const relVy = carA.vy - carB.vy;
+        const relSpeedNormal = relVx * nx + relVy * ny; // > 0 si A se mueve hacia B
+
+        let isDemolition = false;
+        let attacker = null;
+        let victim = null;
+
+        if (isRival) {
+            if (relSpeedNormal > 0.05) {
+                // A es el atacante
+                if (speedA >= demoThreshold || combinedSpeed >= demoThreshold) {
+                    isDemolition = true;
+                    attacker = carA;
+                    victim = carB;
+                }
+            } else if (relSpeedNormal < -0.05) {
+                // B es el atacante
+                if (speedB >= demoThreshold || combinedSpeed >= demoThreshold) {
+                    isDemolition = true;
+                    attacker = carB;
+                    victim = carA;
+                }
+            }
+        }
+
+        if (isDemolition && attacker && victim) {
+            demolishCar(victim, explosionParticles);
+            addFeedMessage('demolition', attacker, victim); // Añadimos mensaje al feed
+            if (attacker.isPlayer || victim.isPlayer) {
+                addScreenShake(15);
+                if (attacker.isPlayer) addHitStop(4); // Hit-stop solo si yo exploto a alguien
+            }
+            attacker.speed *= 0.6;
+            return;
+        }
+
+        // Separación física si no hay demolición (los coches rebotan)
         carA.x -= nx * overlap; carA.y -= ny * overlap;
         carB.x += nx * overlap; carB.y += ny * overlap;
 

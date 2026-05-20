@@ -186,6 +186,12 @@ export class Car {
         let currentAccel = this.isBoosting ? CONST.CONFIG.CAR_BOOST_ACCEL : CONST.CONFIG.CAR_ACCEL;
         let maxSpeed = this.isBoosting ? CONST.CONFIG.CAR_MAX_BOOST_SPEED : CONST.CONFIG.CAR_MAX_SPEED;
 
+        // Aceleración progresiva: se suaviza a medida que la velocidad del coche se acerca al límite
+        const currentSpeedBeforeAccel = Math.sqrt(this.vx**2 + this.vy**2);
+        const speedRatio = Math.min(1.0, currentSpeedBeforeAccel / maxSpeed);
+        const progressiveFactor = Math.max(0.15, 1.0 - Math.pow(speedRatio, 1.4));
+        currentAccel *= progressiveFactor;
+
         if (gameState === 'countdown') {
             this.speed = 0; this.vx = 0; this.vy = 0;
             this.z = 0; this.vz = 0;
