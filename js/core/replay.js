@@ -22,17 +22,23 @@ export class ReplaySystem {
             ball: {
                 x: ball.x,
                 y: ball.y,
+                z: ball.z,
                 angle: ball.rotationAngle,
                 visualRadius: ball.visualRadius,
-                isFireball: ball.isFireball
+                isFireball: ball.isFireball,
+                squashX: ball.squashX || 1.0,
+                squashY: ball.squashY || 1.0
             },
             cars: cars.map(car => ({
                 x: car.x,
                 y: car.y,
+                z: car.z || 0,
                 angle: car.angle,
                 isBoosting: car.isBoosting,
                 isExploded: car.isExploded,
-                isSupersonic: car.isSupersonic
+                isSupersonic: car.isSupersonic,
+                isFlipping: car.isFlipping || false,
+                flipVisualAngle: car.flipVisualAngle || 0
             }))
         };
 
@@ -72,9 +78,12 @@ export class ReplaySystem {
         // Aplicar al balón
         ball.x = frame.ball.x;
         ball.y = frame.ball.y;
+        ball.z = frame.ball.z || 0;
         ball.rotationAngle = frame.ball.angle;
         ball.visualRadius = frame.ball.visualRadius;
         ball.isFireball = frame.ball.isFireball;
+        ball.squashX = frame.ball.squashX;
+        ball.squashY = frame.ball.squashY;
 
         // Aplicar a los coches
         frame.cars.forEach((carState, index) => {
@@ -82,10 +91,13 @@ export class ReplaySystem {
                 const car = cars[index];
                 car.x = carState.x;
                 car.y = carState.y;
+                car.z = carState.z || 0;
                 car.angle = carState.angle;
                 car.isBoosting = carState.isBoosting;
                 car.isExploded = carState.isExploded;
                 car.isSupersonic = carState.isSupersonic;
+                car.isFlipping = carState.isFlipping;
+                car.flipVisualAngle = carState.flipVisualAngle;
                 
                 // Forzar velocidad a 0 para que no afecten las físicas si hay fugas
                 car.vx = 0;

@@ -217,7 +217,7 @@ export class Ball {
                 // Rebote elástico reducido contra el suelo
                 if (this.vz < -0.4) {
                     this.triggerImpactSquash(0, 1, Math.abs(this.vz));
-                    this.vz *= -0.48;
+                    this.vz *= -0.58;
                     this.vx *= 0.95;
                     this.vy *= 0.95;
                     playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
