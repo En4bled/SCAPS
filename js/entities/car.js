@@ -129,9 +129,8 @@ export class Car {
 
                 for (let i = start; i !== end; i += step) {
                     ctx.save();
-                    // 1. Trasladar la capa en el espacio 2D sin escalar para evitar el aplastamiento del Y-scale
                     const progress = i / (numLayers - 1); // 0 (base) a 1 (superficie superior)
-                    const offset = -progress * maxDepth * sinVal * this.flipDirection;
+                    const offset = -progress * maxDepth * sinVal;
                     ctx.translate(0, offset);
 
                     // 2. Aplicar la escala de rotación del chasis a cada capa individualmente
