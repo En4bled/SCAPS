@@ -126,7 +126,8 @@ export function checkPolygonCollision(entity, polygon) {
                         const bounce = 0.18; // Rebote controlado
                         const reboundedNormal = -vNormal * bounce;
                         const climbForce = impactForce * 0.72;
-                        entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, (entity.vz || 0) + climbForce);
+                        // Usar Math.max en lugar de acumulación aditiva para evitar que el coche salga disparado verticalmente
+                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, climbForce));
 
                         // Rebote horizontal amortiguado con deslizamiento
                         entity.vx = reboundedNormal * nx + vTangent * 0.92 * tx;
@@ -137,7 +138,8 @@ export function checkPolygonCollision(entity, polygon) {
                     } else {
                         // Subida suave o deslizamiento continuo por la rampa
                         const climbForce = impactForce * 0.85;
-                        entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.2, (entity.vz || 0) + climbForce);
+                        // Usar Math.max en lugar de acumulación aditiva para evitar la realimentación exponencial en la rampa
+                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.2, climbForce));
 
                         // La velocidad normal se acopla cinemáticamente a la velocidad vertical
                         const constrainedNormal = -entity.vz * slopeFactor;
@@ -289,8 +291,9 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             
             // ELEVACIÓN EJE Z (Efecto aéreo para juego aéreo fluido)
             if (ball.vz !== undefined) {
-                ball.vz += impulse * 0.15 + (zLift * 0.7);
-                if (ball.vz > 10.5) ball.vz = 10.5; // Límite de altura elevado para mejores saltos
+                // Impulso y zLift reducidos para mantener el balón en un rango de altura jugable y realista
+                ball.vz += impulse * 0.10 + (zLift * 0.50);
+                if (ball.vz > 7.5) ball.vz = 7.5; // Límite de altura máximo ajustado de 10.5 a 7.5
             }
 
             // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
