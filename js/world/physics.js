@@ -260,6 +260,13 @@ export function applyGlobalFriction(ball, cars, timeScale) {
 export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale = 1.0) {
     if (car.isExploded) return;
 
+    // Inicializar y actualizar el cooldown del contacto activo del coche con el balón
+    if (car.ballContactCooldown === undefined) car.ballContactCooldown = 0;
+    if (car.ballContactCooldown > 0) {
+        car.ballContactCooldown -= timeScale;
+        if (car.ballContactCooldown < 0) car.ballContactCooldown = 0;
+    }
+
     // --- VERIFICACIÓN DE ALTURA EN EJE Z ---
     const carZ = car.z || 0;
     const ballZ = ball.z || 0;
@@ -275,10 +282,12 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
     if (distance < minDist) {
         const angle = Math.atan2(dy, dx);
         const overlap = minDist - distance;
+        
+        // Resolución posicional: Empujar el balón fuera del coche a lo largo de la normal del choque
         ball.x += Math.cos(angle) * overlap;
         ball.y += Math.sin(angle) * overlap;
 
-        // Usar los vectores normales unitarios del choque
+        // Vectores normales unitarios del choque
         const nx = Math.cos(angle);
         const ny = Math.sin(angle);
 
@@ -289,91 +298,114 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
 
         // Solo resolver colisión física si se están moviendo uno hacia el otro
         if (relSpeedNormal < 0) {
-            // --- IMPACTO POR ZONAS (Power Shot / Front Flip) ---
-            const forwardX = Math.sin(car.angle);
-            const forwardY = -Math.cos(car.angle);
-            const dotFront = nx * forwardX + ny * forwardY; // Qué tan frontal es el golpe
-            
-            let hitForceMultiplier = 1.0;
-            let zLift = 0;
-            
-            if (car.isFlipping) {
-                // VOLTERETA FRONTAL (Front Flip): Power Shot súper cargado con elevación extra
-                hitForceMultiplier = 2.15;
-                zLift = 3.6;
-                if (car.isPlayer) addHitStop(4); // Pausa dramática al golpear con Flip
-            } else if (dotFront > 0.7) { // Impacto frontal estándar
-                hitForceMultiplier = 1.6;
-                zLift = 2.2;
-            } else if (dotFront > 0.3) { // Impacto diagonal
-                hitForceMultiplier = 1.25;
-                zLift = 1.0;
-            }
-
-            // Descomponer velocidad del balón
+            // Descomponer la velocidad del balón
             const ballNormalVel = ball.vx * nx + ball.vy * ny;
             const ballTangentX = ball.vx - ballNormalVel * nx;
             const ballTangentY = ball.vy - ballNormalVel * ny;
 
             const carNormalVel = car.vx * nx + car.vy * ny;
-
-            // Restitución elástica pura de canicas/esferas (coeficiente de bote de la pelota)
-            const e = CONST.CONFIG.BALL_BOUNCINESS || 0.65;
-            let newNormalVel = carNormalVel - e * relSpeedNormal;
-
-            // Añadir impulso de golpe activo si el coche empuja hacia el balón
             const carSpeedMag = Math.sqrt(car.vx**2 + car.vy**2);
-            let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 1.0) * timeScale;
-            
-            // --- PINCH LOGIC ---
-            if (ball.onWallTimer > 0) {
-                kickImpulse *= 1.35;
-            }
 
-            newNormalVel += kickImpulse;
+            // Determinar si es un impacto inicial (activo) o un empuje continuo (pasivo)
+            const isInitialTouch = (car.ballContactCooldown <= 0);
 
-            // Asignar nuevas velocidades al balón basándose puramente en la normal esférica (física de canicas)
-            ball.vx = ballTangentX + nx * newNormalVel;
-            ball.vy = ballTangentY + ny * newNormalVel;
-            
-            if (kickImpulse > 5 && car.isPlayer && !car.isFlipping) {
-                addHitStop(3);
-            }
-
-            // ELEVACIÓN EJE Z (Efecto aéreo realista dependiente de la altura del balón sobre el chasis del coche)
-            if (ball.vz !== undefined) {
-                const heightDiff = ball.z - car.z; // Positivo si el balón está por encima
-                let verticalFactor = 0.0;
+            if (isInitialTouch) {
+                // --- IMPACTO POR ZONAS (Power Shot / Front Flip) ---
+                const forwardX = Math.sin(car.angle);
+                const forwardY = -Math.cos(car.angle);
+                const dotFront = nx * forwardX + ny * forwardY; // Qué tan frontal es el golpe
+                
+                let hitForceMultiplier = 1.0;
+                let zLift = 0;
                 
                 if (car.isFlipping) {
-                    verticalFactor = 1.0;
-                } else if (car.isJumping) {
-                    verticalFactor = 0.8;
-                } else {
-                    // Elevación progresiva si el balón está por encima de la mitad del chasis
-                    verticalFactor = Math.max(0, Math.min(1.0, (heightDiff + 8) / 45));
+                    // VOLTERETA FRONTAL (Front Flip): Power Shot súper cargado con elevación extra
+                    hitForceMultiplier = 2.15;
+                    zLift = 3.6;
+                    if (car.isPlayer) addHitStop(4); // Pausa dramática al golpear con Flip
+                } else if (dotFront > 0.7) { // Impacto frontal estándar
+                    hitForceMultiplier = 1.6;
+                    zLift = 2.2;
+                } else if (dotFront > 0.3) { // Impacto diagonal
+                    hitForceMultiplier = 1.25;
+                    zLift = 1.0;
                 }
 
-                const hitLift = (kickImpulse * 0.28 + (zLift * 0.55)) * verticalFactor;
+                // Restitución elástica de canicas/esferas (coeficiente de bote de la pelota)
+                const e = CONST.CONFIG.BALL_BOUNCINESS || 0.65;
+                let newNormalVel = carNormalVel - e * relSpeedNormal;
+
+                // Añadir impulso de golpe activo
+                let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 1.0) * timeScale;
                 
-                if (heightDiff < -8 && !car.isFlipping) {
-                    // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
-                    ball.vz = Math.min(ball.vz || 0, -1.0);
-                } else {
-                    // Capped a un valor moderado para evitar vuelos infinitos
-                    ball.vz = Math.max(ball.vz || 0, Math.min(5.5, hitLift));
+                // --- PINCH LOGIC ---
+                if (ball.onWallTimer > 0) {
+                    kickImpulse *= 1.35;
                 }
-            }
 
-            // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
-            const hitAngleDifference = angle - car.angle;
-            ball.spin = Math.sin(hitAngleDifference) * (kickImpulse * 0.08);
+                newNormalVel += kickImpulse;
 
-            // TRANSFERENCIA DE MASA: El coche pierde inercia normal por el golpe
-            if (carSpeedMag > 0.5 && carNormalVel > 0) {
-                const brakeFactor = (dotFront > 0.5) ? 0.82 : 0.92;
-                car.vx *= brakeFactor;
-                car.vy *= brakeFactor;
+                // Asignar nuevas velocidades al balón basándose puramente en la normal esférica (física de canicas)
+                ball.vx = ballTangentX + nx * newNormalVel;
+                ball.vy = ballTangentY + ny * newNormalVel;
+                
+                if (kickImpulse > 5 && car.isPlayer && !car.isFlipping) {
+                    addHitStop(3);
+                }
+
+                // ELEVACIÓN EJE Z (Efecto aéreo realista dependiente de la altura del balón sobre el chasis del coche)
+                if (ball.vz !== undefined) {
+                    const heightDiff = ball.z - car.z; // Positivo si el balón está por encima
+                    let verticalFactor = 0.0;
+                    
+                    if (car.isFlipping) {
+                        verticalFactor = 1.0;
+                    } else if (car.isJumping) {
+                        verticalFactor = 0.8;
+                    } else {
+                        // Elevación progresiva si el balón está por encima de la mitad del chasis
+                        verticalFactor = Math.max(0, Math.min(1.0, (heightDiff + 8) / 45));
+                    }
+
+                    const hitLift = (kickImpulse * 0.28 + (zLift * 0.55)) * verticalFactor;
+                    
+                    if (heightDiff < -8 && !car.isFlipping) {
+                        // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
+                        ball.vz = Math.min(ball.vz || 0, -1.0);
+                    } else {
+                        // Capped a un valor moderado para evitar vuelos infinitos
+                        ball.vz = Math.max(ball.vz || 0, Math.min(5.5, hitLift));
+                    }
+                }
+
+                // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
+                const hitAngleDifference = angle - car.angle;
+                ball.spin = Math.sin(hitAngleDifference) * (kickImpulse * 0.08);
+
+                // TRANSFERENCIA DE MASA: El coche pierde inercia normal por el golpe
+                if (carSpeedMag > 0.5 && carNormalVel > 0) {
+                    const brakeFactor = (dotFront > 0.5) ? 0.82 : 0.92;
+                    car.vx *= brakeFactor;
+                    car.vy *= brakeFactor;
+                }
+
+                // Activar el cooldown del contacto activo para evitar rebotes continuos y bucles de sonido
+                car.ballContactCooldown = 15; // 15 frames (aprox 0.25 seg)
+
+                // Sonido con limitador de tasa
+                const nowTime = Date.now();
+                if (!ball.lastSoundTime || nowTime - ball.lastSoundTime > 120) {
+                    playSound('ball_hit', 1.0);
+                    ball.lastSoundTime = nowTime;
+                }
+            } else {
+                // Toque continuo / Deslizamiento pasivo (mantenimiento de contacto)
+                // Se resuelve de manera puramente elástica pasiva con restitución muy baja para evitar jitter
+                const e = 0.1;
+                const newNormalVel = carNormalVel - e * relSpeedNormal;
+
+                ball.vx = ballTangentX + nx * newNormalVel;
+                ball.vy = ballTangentY + ny * newNormalVel;
             }
             
             const maxBallSpeed = CONST.CONFIG.BALL_MAX_SPEED;
@@ -384,13 +416,6 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             }
             
             ball.onWallTimer = 8; 
-            
-            // Evitar saturación y distorsión sonora cuando múltiples coches impactan a la vez
-            const nowTime = Date.now();
-            if (!ball.lastSoundTime || nowTime - ball.lastSoundTime > 120) {
-                playSound('ball_hit', 1.0);
-                ball.lastSoundTime = nowTime;
-            }
         }
         touchHistory.push({ car, time: gameTime });
         if (touchHistory.length > 10) touchHistory.shift();
