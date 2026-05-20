@@ -103,7 +103,7 @@ export class Car {
         ctx.translate(this.x, this.y - this.z); // Trasladar en Y vertical hacia arriba
         ctx.rotate(this.angle);
 
-        // Si está haciendo un Front Flip, simular voltereta frontal con Squash & Stretch
+        // Si está haciendo un Front/Back Flip, simular voltereta con Squash & Stretch y Relieve 3D
         if (this.isFlipping) {
             ctx.scale(scaleX, scaleY);
         }
@@ -115,14 +115,48 @@ export class Car {
         }
 
         if (this.img && this.img.complete) {
-            // Si el coche está boca abajo (scaleY < 0), mostrar silueta oscura (chasis)
-            if (scaleY < 0) {
-                ctx.filter = 'brightness(0.12) contrast(1.1)';
-            } else if (this.hue !== 0 || this.saturate !== 100) {
-                ctx.filter = `hue-rotate(${this.hue}deg) saturate(${this.saturate}%)`;
+            if (this.isFlipping) {
+                const numLayers = 7;
+                const maxDepth = 10; // Altura máxima en píxeles de relieve del chasis
+                // La dirección del offset del relieve depende del seno del ángulo de giro y la dirección del flip
+                const depthStep = (maxDepth / numLayers) * Math.sin(this.flipVisualAngle) * this.flipDirection;
+
+                for (let i = 0; i < numLayers; i++) {
+                    ctx.save();
+                    // Desplazar progresivamente cada capa a lo largo del eje Y local
+                    ctx.translate(0, -i * depthStep);
+
+                    // El factor de brillo simula profundidad (base más oscura, superficie más clara)
+                    const progress = i / (numLayers - 1); // 0 (base) a 1 (superficie superior)
+                    let brightness = 0.35 + progress * 0.65;
+
+                    // Si el chasis está boca abajo (scaleY < 0), invertimos el brillo y oscurecemos
+                    if (scaleY < 0) {
+                        brightness = (0.12 + (1.0 - progress) * 0.15);
+                    }
+
+                    let filters = [];
+                    if (this.hue !== 0 || this.saturate !== 100) {
+                        filters.push(`hue-rotate(${this.hue}deg)`);
+                        filters.push(`saturate(${this.saturate}%)`);
+                    }
+                    filters.push(`brightness(${brightness})`);
+                    if (scaleY < 0) {
+                        filters.push('contrast(1.1)');
+                    }
+                    ctx.filter = filters.join(' ');
+
+                    ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+                    ctx.restore();
+                }
+                ctx.filter = 'none';
+            } else {
+                if (this.hue !== 0 || this.saturate !== 100) {
+                    ctx.filter = `hue-rotate(${this.hue}deg) saturate(${this.saturate}%)`;
+                }
+                ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+                ctx.filter = 'none';
             }
-            ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
-            ctx.filter = 'none'; // Resetear para el resto del frame
         } else {
             // Fallback ultra-simple (Rectángulo de color o chasis negro)
             ctx.fillStyle = (scaleY < 0) ? '#151515' : this.color;
