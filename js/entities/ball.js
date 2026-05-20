@@ -14,6 +14,13 @@ export class Ball {
         this.type = 'ball';
         this.mass = 15;
         this.img = null;
+        
+        // Parámetros de animación "Estirar y Aplastar" (Squash & Stretch)
+        this.squashX = 1.0;
+        this.squashY = 1.0;
+        this.squashVx = 0;
+        this.squashVy = 0;
+
         if (imgPath) {
             this.setAppearance(imgPath);
         }
@@ -32,6 +39,20 @@ export class Ball {
     // Alias para compatibilidad
     set imgUrl(url) {
         this.setAppearance(url);
+    }
+
+    triggerImpactSquash(nx, ny, intensity) {
+        const squashAmount = Math.min(0.35, intensity * 0.05);
+        if (squashAmount < 0.05) return;
+        
+        const factorX = Math.abs(nx);
+        const factorY = Math.abs(ny);
+        
+        this.squashX = 1.0 - (factorX * squashAmount) + (factorY * squashAmount);
+        this.squashY = 1.0 - (factorY * squashAmount) + (factorX * squashAmount);
+        
+        this.squashVx = 0;
+        this.squashVy = 0;
     }
 
     spawnFireParticles(explosionParticles) {
@@ -112,25 +133,29 @@ export class Ball {
         
         // Trasladar en Y hacia arriba para simular la altura Z
         ctx.translate(0, -this.z);
-        ctx.rotate(this.rotationAngle); // Spin del eje Z (rosca)
+
+        // --- APLICAR ESTIRAR Y APLASTAR (SQUASH & STRETCH) ---
+        // 1. Estiramiento dinámico por velocidad física
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (speed > 1.5) {
+            const stretchAmount = Math.min(0.18, speed * 0.008);
+            const stretchAngle = Math.atan2(this.vy, this.vx);
+            ctx.rotate(stretchAngle);
+            ctx.scale(1.0 + stretchAmount, 1.0 - stretchAmount);
+            ctx.rotate(-stretchAngle);
+        }
         
+        // 2. Aplastamiento y oscilación elástica por impactos (suelo/pared/coche)
+        ctx.scale(this.squashX, this.squashY);
+
         // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
         const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
         const renderRadius = this.visualRadius * zoomScale;
         
-        // Guardamos el contexto antes del rodamiento 3D (para que la escala de rodamiento no afecte al sombreado circular final)
+        // --- DIBUJAR LA TEXTURA EN ROTACIÓN CONTINUA ---
         ctx.save();
+        ctx.rotate(this.rotationAngle); // Giro continuo de la textura
         
-        // Aplicar el Rodamiento 3D (giro visual sobre el eje de movimiento)
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (speed > 0.1) {
-            const moveAngle = Math.atan2(this.vy, this.vx);
-            // Rotamos el eje X hacia la dirección del movimiento para aplicar el aplastamiento de rodadura
-            ctx.rotate(moveAngle - this.rotationAngle);
-            ctx.scale(Math.cos(this.rollDistance / this.radius), 1.0);
-            ctx.rotate(-(moveAngle - this.rotationAngle));
-        }
-
         if (this.img && this.img.complete) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
         } else {
@@ -147,21 +172,18 @@ export class Ball {
             ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
         }
-        
-        ctx.restore(); // Restauramos al estado antes de la escala de rodadura
+        ctx.restore();
 
         // --- OVERLAY DE SOMBREADO ESFÉRICO FIJO (NO ROTA CON EL BALÓN) ---
-        // Deshacemos la rotación local del balón para aplicar el sombreado 3D fijo con luz desde arriba-izquierda
-        ctx.rotate(-this.rotationAngle);
-
+        // Sombreado radial fijo de alta definición que le da el relieve volumétrico 3D a la esfera
         const shadingGrad = ctx.createRadialGradient(
             -renderRadius * 0.18, -renderRadius * 0.18, renderRadius * 0.05,
             0, 0, renderRadius
         );
-        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz en 3D
-        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición suave
+        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz
+        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición
         shadingGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
-        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión ambiental en los bordes
+        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión en los bordes
 
         ctx.fillStyle = shadingGrad;
         ctx.beginPath();
@@ -197,6 +219,18 @@ export class Ball {
         }
         if (gameState === 'countdown') return; 
 
+        // Simulación de resorte-amortiguador para squash y stretch (peso/elasticidad)
+        const k = 0.15; // Rigidez
+        const damping = 0.78; // Amortiguación
+        const ax = (1.0 - this.squashX) * k;
+        const ay = (1.0 - this.squashY) * k;
+        this.squashVx += ax * timeScale;
+        this.squashVy += ay * timeScale;
+        this.squashVx *= Math.pow(damping, timeScale);
+        this.squashVy *= Math.pow(damping, timeScale);
+        this.squashX += this.squashVx * timeScale;
+        this.squashY += this.squashVy * timeScale;
+
         // Gravedad y físicas del eje Z
         if (this.z > 0) {
             this.z += this.vz * timeScale;
@@ -206,6 +240,7 @@ export class Ball {
                 this.z = 0;
                 // Rebote elástico reducido contra el suelo
                 if (this.vz < -0.4) {
+                    this.triggerImpactSquash(0, 1, Math.abs(this.vz));
                     this.vz *= -0.48;
                     this.vx *= 0.95;
                     this.vy *= 0.95;
@@ -243,16 +278,16 @@ export class Ball {
             this.vx *= factor; this.vy *= factor; 
         }
 
-        // Rodamiento 3D y spin físico de la pelota
+        // Rodamiento 2D continuo y spin físico de la pelota
         if (this.z > 0) {
-            // En el aire: sigue rodando por inercia pero más lento, y el spin se conserva más
-            this.rollDistance += currentSpeed * 0.65 * timeScale;
+            // En el aire: conserva su rotación de spin
             this.rotationAngle += this.spin * timeScale;
             this.spin *= Math.pow(0.995, timeScale);
         } else {
-            // En el suelo: rueda al 100% de la velocidad física, y el spin se reduce rápido por la fricción del suelo
-            this.rollDistance += currentSpeed * timeScale;
-            this.rotationAngle += this.spin * timeScale;
+            // En el suelo: rueda de forma continua siguiendo el avance horizontal
+            const rollDirectionSign = this.vx >= 0 ? 1 : -1;
+            this.rotationAngle += rollDirectionSign * (currentSpeed / this.radius) * timeScale;
+            this.rotationAngle += this.spin * 0.1 * timeScale; // El spin afecta ligeramente en el suelo
             this.spin *= Math.pow(0.95, timeScale);
         }
 

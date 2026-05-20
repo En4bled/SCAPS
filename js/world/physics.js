@@ -70,7 +70,12 @@ export function checkPolygonCollision(entity, polygon) {
                 bounce = Math.min(0.9, (CONST.CONFIG.BALL_BOUNCINESS || 0.88) * 0.26);
                 friction = 0.90; // Añadimos fricción contra la pared para que pierda velocidad al rebotar o arrastrarse
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
-                if (Math.abs(vNormal) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(vNormal) * 0.1));
+                if (Math.abs(vNormal) > 1.5) {
+                    playSound('wall_hit', Math.min(1.0, Math.abs(vNormal) * 0.1));
+                    if (typeof entity.triggerImpactSquash === 'function') {
+                        entity.triggerImpactSquash(nx, ny, Math.abs(vNormal));
+                    }
+                }
                 if (Math.abs(vNormal) > 8) addScreenShake(Math.abs(vNormal) * 0.3);
             } else {
                 const isJumpingIntoWall = entity.isJumping || (entity.z > 1.0);
@@ -244,6 +249,11 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         ball.vx += (jX / ball.mass) + (nx * extraArcadeImpulse);
         ball.vy += (jY / ball.mass) + (ny * extraArcadeImpulse);
         ball.vz += (jZ / ball.mass) + (nz * extraArcadeImpulse * 0.2);
+
+        if (typeof ball.triggerImpactSquash === 'function') {
+            const relSpeed = Math.abs(relVelNormal) + extraArcadeImpulse;
+            ball.triggerImpactSquash(nx, ny, relSpeed);
+        }
 
         if (ball.onWallTimer > 0) {
             ball.vx *= 1.35;
