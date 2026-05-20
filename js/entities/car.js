@@ -460,7 +460,7 @@ export class Car {
                     if (this.isDrifting) this.spawnDriftSmoke(particles);
                 }
                 if (this.isBoosting) this.spawnParticles(5, this.boostType, particles);
-                else if (currentSpeed > 0.5 && isAccelerating) this.spawnParticles(1, 'smoke', particles);
+                else if (currentSpeed > 0.5 && isAccelerating) this.spawnParticles(2, 'smoke', particles);
             } else {
                 // Si está en el aire con Boost, igual soltar partículas de propulsión
                 if (this.isBoosting) this.spawnParticles(3, this.boostType, particles);
@@ -521,11 +521,26 @@ export class Car {
 
     spawnParticles(amount, type, particles) {
         let angleBehind = this.angle + Math.PI;
-        let spawnX = this.x + Math.sin(angleBehind) * (this.height / 2), spawnY = this.y - Math.cos(angleBehind) * (this.height / 2);
+        let rearX = this.x + Math.sin(angleBehind) * (this.height / 2);
+        let rearY = this.y - Math.cos(angleBehind) * (this.height / 2);
+        
+        // Offset hacia los lados para simular los dos tubos de escape (a un 20% del ancho del coche a cada lado)
+        let s = Math.sin(this.angle + Math.PI / 2) * (this.width / 5);
+        let c = Math.cos(this.angle + Math.PI / 2) * (this.width / 5);
+        
+        const leftX = rearX + s;
+        const leftY = rearY - c;
+        const rightX = rearX - s;
+        const rightY = rearY + c;
         
         // Aplicar nivel de detalle (LOD) basado en los FPS globales
         const lodAmount = Math.max(1, Math.round(amount * (window.SCAPS_LOD_LEVEL || 1.0)));
-        for (let i = 0; i < lodAmount; i++) particles.push(new Particle(spawnX, spawnY, type));
+        for (let i = 0; i < lodAmount; i++) {
+            // Distribuir alternativamente entre el tubo de escape izquierdo y derecho
+            const spawnX = (i % 2 === 0) ? leftX : rightX;
+            const spawnY = (i % 2 === 0) ? leftY : rightY;
+            particles.push(new Particle(spawnX, spawnY, type));
+        }
     }
 
     spawnDriftSmoke(particles) {
