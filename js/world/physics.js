@@ -4,8 +4,7 @@ import { ExplosionParticle } from '../fx/particles.js';
 import { addFeedMessage, addScreenShake, addHitStop } from '../main.js';
 
 /**
- * MOTOR DE FÍSICAS SCAPS - CORE PRODUCTION V12
- * Este es el motor principal que gestiona colisiones, impulsos e IA.
+ * MOTOR DE FÍSICAS SCAPS - CORE PRODUCTION V15 (Impulse Based)
  */
 
 export function checkPolygonCollision(entity, polygon) {
@@ -15,9 +14,7 @@ export function checkPolygonCollision(entity, polygon) {
     let closestProj = { x: 0, y: 0 };
     let closestNormal = { x: 0, y: 0 };
     let hasCollision = false;
-    let closestIndex = -1;
 
-    // 1. Escaneo limpio del polígono para evitar el bug de actualización incremental de posición
     for (let i = 0; i < polygon.length; i++) {
         const p1 = polygon[i];
         const p2 = polygon[(i + 1) % polygon.length];
@@ -35,7 +32,6 @@ export function checkPolygonCollision(entity, polygon) {
         if (dist < closestDist) {
             closestDist = dist;
             closestProj = { x: projX, y: projY };
-            closestIndex = i;
             hasCollision = true;
             
             if (dist > 0.0001) {
@@ -47,211 +43,110 @@ export function checkPolygonCollision(entity, polygon) {
         }
     }
 
-    if (!hasCollision) return;
+    if (!hasCollision || closestDist >= entity.radius) return;
 
     const nx = closestNormal.x;
     const ny = closestNormal.y;
     const overlap = entity.radius - closestDist;
 
-    const isBall = (entity.onWallTimer !== undefined);
+    // 1. Resolución Posicional Estricta (Anti-Tunneling)
+    entity.x += nx * overlap;
+    entity.y += ny * overlap;
 
-    if (isBall) {
-        // --- COMPORTAMIENTO FÍSICO DEL BALÓN (Estable y Rebotador) ---
-        if (closestDist < entity.radius) {
-            entity.x += nx * overlap;
-            entity.y += ny * overlap;
-        }
-
-        if (entity.vx !== undefined) {
-            const dot = entity.vx * nx + entity.vy * ny;
-            if (dot < 0) {
-                const bounce = CONST.CONFIG.BALL_BOUNCINESS;
-                const friction = 0.98;
-                const vNormalX = nx * dot;
-                const vNormalY = ny * dot;
-                const vTangentX = entity.vx - vNormalX;
-                const vTangentY = entity.vy - vNormalY;
-
-                entity.vx = vTangentX * friction - vNormalX * bounce;
-                entity.vy = vTangentY * friction - vNormalY * bounce;
-
-                entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
-                entity.targetRadius = entity.radius; // Mantener tamaño físico real sin agrandamiento visual
-                // ELEVACIÓN EJE Z ELIMINADA (Para forzar mantener el balón puramente en 2D y evitar problemas de rebote)
-                if (entity.vz !== undefined) {
-                    entity.vz = 0;
-                }
-                if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
-                if (Math.abs(dot) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(dot) * 0.1));
-            }
-        }
-    } else {
-        // --- COMPORTAMIENTO AVANZADO DE RAMPAS/PAREDES PARA EL COCHE ---
-        const z = entity.z || 0;
-        const slopeFactor = 0.65;
-        const maxPenetration = 30;
-        
-        // Calcular velocidad normal del impacto
-        const vNormal = (entity.vx !== undefined) ? (entity.vx * nx + entity.vy * ny) : 0;
-        const isJumpingIntoWall = entity.isJumping || (z > 1.0 && (entity.wallTractionTimer || 0) <= 0);
-        // Chocar conduciendo directamente contra el muro (velocidad normal fuerte hacia el muro)
-        const isHardImpact = vNormal < -0.85;
-
-        // Si el coche choca fuerte de frente, hace un flip, o salta al muro, rebota elásticamente hacia atrás
-        if (entity.isFlipping || isJumpingIntoWall || isHardImpact) {
-            const isOnWall = (closestDist < entity.radius);
-            if (isOnWall) {
-                // Resolver colisión empujando fuera de la pared por completo (sin allowedPenetration)
-                entity.x += nx * overlap;
-                entity.y += ny * overlap;
-                
-                if (entity.vx !== undefined) {
-                    const tx = -ny;
-                    const ty = nx;
-                    const vTangent = entity.vx * tx + entity.vy * ty;
-                    
-                    // Rebote horizontal limpio y elástico siguiendo la trayectoria reflejada
-                    const bounce = 0.40;
-                    const reboundedNormal = -vNormal * bounce;
-                    entity.vx = reboundedNormal * nx + vTangent * 0.88 * tx;
-                    entity.vy = reboundedNormal * ny + vTangent * 0.88 * ty;
-                    
-                    // Cancelar flip/salto
-                    entity.isFlipping = false;
-                    entity.isJumping = false;
-                    
-                    // Si estaba en el suelo, forzar que despegue ligeramente para que dibuje la parábola hacia atrás
-                    if (entity.z === 0) entity.z = 0.1;
-                    
-                    const liftForce = -vNormal * 0.45 + 1.5;
-                    entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
-                    
-                    addScreenShake(Math.abs(vNormal) * 0.45);
-                    playSound('wall_hit', 0.5);
-                }
-                entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
-                return;
-            }
-        }
-        
-        const allowedPenetration = Math.min(maxPenetration, z * slopeFactor);
-        const isOnWall = (closestDist < entity.radius);
-
-        if (isOnWall) {
-            entity.wallTractionTimer = 15;
-            entity.lastWallNormal = { x: nx, y: ny };
-            if (z === 0) {
-                entity.z = 0.5; // Pequeño offset para inicializar el estado de rampa
-            }
-        }
-
-        // Resolución de la posición física límite (solo si excede la anchura de la rampa)
-        const actualOverlap = overlap - allowedPenetration;
-        if (actualOverlap > 0) {
-            entity.x += nx * actualOverlap;
-            entity.y += ny * actualOverlap;
-        }
-
-        if (entity.vx !== undefined) {
-            const vNormal = entity.vx * nx + entity.vy * ny;
-            const tx = -ny; // Vector tangente perpendicular
+    const isBall = entity.type === 'ball';
+    
+    // 2. Resolución de Velocidad (Impulso / Rebote)
+    if (entity.vx !== undefined) {
+        const vNormal = entity.vx * nx + entity.vy * ny;
+        if (vNormal < 0) {
+            const tx = -ny;
             const ty = nx;
             const vTangent = entity.vx * tx + entity.vy * ty;
 
-            if (isOnWall) {
-                if (vNormal < 0) {
-                    // El coche se mueve hacia la pared (Subiendo la rampa)
-                    const impactForce = Math.abs(vNormal);
+            let bounce = 0.4;
+            let friction = 0.95;
 
-                    // Si es un impacto directo fuerte contra la base de la pared (z bajo)
-                    if (z <= 1.0 && impactForce > 1.2) {
-                        const bounce = 0.18; // Rebote controlado
-                        const reboundedNormal = -vNormal * bounce;
-                        const climbForce = impactForce * 0.72;
-                        // Usar Math.max en lugar de acumulación aditiva para evitar que el coche salga disparado verticalmente
-                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, climbForce));
-
-                        // Rebote horizontal amortiguado con deslizamiento
-                        entity.vx = reboundedNormal * nx + vTangent * 0.92 * tx;
-                        entity.vy = reboundedNormal * ny + vTangent * 0.92 * ty;
-
-                        if (impactForce > 4) addScreenShake(impactForce * 0.4);
-                        playSound('wall_hit', 0.3);
-                    } else {
-                        // Subida suave o deslizamiento continuo por la rampa
-                        const climbForce = impactForce * 0.85;
-                        // Usar Math.max en lugar de acumulación aditiva para evitar la realimentación exponencial en la rampa
-                        entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.2, climbForce));
-
-                        // La velocidad normal se acopla cinemáticamente a la velocidad vertical
-                        const constrainedNormal = -entity.vz * slopeFactor;
-
-                        // Deslizamiento perfecto: ¡Sin fricción artificial de colisión aplicada al tangente!
-                        entity.vx = constrainedNormal * nx + vTangent * tx;
-                        entity.vy = constrainedNormal * ny + vTangent * ty;
-                    }
+            if (isBall) {
+                bounce = CONST.CONFIG.BALL_BOUNCINESS || 0.88;
+                friction = 0.98;
+                entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
+                if (Math.abs(vNormal) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(vNormal) * 0.1));
+                if (Math.abs(vNormal) > 8) addScreenShake(Math.abs(vNormal) * 0.3);
+            } else {
+                const isJumpingIntoWall = entity.isJumping || (entity.z > 1.0);
+                if (entity.isFlipping || isJumpingIntoWall || vNormal < -0.85) {
+                    bounce = 0.40;
+                    friction = 0.88;
+                    entity.isFlipping = false;
+                    entity.isJumping = false;
+                    
+                    if (entity.z === 0) entity.z = 0.1;
+                    const liftForce = -vNormal * 0.45 + 1.5;
+                    entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
+                    
+                    if (vNormal < -2) playSound('wall_hit', 0.5);
+                    if (vNormal < -4) addScreenShake(Math.abs(vNormal) * 0.45);
                 } else {
-                    // El coche se aleja de la pared (Bajando la rampa)
-                    // La velocidad vertical de caída se ajusta según la velocidad de alejamiento
-                    entity.vz = -vNormal / slopeFactor;
-
-                    // Si la gravedad está haciendo caer al coche más rápido de lo que el jugador se aleja,
-                    // la restricción cinemática empuja al coche hacia el campo para mantenerlo en la rampa
-                    const gravityDescentNormal = -(entity.vz || 0) * slopeFactor;
-                    const finalNormal = Math.max(vNormal, gravityDescentNormal);
-
-                    entity.vx = finalNormal * nx + vTangent * tx;
-                    entity.vy = finalNormal * ny + vTangent * ty;
+                    bounce = 0.1;
+                    friction = 0.92;
+                    entity.wallTractionTimer = 15;
+                    entity.lastWallNormal = { x: nx, y: ny };
+                    
+                    if (entity.z === 0) entity.z = 0.5;
+                    const climbForce = Math.abs(vNormal) * 0.85;
+                    entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.2, climbForce));
                 }
-                
-                // Mantener actualizada la velocidad lineal del chasis
-                entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
             }
+
+            const reboundedNormal = -vNormal * bounce;
+            entity.vx = reboundedNormal * nx + vTangent * friction * tx;
+            entity.vy = reboundedNormal * ny + vTangent * friction * ty;
+            
+            if (!isBall) entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
+        } else if (!isBall && entity.wallTractionTimer > 0) {
+            const slopeFactor = 0.65;
+            entity.vz = -vNormal / slopeFactor;
+            
+            const tx = -ny;
+            const ty = nx;
+            const vTangent = entity.vx * tx + entity.vy * ty;
+            const gravityDescentNormal = -(entity.vz || 0) * slopeFactor;
+            const finalNormal = Math.max(vNormal, gravityDescentNormal);
+
+            entity.vx = finalNormal * nx + vTangent * tx;
+            entity.vy = finalNormal * ny + vTangent * ty;
+            entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
         }
     }
 }
 
-/**
- * Aplica fricción de neumáticos: Agarre lateral extremo vs inercia frontal.
- * Evita que los coches deslicen como si estuvieran en hielo.
- */
 export function applyTirePhysics(car, timeScale) {
     if (car.isExploded) return;
+    if (car.z > 0 && !(car.wallTractionTimer > 0)) return; 
     
-    // Si el coche está en el aire, no hay fricción de neumáticos (a menos que esté subiendo por la rampa de la pared)
-    if (car.z > 0 && !(car.wallTractionTimer > 0)) return;
-    
-    // 1. Vectores de dirección del coche
     const forwardX = Math.sin(car.angle);
     const forwardY = -Math.cos(car.angle);
     const rightX = -forwardY;
     const rightY = forwardX;
 
-    // 2. Descomponer velocidad física real
     const lateralVel = car.vx * rightX + car.vy * rightY;
     const forwardVel = car.vx * forwardX + car.vy * forwardY;
 
-    // 3. Aplicar retención lateral (fricción de neumático según si derrapa o no)
     const grip = car.isDrifting ? CONST.CONFIG.CAR_LATERAL_GRIP_DRIFT : CONST.CONFIG.CAR_LATERAL_GRIP_NORMAL;
     const newLateralVel = lateralVel * Math.pow(grip, timeScale);
 
-    // 4. Recomponer velocidades vectoriales finales
     car.vx = forwardX * forwardVel + rightX * newLateralVel;
     car.vy = forwardY * forwardVel + rightY * newLateralVel;
 }
 
-/**
- * Arrastre Atmosférico Global (Drag)
- */
 export function applyGlobalFriction(ball, cars, timeScale) {
     const drag = Math.pow(0.999, timeScale); 
     ball.vx *= drag;
     ball.vy *= drag;
     cars.forEach(car => {
-        if (!car.isExploded) {
+        if (!car.isBoosting) {
             car.vx *= drag;
             car.vy *= drag;
-            car.speed = Math.sqrt(car.vx**2 + car.vy**2);
         }
     });
 }
@@ -259,145 +154,104 @@ export function applyGlobalFriction(ball, cars, timeScale) {
 export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale = 1.0) {
     if (car.isExploded) return;
 
-    // Inicializar y actualizar el cooldown del contacto activo del coche con el balón
-    if (car.ballContactCooldown === undefined) car.ballContactCooldown = 0;
-    if (car.ballContactCooldown > 0) {
+    const isInitialTouch = (car.ballContactCooldown <= 0);
+    if (!isInitialTouch) {
         car.ballContactCooldown -= timeScale;
         if (car.ballContactCooldown < 0) car.ballContactCooldown = 0;
+        return; 
     }
-
-    // --- VERIFICACIÓN DE ALTURA EN EJE Z ---
-    const carZ = car.z || 0;
-    const ballZ = ball.z || 0;
-    const carHeight = 22; // Altura tridimensional del chasis
-    const zOverlap = Math.abs(carZ - ballZ) < (carHeight + ball.radius);
-    if (!zOverlap) return; // Si no coinciden en altura, se cruzan sin colisión
 
     const dx = ball.x - car.x;
     const dy = ball.y - car.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const minDist = car.radius + ball.radius;
+    const carHeight = 22;
+    const carCenterZ = car.z + carHeight / 2;
+    const ballCenterZ = ball.z + ball.radius;
+    let dz = ballCenterZ - carCenterZ;
+    
+    const xyDist = Math.sqrt(dx * dx + dy * dy);
+    if (xyDist > car.radius && Math.abs(dz) < carHeight/2 + ball.radius * 0.5) {
+        dz = dz * 0.4; 
+    }
 
-    if (distance < minDist) {
-        const angle = Math.atan2(dy, dx);
-        const overlap = minDist - distance;
+    const distance3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const minDistance = car.radius + ball.radius;
+
+    if (distance3D < minDistance) {
+        const overlap = minDistance - distance3D;
+        const nx = dx / distance3D;
+        const ny = dy / distance3D;
+        const nz = dz / distance3D;
+
+        const totalMass = car.mass + ball.mass;
+        const ratioCar = ball.mass / totalMass;
+        const ratioBall = car.mass / totalMass;
+
+        car.x -= nx * overlap * ratioCar;
+        car.y -= ny * overlap * ratioCar;
+        ball.x += nx * overlap * ratioBall;
+        ball.y += ny * overlap * ratioBall;
+        ball.z = Math.max(0, ball.z + nz * overlap * ratioBall);
+
+        const vRelX = ball.vx - car.vx;
+        const vRelY = ball.vy - car.vy;
+        const vRelZ = ball.vz - car.vz;
+
+        const relVelNormal = vRelX * nx + vRelY * ny + vRelZ * nz;
+
+        if (relVelNormal > 0) return;
+
+        let e = CONST.CONFIG.BALL_BOUNCINESS || 0.88;
+        if (car.isFlipping) e = 1.6;
+
+        const impulseMagnitude = -(1 + e) * relVelNormal / ((1 / car.mass) + (1 / ball.mass));
+
+        const jX = impulseMagnitude * nx;
+        const jY = impulseMagnitude * ny;
+        const jZ = impulseMagnitude * nz;
+
+        car.vx -= jX / car.mass;
+        car.vy -= jY / car.mass;
+        car.vz -= jZ / car.mass;
+
+        const carSpeedMag = Math.sqrt(car.vx**2 + car.vy**2);
+        const forwardX = Math.sin(car.angle);
+        const forwardY = -Math.cos(car.angle);
+        const dotFront = nx * forwardX + ny * forwardY;
         
-        // Resolución posicional: Empujar el balón fuera del coche a lo largo de la normal del choque
-        ball.x += Math.cos(angle) * overlap;
-        ball.y += Math.sin(angle) * overlap;
-
-        // Vectores normales unitarios del choque
-        const nx = Math.cos(angle);
-        const ny = Math.sin(angle);
-
-        // Velocidad relativa a lo largo del eje normal del impacto
-        const relVx = ball.vx - car.vx;
-        const relVy = ball.vy - car.vy;
-        const relSpeedNormal = relVx * nx + relVy * ny;
-
-        // Solo resolver colisión física si se están moviendo uno hacia el otro
-        if (relSpeedNormal < 0) {
-            // Descomponer la velocidad del balón
-            const ballNormalVel = ball.vx * nx + ball.vy * ny;
-            const ballTangentX = ball.vx - ballNormalVel * nx;
-            const ballTangentY = ball.vy - ballNormalVel * ny;
-
-            const carNormalVel = car.vx * nx + car.vy * ny;
-            const carSpeedMag = Math.sqrt(car.vx**2 + car.vy**2);
-
-            // Determinar si es un impacto inicial (activo) o un empuje continuo (pasivo)
-            const isInitialTouch = (car.ballContactCooldown <= 0);
-
-            if (isInitialTouch) {
-                // --- IMPACTO POR ZONAS (Power Shot / Front Flip) ---
-                const forwardX = Math.sin(car.angle);
-                const forwardY = -Math.cos(car.angle);
-                const dotFront = nx * forwardX + ny * forwardY; // Qué tan frontal es el golpe
-                
-                let hitForceMultiplier = 1.0;
-                let zLift = 0;
-                
-                if (car.isFlipping) {
-                    // VOLTERETA FRONTAL (Front Flip): Power Shot súper cargado con elevación extra
-                    hitForceMultiplier = 2.15;
-                    zLift = 3.6;
-                    if (car.isPlayer) addHitStop(4); // Pausa dramática al golpear con Flip
-                } else if (dotFront > 0.7) { // Impacto frontal estándar
-                    hitForceMultiplier = 1.6;
-                    zLift = 2.2;
-                } else if (dotFront > 0.3) { // Impacto diagonal
-                    hitForceMultiplier = 1.25;
-                    zLift = 1.0;
-                }
-
-                // Restitución elástica de canicas/esferas (coeficiente de bote de la pelota)
-                const e = CONST.CONFIG.BALL_BOUNCINESS || 0.65;
-                let newNormalVel = carNormalVel - e * relSpeedNormal;
-
-                // Añadir impulso de golpe activo: El usuario pidió que rebote al doble de velocidad
-                let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 2.0) * timeScale;
-                
-                // --- PINCH LOGIC ---
-                if (ball.onWallTimer > 0) {
-                    kickImpulse *= 1.35;
-                }
-
-                newNormalVel += kickImpulse;
-
-                // Asignar nuevas velocidades al balón basándose puramente en la normal esférica (física de canicas)
-                ball.vx = ballTangentX + nx * newNormalVel;
-                ball.vy = ballTangentY + ny * newNormalVel;
-                
-                if (kickImpulse > 5 && car.isPlayer && !car.isFlipping) {
-                    addHitStop(3);
-                }
-
-                // ELEVACIÓN EJE Z ELIMINADA (Forzamos 0 para mantener físicas puramente 2D sin rebotes extraños)
-                if (ball.vz !== undefined) {
-                    ball.vz = 0;
-                }
-
-
-                // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
-                const hitAngleDifference = angle - car.angle;
-                ball.spin = Math.sin(hitAngleDifference) * (kickImpulse * 0.08);
-
-                // TRANSFERENCIA DE MASA: El coche pierde inercia normal por el golpe
-                if (carSpeedMag > 0.5 && carNormalVel > 0) {
-                    const brakeFactor = (dotFront > 0.5) ? 0.82 : 0.92;
-                    car.vx *= brakeFactor;
-                    car.vy *= brakeFactor;
-                }
-
-                // Activar el cooldown del contacto activo para evitar rebotes continuos y bucles de sonido
-                car.ballContactCooldown = 15; // 15 frames (aprox 0.25 seg)
-
-                // Sonido con limitador de tasa
-                const nowTime = Date.now();
-                if (!ball.lastSoundTime || nowTime - ball.lastSoundTime > 120) {
-                    playSound('ball_hit', 1.0);
-                    ball.lastSoundTime = nowTime;
-                }
-            } else {
-                // Toque continuo / Deslizamiento pasivo (mantenimiento de contacto)
-                // Se resuelve de manera altamente repulsiva para evitar que el coche pueda arrastrar el balón
-                const e = 2.0; // Restitución exagerada (rebote) para despegarse del coche
-                let pushAway = Math.max(0, carNormalVel) * 2.0; // Empuje extra al doble de velocidad
-                const newNormalVel = carNormalVel - e * relSpeedNormal + pushAway;
-
-                ball.vx = ballTangentX + nx * newNormalVel;
-                ball.vy = ballTangentY + ny * newNormalVel;
-            }
-            
-            const maxBallSpeed = CONST.CONFIG.BALL_MAX_SPEED;
-            const currentBallSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
-            if (currentBallSpeed > maxBallSpeed) {
-                ball.vx = (ball.vx / currentBallSpeed) * maxBallSpeed;
-                ball.vy = (ball.vy / currentBallSpeed) * maxBallSpeed;
-            }
-            
-            ball.onWallTimer = 8; 
+        let extraArcadeImpulse = 0;
+        if (dotFront > 0.5) {
+            extraArcadeImpulse = CONST.CONFIG.BALL_HIT_FORCE * carSpeedMag * 0.1;
+            if (car.isFlipping) extraArcadeImpulse *= 1.8;
         }
+
+        ball.vx += (jX / ball.mass) + (nx * extraArcadeImpulse);
+        ball.vy += (jY / ball.mass) + (ny * extraArcadeImpulse);
+        ball.vz += (jZ / ball.mass) + (nz * extraArcadeImpulse * 0.5);
+
+        if (ball.onWallTimer > 0) {
+            ball.vx *= 1.35;
+            ball.vy *= 1.35;
+        }
+
+        const currentBallSpeed = Math.sqrt(ball.vx**2 + ball.vy**2);
+        const maxBallSpeed = CONST.CONFIG.BALL_MAX_SPEED;
+        if (currentBallSpeed > maxBallSpeed) {
+            ball.vx = (ball.vx / currentBallSpeed) * maxBallSpeed;
+            ball.vy = (ball.vy / currentBallSpeed) * maxBallSpeed;
+        }
+
+        const hitAngleDifference = Math.atan2(ny, nx) - car.angle;
+        ball.spin = Math.sin(hitAngleDifference) * (impulseMagnitude * 0.005);
+
+        if (car.isPlayer && extraArcadeImpulse > 5) addHitStop(3);
+        car.ballContactCooldown = 15;
+        
+        const nowTime = Date.now();
+        if (!ball.lastSoundTime || nowTime - ball.lastSoundTime > 120) {
+            playSound('ball_hit', 1.0);
+            ball.lastSoundTime = nowTime;
+        }
+        
         touchHistory.push({ car, time: gameTime });
         if (touchHistory.length > 10) touchHistory.shift();
     }
@@ -406,128 +260,99 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
 export function checkCarCarCollision(carA, carB, explosionParticles) {
     if (carA.isExploded || carB.isExploded) return;
 
-    // --- VERIFICACIÓN DE ALTURA EN EJE Z ---
-    // Si un coche salta por encima del otro, no colisionan horizontalmente
     const heightDiff = Math.abs(carA.z - carB.z);
-    if (heightDiff > 40) return;
+    if (heightDiff > 25) return;
 
     const dx = carB.x - carA.x;
     const dy = carB.y - carA.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
+    const distance = Math.sqrt(dx * dx + dy * dy);
     const minDist = carA.radius + carB.radius;
 
-    if (dist < minDist) {
-        const angle = Math.atan2(dy, dx);
-        
-        const overlap = (minDist - dist) / 2;
-        const nx = Math.cos(angle);
-        const ny = Math.sin(angle);
+    if (distance < minDist) {
+        const overlap = minDist - distance;
+        const nx = dx / distance;
+        const ny = dy / distance;
 
-        // --- LÓGICA DE DEMOLICIÓN DE RIVALES (Regla del 80% de velocidad con boost) ---
-        const speedA = Math.sqrt(carA.vx * carA.vx + carA.vy * carA.vy);
-        const speedB = Math.sqrt(carB.vx * carB.vx + carB.vy * carB.vy);
-        const combinedSpeed = speedA + speedB;
-        const maxBoostSpeed = CONST.CONFIG.CAR_MAX_BOOST_SPEED;
-        const demoThreshold = maxBoostSpeed * 0.80; // 80% de la velocidad máxima con boost
-        
-        const isRival = (carA.color !== carB.color);
-        const relVx = carA.vx - carB.vx;
-        const relVy = carA.vy - carB.vy;
-        const relSpeedNormal = relVx * nx + relVy * ny; // > 0 si A se mueve hacia B
+        const isASupersonic = carA.isSupersonic && !carA.isExploded;
+        const isBSupersonic = carB.isSupersonic && !carB.isExploded;
+        let demoOccurred = false;
 
-        let isDemolition = false;
-        let attacker = null;
-        let victim = null;
+        if (isASupersonic && isBSupersonic) {
+            const dotA = Math.sin(carA.angle) * nx + (-Math.cos(carA.angle)) * ny;
+            const dotB = Math.sin(carB.angle) * (-nx) + (-Math.cos(carB.angle)) * (-ny);
 
-        if (isRival) {
-            if (relSpeedNormal > 0.05) {
-                // A es el atacante
-                if (speedA >= demoThreshold || combinedSpeed >= demoThreshold) {
-                    isDemolition = true;
-                    attacker = carA;
-                    victim = carB;
-                }
-            } else if (relSpeedNormal < -0.05) {
-                // B es el atacante
-                if (speedB >= demoThreshold || combinedSpeed >= demoThreshold) {
-                    isDemolition = true;
-                    attacker = carB;
-                    victim = carA;
-                }
+            if (dotA > 0.8 && dotB <= 0.8) {
+                explodeCar(carB, explosionParticles, carA);
+                demoOccurred = true;
+            } else if (dotB > 0.8 && dotA <= 0.8) {
+                explodeCar(carA, explosionParticles, carB);
+                demoOccurred = true;
+            } else if (dotA > 0.8 && dotB > 0.8) {
+                explodeCar(carA, explosionParticles, carB);
+                explodeCar(carB, explosionParticles, carA);
+                demoOccurred = true;
+            }
+        } else if (isASupersonic) {
+            const dotA = Math.sin(carA.angle) * nx + (-Math.cos(carA.angle)) * ny;
+            if (dotA > 0.6) {
+                explodeCar(carB, explosionParticles, carA);
+                demoOccurred = true;
+            }
+        } else if (isBSupersonic) {
+            const dotB = Math.sin(carB.angle) * (-nx) + (-Math.cos(carB.angle)) * (-ny);
+            if (dotB > 0.6) {
+                explodeCar(carA, explosionParticles, carB);
+                demoOccurred = true;
             }
         }
 
-        if (isDemolition && attacker && victim) {
-            demolishCar(victim, explosionParticles);
-            addFeedMessage('demolition', attacker, victim); // Añadimos mensaje al feed
-            if (attacker.isPlayer || victim.isPlayer) {
-                addScreenShake(15);
-                if (attacker.isPlayer) addHitStop(4); // Hit-stop solo si yo exploto a alguien
-            }
-            attacker.speed *= 0.6;
-            return;
-        }
+        if (demoOccurred) return;
 
-        // Separación física si no hay demolición (los coches rebotan)
-        carA.x -= nx * overlap; carA.y -= ny * overlap;
-        carB.x += nx * overlap; carB.y += ny * overlap;
+        carA.x -= nx * (overlap / 2);
+        carA.y -= ny * (overlap / 2);
+        carB.x += nx * (overlap / 2);
+        carB.y += ny * (overlap / 2);
 
-        // Intercambio de impulsos (Rebote con conservación de momento lineal)
-        if (relSpeedNormal > 0) {
-            // Aumentar ligeramente el coeficiente para un rebote horizontal más visible y satisfactorio
-            const restitution = CONST.CONFIG.CAR_ELASTICITY; 
-            const elasticMultiplier = 1.35 + restitution * 0.8;
-            const impulse = -elasticMultiplier * relSpeedNormal;
-            
-            if (Math.abs(impulse) > 2 && (carA.isPlayer || carB.isPlayer)) {
-                addScreenShake(Math.abs(impulse) * 0.65);
-            }
+        const vRelX = carB.vx - carA.vx;
+        const vRelY = carB.vy - carA.vy;
+        const relVelNormal = vRelX * nx + vRelY * ny;
 
-            const j = impulse / 2; // Asumimos masas iguales para un comportamiento de choque limpio
-            
-            carA.vx += j * nx; 
-            carA.vy += j * ny;
-            carB.vx -= j * nx; 
-            carB.vy -= j * ny;
+        if (relVelNormal > 0) return;
 
-            // --- ELEVACIÓN EN Z (Trayectoria parabólica en el aire) ---
-            if (relSpeedNormal > 0.35) {
-                // Elevación proporcional a la velocidad relativa de impacto
-                const lift = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.8, relSpeedNormal * 0.72 + 0.3);
-                
-                carA.vz = Math.max(carA.vz || 0, lift);
-                carB.vz = Math.max(carB.vz || 0, lift);
-                
-                // Forzar inicio de elevación si estaban pegados al suelo
-                if (carA.z === 0) carA.z = 0.1;
-                if (carB.z === 0) carB.z = 0.1;
-                
-                // Cancelar cualquier estado previo de salto o flip para física aérea limpia
-                carA.isJumping = false; carA.isFlipping = false;
-                carB.isJumping = false; carB.isFlipping = false;
-            }
-            
-            // Solo reproducir sonido si el impacto es lo suficientemente fuerte (>0.5)
-            if (relSpeedNormal > 0.5) {
-                playSound('car_hit', Math.min(1.0, relSpeedNormal * 0.5));
-            }
+        const e = 0.3; 
+        const impulseMagnitude = -(1 + e) * relVelNormal / ((1 / carA.mass) + (1 / carB.mass));
+        
+        const jX = impulseMagnitude * nx;
+        const jY = impulseMagnitude * ny;
+
+        carA.vx -= jX / carA.mass;
+        carA.vy -= jY / carA.mass;
+        carB.vx += jX / carB.mass;
+        carB.vy += jY / carB.mass;
+
+        if (Math.abs(relVelNormal) > 2) {
+            playSound('car_hit', Math.min(1.0, Math.abs(relVelNormal) * 0.15));
         }
     }
 }
 
-function demolishCar(car, explosionParticles) {
+function explodeCar(car, explosionParticles, killer) {
     car.isExploded = true;
-    car.respawnTimer = 180; // 3 segundos a 60fps
-    car.speed = 0;
-    car.vx = 0; car.vy = 0;
+    car.respawnTimer = 180;
     
-    // Generar partículas de explosión reales
-    if (explosionParticles) {
-        for (let i = 0; i < 20; i++) {
-            explosionParticles.push(new ExplosionParticle(car.x, car.y, Math.random() * 50 - 25));
-        }
+    for (let i = 0; i < 40; i++) {
+        explosionParticles.push(new ExplosionParticle(car.x, car.y, car.color));
     }
-    playSound('goal', 0.8); // Usamos el sonido de gol como base para la explosión
+    playSound('goal', 0.8);
+    addScreenShake(6);
+    addHitStop(5);
+    
+    if (killer) {
+        addFeedMessage(`${killer.name} DEMOLIÓ A ${car.name}`);
+        killer.score += 20;
+    } else {
+        addFeedMessage(`${car.name} FUE DEMOLIDO`);
+    }
 }
 
 export function checkGoalPhysics(ball) {
@@ -547,226 +372,3 @@ export function checkGoalPhysics(ball) {
         }
     });
 }
-
-/**
- * IA DE LOS BOTS - CORE PRODUCTION (Ex Experimental V11)
- */
-/**
- * IA DE LOS BOTS AVANZADA (V14 - COMPETITIVE)
- * Implementa predicción, rotación defensiva y control de boost inteligente.
- */
-export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars) { 
-    if (gameState !== 'playing' && gameState !== 'countdown') return;
-
-    const controls = ai.controls;
-    keysPressed[controls.up] = false; keysPressed[controls.down] = false;
-    keysPressed[controls.left] = false; keysPressed[controls.right] = false;
-    keysPressed[controls.boost] = false; keysPressed[controls.drift] = false;
-
-    if (gameState === 'countdown') return;
-
-    // --- 1. MÁQUINA DE ESTADOS ANTI-ATASCOS (Bomba Arcade) ---
-    // Si la velocidad es casi nula y no estamos desatascándonos, sumar contador
-    if (Math.abs(ai.speed) < 0.3 && !ai.isUnsticking) {
-        ai.stuckTimer = (ai.stuckTimer || 0) + 1;
-        if (ai.stuckTimer > 20) { // Si lleva ~0.3s parado
-            ai.isUnsticking = true;
-            ai.unstickFrames = 45; // Obligamos a hacer 45 frames ininterrumpidos de maniobra
-        }
-    } else if (Math.abs(ai.speed) >= 0.3 && !ai.isUnsticking) {
-        ai.stuckTimer = 0;
-    }
-
-    // Si está en Modo Pánico, ejecutamos maniobra evasiva ciega
-    if (ai.isUnsticking) {
-        ai.unstickFrames--;
-        keysPressed[controls.down] = true; // Marcha atrás a fondo
-        
-        // Girar para hacer un arco y salir de la trampa
-        // Usamos el ID del coche o un patrón para que no todos giren al mismo lado siempre
-        if ((ai.unstickFrames % 30) < 15) {
-            keysPressed[controls.left] = true;
-        } else {
-            keysPressed[controls.right] = true;
-        }
-
-        if (ai.unstickFrames <= 0) {
-            ai.isUnsticking = false;
-            ai.stuckTimer = 0;
-        }
-        return; // IGNORAR TODA LA IA MIENTRAS SE DESATASCA
-    }
-
-    // --- 2. OBJETIVOS Y ROLES (Arcade Style) ---
-    const isBlue = ai.color === '#5ad';
-    const myGoal = isBlue ? CONST.CONFIG.GOAL_TOP : CONST.CONFIG.GOAL_BOTTOM;
-    const enemyGoal = isBlue ? CONST.CONFIG.GOAL_BOTTOM : CONST.CONFIG.GOAL_TOP;
-
-    let tx = ball.x + ball.vx * 15; // Predicción simple
-    let ty = ball.y + ball.vy * 15;
-    let role = 'ATTACK';
-    
-    const teammate = allCars.find(c => c.color === ai.color && c !== ai);
-    const distToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
-    const ballToMyGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
-    
-    if (teammate) {
-        const tDist = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
-        if (tDist < distToBall - 30 && ballToMyGoal > 800) {
-            role = 'SUPPORT';
-        }
-    }
-    if (ballToMyGoal < 700 && distToBall > 300) {
-        role = 'DEFEND';
-    }
-
-    // --- 3. COORDENADAS OBJETIVO ---
-    if (role === 'ATTACK') {
-        // Encarar siempre desde detrás del balón para empujar a portería
-        const dxGoal = enemyGoal.x - ball.x;
-        const dyGoal = enemyGoal.y - ball.y;
-        const dGoal = Math.max(1, Math.hypot(dxGoal, dyGoal));
-        
-        // Comprobar si ya estamos bien alineados detrás del balón para chutar
-        const dxBotToBall = ball.x - ai.x;
-        const dyBotToBall = ball.y - ai.y;
-        const distBotToBall = Math.max(1, Math.hypot(dxBotToBall, dyBotToBall));
-        
-        // Producto escalar para ver si el vector Bot->Balón es similar al vector Balón->Portería
-        const dotProduct = ((dxBotToBall / distBotToBall) * (dxGoal / dGoal)) + ((dyBotToBall / distBotToBall) * (dyGoal / dGoal));
-        
-        if (dotProduct > 0.85) {
-            // Ya estamos alineados: cargar contra el balón (con leve predicción)
-            tx = ball.x + (ball.vx || 0) * 12;
-            ty = ball.y + (ball.vy || 0) * 12;
-        } else {
-            // No estamos alineados: buscar posición (offset) detrás del balón
-            tx = ball.x - (dxGoal / dGoal) * 80;
-            ty = ball.y - (dyGoal / dGoal) * 80;
-        }
-    } else if (role === 'DEFEND') {
-        // Ponerse en línea
-        tx = myGoal.x + (ball.x - myGoal.x) * 0.3;
-        ty = myGoal.y + (ball.y - myGoal.y) * 0.3;
-    } else if (role === 'SUPPORT') {
-        tx = (ball.x + myGoal.x) / 2;
-        ty = (ball.y + myGoal.y) / 2;
-        // Si hay poco boost, desviarse
-        if (ai.boost < 30) {
-            const activePads = boostPads.filter(p => p.active);
-            if (activePads.length > 0) {
-                let best = activePads[0];
-                let min = Infinity;
-                activePads.forEach(p => {
-                    const d = Math.hypot(p.x - ai.x, p.y - ai.y);
-                    if (d < min) { min = d; best = p; }
-                });
-                tx = best.x; ty = best.y;
-            }
-        }
-    }
-
-    // --- 3.5. EVASIÓN INTELIGENTE DE PAREDES (IA) ---
-    // Si el bot está tocando una pared/rampa o estuvo en contacto reciente
-    if (ai.wallTractionTimer > 0 && ai.lastWallNormal) {
-        // Comprobar si el objetivo tx, ty nos forzaría a empujar directamente hacia fuera del campo (contra el muro)
-        const toTargetX = tx - ai.x;
-        const toTargetY = ty - ai.y;
-        const distToTarget = Math.hypot(toTargetX, toTargetY);
-        
-        if (distToTarget > 20) {
-            const dxNorm = toTargetX / distToTarget;
-            const dyNorm = toTargetY / distToTarget;
-            // Producto punto entre el vector del objetivo y la normal hacia el interior del campo (apunta hacia adentro)
-            const dotWall = dxNorm * ai.lastWallNormal.x + dyNorm * ai.lastWallNormal.y;
-            
-            // Si el objetivo está detrás del muro (dotWall < -0.15)
-            if (dotWall < -0.15) {
-                // Tangente a la pared: perpendicular a la normal
-                const txTan = -ai.lastWallNormal.y;
-                const tyTan = ai.lastWallNormal.x;
-                
-                // Determinar qué dirección de la tangente nos acerca más al objetivo real
-                const dotTan = toTargetX * txTan + toTargetY * tyTan;
-                const tangentSign = dotTan >= 0 ? 1 : -1;
-                
-                // Redirigir el objetivo del bot a lo largo de la pared (deslizamiento tangente) 
-                // e introducir un leve vector hacia el interior del campo (normal de la pared)
-                tx = ai.x + txTan * tangentSign * 160 + ai.lastWallNormal.x * 60;
-                ty = ai.y + tyTan * tangentSign * 160 + ai.lastWallNormal.y * 60;
-            }
-        }
-
-        // Salida de Emergencia por Atasco Crítico: si lleva tiempo parado contra la pared, forzar salida directa al centro
-        if (ai.stuckTimer > 10) {
-            tx = ai.x + ai.lastWallNormal.x * 320;
-            ty = ai.y + ai.lastWallNormal.y * 320;
-        }
-    }
-
-    // --- 4. CONDUCCIÓN IMPLACABLE ---
-    const dx = tx - ai.x;
-    const dy = ty - ai.y;
-    const distToTarget = Math.hypot(dx, dy);
-    const targetAngle = Math.atan2(dy, dx);
-    const currentAngle = ai.angle - Math.PI / 2;
-    
-    let angleDiff = targetAngle - currentAngle;
-    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
-    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-    const absDiff = Math.abs(angleDiff);
-
-    // --- 4. CONDUCCIÓN INTELIGENTE ---
-    let shouldAccelerate = true;
-    // Si el defensor ya está en zona defensiva cercana al objetivo, se detiene
-    if (role === 'DEFEND' && distToTarget < 70) {
-        shouldAccelerate = false;
-        if (ai.speed > 0.1) {
-            keysPressed[controls.down] = true; // Freno activo
-        }
-    } else if (role !== 'ATTACK' && distToTarget < 35) {
-        // En roles de posicionamiento (no ataque directo), si estamos a punto de llegar al objetivo, desaceleramos
-        shouldAccelerate = false;
-        if (ai.speed > 0.1) {
-            keysPressed[controls.down] = true; // Frenar suavemente
-        }
-    }
-
-    if (shouldAccelerate) {
-        // Maniobra inteligente: Marcha atrás si el objetivo está detrás y a corta distancia
-        if (absDiff > Math.PI * 0.7 && distToTarget < 180) {
-            keysPressed[controls.down] = true; // Retroceder
-            
-            // Dirección inversa en reversa
-            if (absDiff > 0.15) {
-                if (angleDiff > 0) {
-                    keysPressed[controls.left] = true;
-                } else {
-                    keysPressed[controls.right] = true;
-                }
-            }
-        } else {
-            keysPressed[controls.up] = true; // Acelerar
-            
-            // Dirección hacia el objetivo
-            if (absDiff > 0.15 && distToTarget > 20) {
-                if (angleDiff > 0) {
-                    keysPressed[controls.right] = true;
-                } else {
-                    keysPressed[controls.left] = true;
-                }
-            }
-        }
-    }
-
-    // Derrape mágico para hacer giros en U rápidos sin atascarse (solo si vamos hacia adelante)
-    if (shouldAccelerate && !keysPressed[controls.down] && absDiff > 1.2 && Math.abs(ai.speed) > 1.0) {
-        keysPressed[controls.drift] = true;
-    }
-
-    // Usar turbo a muerte si apuntamos al objetivo de ataque y no estamos frenando
-    if (shouldAccelerate && !keysPressed[controls.down] && absDiff < 0.3 && ai.boost > 0 && distToTarget > 150) {
-        keysPressed[controls.boost] = true;
-    }
-}
-

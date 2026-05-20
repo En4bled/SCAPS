@@ -12,6 +12,7 @@ export class Ball {
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
         this.rotationAngle = 0; this.spin = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.type = 'ball';
+        this.mass = 15;
         this.img = null;
         if (imgPath) {
             this.setAppearance(imgPath);
@@ -111,9 +112,24 @@ export class Ball {
         }
         if (gameState === 'countdown') return; 
 
-        // FÍSICAS DEL EJE Z ELIMINADAS - Forzar plano 2D
-        this.z = 0;
-        this.vz = 0;
+        // Gravedad y físicas del eje Z
+        if (this.z > 0) {
+            this.z += this.vz * timeScale;
+            this.vz -= CONST.CONFIG.CAR_GRAVITY * 0.85 * timeScale; // Gravedad similar a los coches
+            
+            if (this.z <= 0) {
+                this.z = 0;
+                // Rebote elástico contra el suelo
+                if (this.vz < -0.4) {
+                    this.vz *= -0.65;
+                    this.vx *= 0.95;
+                    this.vy *= 0.95;
+                    playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
+                } else {
+                    this.vz = 0;
+                }
+            }
+        }
 
         // Fricción constante en el suelo
         const currentFriction = CONST.CONFIG.BALL_FRICTION;

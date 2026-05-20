@@ -22,6 +22,7 @@ export class Car {
         this.hue = hue;
         this.saturate = saturate;
         this.type = 'car';
+        this.mass = 100;
         
         this.img = null;
         if (imgPath) {
