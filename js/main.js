@@ -2308,12 +2308,6 @@ function updateAll(dt) {
         });
 
         ball.update(gameState, particles, timeScale);
-        
-        // 2. Colisiones Ball/Car
-        allCars.forEach(car => {
-            checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale);
-        });
-
         applyGlobalFriction(ball, allCars, timeScale);
         boostPads.forEach(pad => pad.update());
 
@@ -2338,7 +2332,7 @@ function updateAll(dt) {
             }
         });
 
-        checkCollisions();
+        checkCollisions(timeScale);
     }
 
     // --- LÓGICA DE REPLAY ---
@@ -2391,13 +2385,13 @@ function updateAll(dt) {
     if (gameState === 'settings') drawSettingsVisualizer();
 }
 
-function checkCollisions() {
+function checkCollisions(timeScale = 1.0) {
     // Permitimos que corra durante goalScored para que los coches puedan moverse (car.move)
     if (gameState !== 'playing' && gameState !== 'goalScored') return;
 
     for (let i = 0; i < allCars.length; i++) {
         const car = allCars[i];
-        checkCarBallCollision(car, ball, touchHistory, gameTime);
+        checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale);
         for (let j = i + 1; j < allCars.length; j++) {
             checkCarCarCollision(car, allCars[j], explosionParticles);
         }
