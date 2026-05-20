@@ -400,8 +400,8 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                 }
             } else {
                 // Toque continuo / Deslizamiento pasivo (mantenimiento de contacto)
-                // Se resuelve de manera puramente elástica pasiva con restitución muy baja para evitar jitter
-                const e = 0.1;
+                // Se resuelve de manera puramente elástica pasiva con restitución moderada para evitar jitter y no sentirse pegajoso
+                const e = 0.22;
                 const newNormalVel = carNormalVel - e * relSpeedNormal;
 
                 ball.vx = ballTangentX + nx * newNormalVel;

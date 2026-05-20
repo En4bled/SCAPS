@@ -119,11 +119,11 @@ export class Ball {
             this.z = 0;
             // Bote elástico en el suelo (Permitir pequeños rebotes sucesivos suaves)
             if (this.vz < -0.4) {
-                this.vz *= -0.50; // Factor de restitución vertical
+                this.vz *= -0.75; // Factor de restitución vertical (tipo canica elástica)
                 
                 // Fricción por impacto: chocar contra el suelo absorbe inercia horizontal (rebote más orgánico)
-                this.vx *= 0.86;
-                this.vy *= 0.86;
+                this.vx *= 0.95;
+                this.vy *= 0.95;
                 
                 // Sonido suave proporcional a la fuerza del bote
                 playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
