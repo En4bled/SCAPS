@@ -74,8 +74,8 @@ export const CONFIG = {
     CAR_WALL_RESTITUTION: 0.6,         // Elasticidad al chocar contra las paredes
     CAR_JUMP_FORCE: 4.6,               // Fuerza inicial de salto vertical en Z
     CAR_GRAVITY: 0.22,                 // Gravedad aplicada al coche en Z
-    CAR_FLIP_IMPULSE: 2.0,            // Impulso horizontal añadido por el Front Flip (aumentado para mayor empuje)
-    CAR_FLIP_DURATION: 26,             // Duración en frames del Front Flip (animación y Power Shot)
+    CAR_FLIP_IMPULSE: 1.2,            // Impulso horizontal añadido por el Front/Back Flip (más sutil y controlado)
+    CAR_FLIP_DURATION: 32,             // Duración en frames de la animación de voltereta y Power Shot (alineada con la caída)
 
     // Físicas de Balón
     BALL_BOUNCINESS: 0.85, // 1.3 rompía las leyes de la termodinámica generando energía de la nada

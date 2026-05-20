@@ -240,9 +240,21 @@ export class Car {
         this.jumpKeyPressedLastFrame = jumpPressed;
 
         if (jumpJustPressed) {
-            if (this.z === 0) { // Salto inicial
-                this.vz = CONST.CONFIG.CAR_JUMP_FORCE;
-                this.z = 0.1;
+            const isOnWall = (this.z > 0 && this.wallTractionTimer > 0 && this.lastWallNormal);
+
+            if (this.z === 0 || isOnWall) { // Salto inicial o salto desde pared
+                if (isOnWall) {
+                    // Salto desde la pared: impulsarse perpendicularmente hacia afuera del muro
+                    const jumpForce = CONST.CONFIG.CAR_JUMP_FORCE * 0.85;
+                    this.vx += this.lastWallNormal.x * jumpForce;
+                    this.vy += this.lastWallNormal.y * jumpForce;
+                    // Proporcionar un leve impulso vertical en Z para despegar del plano inclinado
+                    this.vz = CONST.CONFIG.CAR_JUMP_FORCE * 0.45;
+                    this.wallTractionTimer = 0;
+                } else {
+                    this.vz = CONST.CONFIG.CAR_JUMP_FORCE;
+                    this.z = 0.1;
+                }
                 this.isJumping = true;
                 this.canDoubleJump = true;
                 playSound('jump');
@@ -281,8 +293,8 @@ export class Car {
         // Gravedad y actualización del vuelo Z
         if (this.z > 0) {
             this.z += this.vz * timeScale;
-            // Durante la voltereta, la gravedad afecta MENOS para dar sensación de planeo aerodinámico
-            const gravityMultiplier = this.isFlipping ? 0.35 : 1.0;
+            // Durante la voltereta, la gravedad afecta un poco menos para dar sensación de planeo aerodinámico alineado
+            const gravityMultiplier = this.isFlipping ? 0.75 : 1.0;
             this.vz -= CONST.CONFIG.CAR_GRAVITY * gravityMultiplier * timeScale;
             
             if (this.z <= 0) {

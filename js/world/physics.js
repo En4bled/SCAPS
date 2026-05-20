@@ -10,91 +10,158 @@ import { addFeedMessage, addScreenShake, addHitStop } from '../main.js';
 
 export function checkPolygonCollision(entity, polygon) {
     if (!polygon || polygon.length < 2) return;
+    
     let closestDist = Infinity;
+    let closestProj = { x: 0, y: 0 };
     let closestNormal = { x: 0, y: 0 };
     let hasCollision = false;
+    let closestIndex = -1;
 
+    // 1. Escaneo limpio del polígono para evitar el bug de actualización incremental de posición
     for (let i = 0; i < polygon.length; i++) {
         const p1 = polygon[i];
         const p2 = polygon[(i + 1) % polygon.length];
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) continue;
+
         let t = ((entity.x - p1.x) * dx + (entity.y - p1.y) * dy) / lenSq;
         t = Math.max(0, Math.min(1, t));
         const projX = p1.x + t * dx;
         const projY = p1.y + t * dy;
         const dist = Math.sqrt((entity.x - projX) ** 2 + (entity.y - projY) ** 2);
 
-        if (dist < entity.radius) {
-            const nx = (entity.x - projX) / dist;
-            const ny = (entity.y - projY) / dist;
-            const overlap = entity.radius - dist;
+        if (dist < closestDist) {
+            closestDist = dist;
+            closestProj = { x: projX, y: projY };
+            closestIndex = i;
+            hasCollision = true;
             
-            const isBall = (entity.onWallTimer !== undefined);
-            if (!isBall) {
-                // Rampa 3D: Permitir que el coche penetre la valla visualmente a medida que sube en Z
-                const allowedPenetration = Math.min(30, (entity.z || 0) * 0.65);
-                const actualOverlap = Math.max(0, overlap - allowedPenetration);
-                entity.x += nx * actualOverlap;
-                entity.y += ny * actualOverlap;
-
-                // Tracción e información de contacto con la pared
-                entity.wallTractionTimer = 15;
-                entity.lastWallNormal = { x: nx, y: ny };
+            if (dist > 0.0001) {
+                closestNormal = { x: (entity.x - projX) / dist, y: (entity.y - projY) / dist };
             } else {
-                entity.x += nx * overlap;
-                entity.y += ny * overlap;
-            }
-
-            if (dist < closestDist) {
-                closestDist = dist;
-                closestNormal = { x: nx, y: ny };
-                hasCollision = true;
+                const len = Math.sqrt(lenSq);
+                closestNormal = { x: -dy / len, y: dx / len };
             }
         }
     }
 
-    if (hasCollision && entity.vx !== undefined) {
-        const dot = entity.vx * closestNormal.x + entity.vy * closestNormal.y;
-        if (dot < 0) {
-            const isBall = (entity.onWallTimer !== undefined);
-            const bounce = isBall ? CONST.CONFIG.BALL_BOUNCINESS : 0.18; // Rebote elástico ligero para coche (no se queda pegado)
-            const friction = isBall ? 0.98 : 0.92; // Deslizamiento controlado por la rampa
+    if (!hasCollision) return;
 
-            // Componente Normal (Rebote)
-            const vNormalX = closestNormal.x * dot;
-            const vNormalY = closestNormal.y * dot;
+    const nx = closestNormal.x;
+    const ny = closestNormal.y;
+    const overlap = entity.radius - closestDist;
 
-            // Componente Tangencial (Deslizamiento)
-            const vTangentX = entity.vx - vNormalX;
-            const vTangentY = entity.vy - vNormalY;
+    const isBall = (entity.onWallTimer !== undefined);
 
-            // Aplicar rebote y fricción tangencial
-            entity.vx = vTangentX * friction - vNormalX * bounce;
-            entity.vy = vTangentY * friction - vNormalY * bounce;
+    if (isBall) {
+        // --- COMPORTAMIENTO FÍSICO DEL BALÓN (Estable y Rebotador) ---
+        if (closestDist < entity.radius) {
+            entity.x += nx * overlap;
+            entity.y += ny * overlap;
+        }
 
-            if (isBall) {
+        if (entity.vx !== undefined) {
+            const dot = entity.vx * nx + entity.vy * ny;
+            if (dot < 0) {
+                const bounce = CONST.CONFIG.BALL_BOUNCINESS;
+                const friction = 0.98;
+                const vNormalX = nx * dot;
+                const vNormalY = ny * dot;
+                const vTangentX = entity.vx - vNormalX;
+                const vTangentY = entity.vy - vNormalY;
+
+                entity.vx = vTangentX * friction - vNormalX * bounce;
+                entity.vy = vTangentY * friction - vNormalY * bounce;
+
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
-                // Añadir un pequeño bote en Z al chocar contra la pared (más suave y controlado)
+                
                 if (entity.vz !== undefined) {
-                    const wallBounceZ = Math.abs(vNormalX * bounce + vNormalY * bounce) * 0.04 + 0.3;
+                    const wallBounceZ = Math.abs(dot) * bounce * 0.04 + 0.3;
                     entity.vz = Math.min(2.5, entity.vz + wallBounceZ);
                 }
                 if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
                 playSound('wall_hit', 0.5);
-            } else if (entity.speed !== undefined) {
-                entity.speed = Math.sqrt(entity.vx**2 + entity.vy**2);
-                
-                // Rampa 3D: Convertir la inercia normal del choque frontal en impulso vertical Z
-                const wallClimbForce = Math.abs(dot) * 0.72;
-                entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, (entity.vz || 0) + wallClimbForce);
-                if (entity.z === 0) entity.z = 0.5;
+            }
+        }
+    } else {
+        // --- COMPORTAMIENTO AVANZADO DE RAMPAS/PAREDES PARA EL COCHE ---
+        const z = entity.z || 0;
+        const slopeFactor = 0.65;
+        const maxPenetration = 30;
+        const allowedPenetration = Math.min(maxPenetration, z * slopeFactor);
+        
+        const isOnWall = (closestDist < entity.radius);
 
-                // No modificar el ángulo del chasis para conservar orientación al rebotar
-                if (Math.abs(dot) > 4) addScreenShake(Math.abs(dot) * 0.4);
-                playSound('wall_hit', 0.3); // Sonido sutil para la rampa
+        if (isOnWall) {
+            entity.wallTractionTimer = 15;
+            entity.lastWallNormal = { x: nx, y: ny };
+            if (z === 0) {
+                entity.z = 0.5; // Pequeño offset para inicializar el estado de rampa
+            }
+        }
+
+        // Resolución de la posición física límite (solo si excede la anchura de la rampa)
+        const actualOverlap = overlap - allowedPenetration;
+        if (actualOverlap > 0) {
+            entity.x += nx * actualOverlap;
+            entity.y += ny * actualOverlap;
+        }
+
+        if (entity.vx !== undefined) {
+            const vNormal = entity.vx * nx + entity.vy * ny;
+            const tx = -ny; // Vector tangente perpendicular
+            const ty = nx;
+            const vTangent = entity.vx * tx + entity.vy * ty;
+
+            if (isOnWall) {
+                if (vNormal < 0) {
+                    // El coche se mueve hacia la pared (Subiendo la rampa)
+                    const impactForce = Math.abs(vNormal);
+
+                    // Si es un impacto directo fuerte contra la base de la pared (z bajo)
+                    if (z <= 1.0 && impactForce > 1.2) {
+                        const bounce = 0.18; // Rebote controlado
+                        const reboundedNormal = -vNormal * bounce;
+                        const climbForce = impactForce * 0.72;
+                        entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, (entity.vz || 0) + climbForce);
+
+                        // Rebote horizontal amortiguado con deslizamiento
+                        entity.vx = reboundedNormal * nx + vTangent * 0.92 * tx;
+                        entity.vy = reboundedNormal * ny + vTangent * 0.92 * ty;
+
+                        if (impactForce > 4) addScreenShake(impactForce * 0.4);
+                        playSound('wall_hit', 0.3);
+                    } else {
+                        // Subida suave o deslizamiento continuo por la rampa
+                        const climbForce = impactForce * 0.85;
+                        entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.2, (entity.vz || 0) + climbForce);
+
+                        // La velocidad normal se acopla cinemáticamente a la velocidad vertical
+                        const constrainedNormal = -entity.vz * slopeFactor;
+
+                        // Deslizamiento perfecto: ¡Sin fricción artificial de colisión aplicada al tangente!
+                        entity.vx = constrainedNormal * nx + vTangent * tx;
+                        entity.vy = constrainedNormal * ny + vTangent * ty;
+                    }
+                } else {
+                    // El coche se aleja de la pared (Bajando la rampa)
+                    // La velocidad vertical de caída se ajusta según la velocidad de alejamiento
+                    entity.vz = -vNormal / slopeFactor;
+
+                    // Si la gravedad está haciendo caer al coche más rápido de lo que el jugador se aleja,
+                    // la restricción cinemática empuja al coche hacia el campo para mantenerlo en la rampa
+                    const gravityDescentNormal = -(entity.vz || 0) * slopeFactor;
+                    const finalNormal = Math.max(vNormal, gravityDescentNormal);
+
+                    entity.vx = finalNormal * nx + vTangent * tx;
+                    entity.vy = finalNormal * ny + vTangent * ty;
+                }
+                
+                // Mantener actualizada la velocidad lineal del chasis
+                entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
             }
         }
     }
