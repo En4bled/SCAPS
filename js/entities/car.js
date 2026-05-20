@@ -306,7 +306,8 @@ export class Car {
         this.speed = forwardVel;
 
         // --- DIRECCIÓN Y GIRO (Bloqueadas durante el Front Flip) ---
-        if (!this.isFlipping && currentSpeed > 0.05) {
+        const isTryingToMove = keys[this.controls.up] || keys[this.controls.down] || (typeof keys['analogGas'] === 'number' && Math.abs(keys['analogGas']) > 0.1);
+        if (!this.isFlipping && (currentSpeed > 0.05 || isTryingToMove)) {
             let turnDirection = 0;
             
             // Prioridad a la entrada analógica
@@ -319,11 +320,13 @@ export class Car {
             }
             
             if (turnDirection !== 0) {
-                let steerAngle = (forwardVel >= 0) ? turnDirection : -turnDirection;
+                const isReversing = keys[this.controls.down] || (typeof keys['analogGas'] === 'number' && keys['analogGas'] < -0.1);
+                let steerAngle = (forwardVel < -0.05 || (currentSpeed <= 0.05 && isReversing)) ? -turnDirection : turnDirection;
                 let maxTurnSpeed = CONST.CONFIG.CAR_TURN_SPEED;
                 
-                // Giro según la velocidad
-                let speedFactor = Math.min(1.0, currentSpeed / CONST.CONFIG.CAR_MAX_SPEED);
+                // Giro según la velocidad (permitimos un giro mínimo del 12% si intentamos movernos pero estamos bloqueados)
+                const effectiveSpeedForTurn = Math.max(0.12 * CONST.CONFIG.CAR_MAX_SPEED, currentSpeed);
+                let speedFactor = Math.min(1.0, effectiveSpeedForTurn / CONST.CONFIG.CAR_MAX_SPEED);
                 let dynamicTurnSpeed = maxTurnSpeed * (0.8 + 0.2 * (1 - Math.abs(speedFactor - 0.5) * 2));
                 
                 if (this.isBoosting) {

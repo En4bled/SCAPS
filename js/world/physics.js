@@ -74,14 +74,22 @@ export function checkPolygonCollision(entity, polygon) {
                 if (Math.abs(vNormal) > 8) addScreenShake(Math.abs(vNormal) * 0.3);
             } else {
                 const isJumpingIntoWall = entity.isJumping || (entity.z > 1.0);
-                if (entity.isFlipping || isJumpingIntoWall || vNormal < -0.85) {
-                    bounce = 0.40;
+                const isSoftImpactOnGround = (entity.z === 0 || entity.z < 1.0) && !entity.isJumping && !entity.isFlipping && vNormal >= -1.5;
+
+                if (isSoftImpactOnGround) {
+                    bounce = 0.0;
+                    friction = 0.96; // Permitir excelente deslizamiento lateral
+                    entity.wallTractionTimer = 0;
+                    entity.vz = 0;
+                    entity.z = 0;
+                } else if (entity.isFlipping || isJumpingIntoWall || vNormal < -1.5) {
+                    bounce = 0.35;
                     friction = 0.88;
                     entity.isFlipping = false;
                     entity.isJumping = false;
                     
                     if (entity.z === 0) entity.z = 0.1;
-                    const liftForce = -vNormal * 0.45 + 1.5;
+                    const liftForce = -vNormal * 0.45 + 1.2;
                     entity.vz = Math.max(entity.vz || 0, Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.85, liftForce));
                     
                     if (vNormal < -2) playSound('wall_hit', 0.5);
