@@ -123,26 +123,49 @@ export class Ball {
         ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
         ctx.clip(); // Limita todo el dibujo a la silueta circular de la esfera
         
-        // Rotación del eje Z (spin / rosca)
-        ctx.rotate(this.rotationAngle);
-        
-        // Desplazamiento dinámico de la textura alineado con la dirección del movimiento (rodamiento 3D direccional)
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        const moveAngle = speed > 0.1 ? Math.atan2(this.vy, this.vx) : 0;
-        
-        // Oscilación sinusoidal direccional continua y suave sin saltos para la textura interna
-        const shiftAmp = renderRadius * 0.22;
-        const shiftDist = Math.sin(this.rollDistance / (this.radius * 0.85)) * shiftAmp;
-        const shiftX = -Math.cos(moveAngle) * shiftDist;
-        const shiftY = -Math.sin(moveAngle) * shiftDist;
-        
-        // Escalamos un poco más la textura interna (1.5x) para que al desplazarse por rodadura nunca exponga bordes transparentes
-        const texSize = renderRadius * 1.5;
-        
         if (this.img && this.img.complete) {
-            ctx.drawImage(this.img, -texSize + shiftX, -texSize + shiftY, texSize * 2, texSize * 2);
+            ctx.save(); // Para las transformaciones de la textura
+            
+            // Calculamos la escala idónea del patrón para que las celdas hexagonales
+            // se ajusten armoniosamente al tamaño del balón
+            const patternScale = (renderRadius * 2.3) / this.img.width;
+            
+            // Dirección del movimiento y velocidad para el rodamiento continuo e infinito
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            const moveAngle = speed > 0.1 ? Math.atan2(this.vy, this.vx) : 0;
+            
+            // Desplazamiento lineal infinito en la dirección del movimiento
+            const shiftX = -Math.cos(moveAngle) * this.rollDistance;
+            const shiftY = -Math.sin(moveAngle) * this.rollDistance;
+            
+            // 1. Escalar el contexto al tamaño del patrón
+            ctx.scale(patternScale, patternScale);
+            
+            // 2. Trasladar según la rodadura física en el espacio escalado
+            ctx.translate(shiftX / patternScale, shiftY / patternScale);
+            
+            // 3. Rotar según el spin (rosca Z)
+            ctx.rotate(this.rotationAngle);
+            
+            // Crear el patrón repetitivo rectangular infinito
+            const pattern = ctx.createPattern(this.img, 'repeat');
+            ctx.fillStyle = pattern;
+            
+            // Rellenar un área grande que cubra con creces la esfera clipada
+            const fillSize = (renderRadius * 4) / patternScale;
+            ctx.fillRect(-fillSize, -fillSize, fillSize * 2, fillSize * 2);
+            
+            ctx.restore(); // Restaura transformaciones de la textura
         } else {
-            // Fallback con formas vectoriales
+            // Fallback vectorial con sombreado
+            ctx.save();
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            const moveAngle = speed > 0.1 ? Math.atan2(this.vy, this.vx) : 0;
+            const shiftAmp = renderRadius * 0.22;
+            const shiftDist = Math.sin(this.rollDistance / (this.radius * 0.85)) * shiftAmp;
+            const shiftX = -Math.cos(moveAngle) * shiftDist;
+            const shiftY = -Math.sin(moveAngle) * shiftDist;
+            
             ctx.beginPath();
             ctx.arc(shiftX, shiftY, renderRadius, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
@@ -155,6 +178,7 @@ export class Ball {
             ctx.beginPath(); ctx.arc(shiftX, -renderRadius / 2 + shiftY, renderRadius / 3, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(renderRadius / 2 + shiftX, renderRadius / 3 + shiftY, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(-renderRadius / 2 + shiftX, renderRadius / 3 + shiftY, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
         }
         
         ctx.restore(); // Eliminamos la máscara de recorte (mantiene la traslación de Z)
