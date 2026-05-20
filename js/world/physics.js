@@ -435,10 +435,6 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
         carB.x += nx * overlap; carB.y += ny * overlap;
 
         // Intercambio de impulsos (Rebote con conservación de momento lineal)
-        const relVx = carA.vx - carB.vx;
-        const relVy = carA.vy - carB.vy;
-        const relSpeedNormal = relVx * nx + relVy * ny;
-
         if (relSpeedNormal > 0) {
             // Aumentar ligeramente el coeficiente para un rebote horizontal más visible y satisfactorio
             const restitution = CONST.CONFIG.CAR_ELASTICITY; 
