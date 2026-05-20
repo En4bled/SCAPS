@@ -111,29 +111,12 @@ export class Ball {
         }
         if (gameState === 'countdown') return; 
 
-        // FÍSICAS DEL EJE Z (Gravedad y Rebote)
-        this.z += this.vz * timeScale;
-        this.vz -= 0.3 * timeScale; // Fuerza de gravedad
-        
-        if (this.z < 0) {
-            this.z = 0;
-            // Bote elástico en el suelo (Permitir pequeños rebotes sucesivos suaves)
-            if (this.vz < -0.4) {
-                this.vz *= -0.75; // Factor de restitución vertical (tipo canica elástica)
-                
-                // Fricción por impacto: chocar contra el suelo absorbe inercia horizontal (rebote más orgánico)
-                this.vx *= 0.95;
-                this.vy *= 0.95;
-                
-                // Sonido suave proporcional a la fuerza del bote
-                playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
-            } else {
-                this.vz = 0;
-            }
-        }
+        // FÍSICAS DEL EJE Z ELIMINADAS - Forzar plano 2D
+        this.z = 0;
+        this.vz = 0;
 
-        // Fricción adaptativa (mucho menos en el aire)
-        const currentFriction = (this.z > 0) ? 0.998 : CONST.CONFIG.BALL_FRICTION;
+        // Fricción constante en el suelo
+        const currentFriction = CONST.CONFIG.BALL_FRICTION;
         this.x += this.vx * timeScale; 
         this.y += this.vy * timeScale; 
         this.vx *= Math.pow(currentFriction, timeScale); 
@@ -191,7 +174,7 @@ export class Ball {
             this.y = CONST.CONFIG.WORLD_H / 2;
             this.vx = 0;
             this.vy = 0;
-            this.z = 100;
+            this.z = 0;
             this.vz = 0;
             console.log("Balón rescatado del infinito.");
         }

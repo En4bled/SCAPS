@@ -77,10 +77,9 @@ export function checkPolygonCollision(entity, polygon) {
 
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 entity.targetRadius = entity.radius; // Mantener tamaño físico real sin agrandamiento visual
-                
+                // ELEVACIÓN EJE Z ELIMINADA (Para forzar mantener el balón puramente en 2D y evitar problemas de rebote)
                 if (entity.vz !== undefined) {
-                    const wallBounceZ = Math.abs(dot) * bounce * 0.04 + 0.3;
-                    entity.vz = Math.min(2.5, entity.vz + wallBounceZ);
+                    entity.vz = 0;
                 }
                 if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
                 playSound('wall_hit', 0.5);
@@ -353,30 +352,11 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                     addHitStop(3);
                 }
 
-                // ELEVACIÓN EJE Z (Efecto aéreo realista dependiente de la altura del balón sobre el chasis del coche)
+                // ELEVACIÓN EJE Z ELIMINADA (Forzamos 0 para mantener físicas puramente 2D sin rebotes extraños)
                 if (ball.vz !== undefined) {
-                    const heightDiff = ball.z - car.z; // Positivo si el balón está por encima
-                    let verticalFactor = 0.0;
-                    
-                    if (car.isFlipping) {
-                        verticalFactor = 1.0;
-                    } else if (car.isJumping) {
-                        verticalFactor = 0.8;
-                    } else {
-                        // Elevación progresiva si el balón está por encima de la mitad del chasis
-                        verticalFactor = Math.max(0, Math.min(1.0, (heightDiff + 8) / 45));
-                    }
-
-                    const hitLift = (kickImpulse * 0.28 + (zLift * 0.55)) * verticalFactor;
-                    
-                    if (heightDiff < -8 && !car.isFlipping) {
-                        // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
-                        ball.vz = Math.min(ball.vz || 0, -1.0);
-                    } else {
-                        // Capped a un valor que permite una elevación máxima controlada (~31px de altura pico)
-                        ball.vz = Math.max(ball.vz || 0, Math.min(4.3, hitLift));
-                    }
+                    ball.vz = 0;
                 }
+
 
                 // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
                 const hitAngleDifference = angle - car.angle;
