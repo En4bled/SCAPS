@@ -204,6 +204,31 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         ball.z = Math.max(0, ball.z + nz * overlap * ratioBall);
 
         // COOLDOWN DE IMPACTO FUERTE (Evita múltiples sonidos e impulsos exponenciales)
+        // Si el coche está haciendo un flip (voltereta), siempre garantizamos un golpe potente que lo despeje
+        if (car.isFlipping) {
+            car.ballContactCooldown = 25; // Prevenir múltiples impulsos consecutivos
+
+            const carSpeedMag = Math.sqrt(car.vx * car.vx + car.vy * car.vy);
+            const flipBaseForce = (CONST.CONFIG.BALL_HIT_FORCE || 32.0) * 1.5;
+            const impulseMag = Math.max(12.0, carSpeedMag + flipBaseForce);
+
+            // Proyectar el balón radialmente hacia afuera
+            ball.vx = car.vx + nx * impulseMag;
+            ball.vy = car.vy + ny * impulseMag;
+            ball.vz = Math.max(ball.vz, 3.5 + Math.abs(nz) * 6.5);
+
+            if (typeof ball.triggerImpactSquash === 'function') {
+                ball.triggerImpactSquash(nx, ny, impulseMag);
+            }
+            
+            playSound('ball_hit', 0.28);
+
+            if (touchHistory) {
+                touchHistory.push({ car: car.name, team: car.color === '#5ad' ? 'blue' : 'orange', time: gameTime });
+            }
+            return;
+        }
+
         const isInitialTouch = (car.ballContactCooldown <= 0);
         if (!isInitialTouch) {
             // Fricción de arrastre suave si sigue empujando

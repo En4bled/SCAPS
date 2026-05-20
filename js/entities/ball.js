@@ -65,18 +65,16 @@ export class Ball {
     }
 
     drawNormalBall(ctx) {
-        // --- 1. DIBUJAR SOMBRA PROYECTADA EN EL SUELO ---
-        // La sombra se dibuja primero (debajo del balón) y se proyecta dinámicamente según la altura
+        // --- 1. DIBUJAR SOMBRA DE OCLUSIÓN DIRECTAMENTE DEBAJO DEL BALÓN ---
+        // Sombra suave en el suelo que indica la posición proyectada vertical exacta del balón.
         ctx.save();
-        // Desplazamiento de la sombra basado en la altura Z (luz desde arriba-izquierda)
-        const shadowOffsetX = this.z * 0.35;
-        const shadowOffsetY = this.z * 0.45;
-        ctx.translate(this.x + shadowOffsetX, this.y + shadowOffsetY);
+        ctx.translate(this.x, this.y);
         ctx.scale(1, 0.5); // Proyección ovalada isométrica plana
         
         const heightFactor = Math.min(1.0, this.z / 150.0);
-        const shadowRadius = this.radius * (1.0 + heightFactor * 0.45); // Se expande y difumina con la altura
-        const shadowOpacity = 0.60 * (1.0 - heightFactor * 0.85); // Pierde opacidad con la altura
+        // La sombra local se contrae (se hace más pequeña) y se difumina con la altura
+        const shadowRadius = this.radius * Math.max(0.25, 1.0 - heightFactor * 0.7);
+        const shadowOpacity = 0.60 * (1.0 - heightFactor * 0.85);
         
         const shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, shadowRadius);
         shadowGrad.addColorStop(0, `rgba(0, 0, 0, ${shadowOpacity})`);
@@ -90,13 +88,13 @@ export class Ball {
         ctx.fill();
         ctx.restore();
 
-        // --- 2. DIBUJAR LA RETÍCULA DE CAÍDA (SI ESTÁ ALTO EN EL AIRE) ---
-        if (this.z > 25.0) {
+        // --- 2. DIBUJAR LA RETÍCULA DE CAÍDA (ÚNICAMENTE SI ESTÁ MUY ALTO) ---
+        if (this.z > 65.0) {
             ctx.save();
             ctx.translate(this.x, this.y); // Centrado en la proyección vertical exacta en el suelo
             ctx.scale(1, 0.5);
             
-            const opacity = Math.min(0.7, (this.z - 25.0) / 40.0);
+            const opacity = Math.min(0.7, (this.z - 65.0) / 40.0);
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.95})`;
             ctx.lineWidth = 2.5;
             
@@ -147,24 +145,6 @@ export class Ball {
             ctx.fill();
         }
         ctx.restore(); // Se deshace la rotación de textura!
-
-        // --- 4. OVERLAY DE SOMBREADO ESFÉRICO DINÁMICO FIJO ---
-        // Sombreado radial fijo de alta definición que le da el relieve volumétrico 3D a la esfera.
-        // Queda estático (luz de arriba-izquierda, sombra abajo-derecha) independientemente de la rotación de la pelota.
-        const shadingGrad = ctx.createRadialGradient(
-            -renderRadius * 0.22, -renderRadius * 0.22, renderRadius * 0.05,
-            0, 0, renderRadius
-        );
-        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');   // Brillo del foco de luz en 3D
-        shadingGrad.addColorStop(0.25, 'rgba(255, 255, 255, 0.05)');  // Transición suave
-        shadingGrad.addColorStop(0.65, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
-        shadingGrad.addColorStop(0.95, 'rgba(0, 0, 0, 0.65)');       // Oclusión ambiental
-        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');          // Borde oscuro esférico
-
-        ctx.fillStyle = shadingGrad;
-        ctx.beginPath();
-        ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
-        ctx.fill();
 
         ctx.restore(); // Restaurar el cuerpo del balón
     }

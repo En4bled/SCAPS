@@ -30,10 +30,36 @@ export function drawDynamicShadows(ctx, entities, lights) {
                 
                 // --- SOMBRAS DE SPRITE REFINADAS CON ALTURA Z ---
                 const zVal = entity.z || 0;
-                
-                // Si el balón está muy alto, desactivamos su sombra proyectada dinámica 
-                // para que no interfiera con la retícula de caída (cruz y círculo)
-                if (entity.type === 'ball' && zVal > 25) return;
+
+                if (entity.type === 'ball') {
+                    const shadowHeightFactor = Math.min(1.0, zVal / 180.0);
+                    const shadowRadius = entity.radius * (1.0 + shadowHeightFactor * 0.4);
+                    const shadowOpacity = Math.min(0.55, (1.0 - (dist / lRadius)) * 0.7 * effIntensity) * (1.0 - shadowHeightFactor * 0.82);
+                    
+                    if (shadowOpacity > 0.01) {
+                        ctx.save();
+                        const lightHeight = 320;
+                        const projScale = zVal / Math.max(10, lightHeight - zVal);
+                        const shadowOffsetX = dx * projScale;
+                        const shadowOffsetY = dy * projScale;
+                        
+                        ctx.translate(entity.x + shadowOffsetX, entity.y + shadowOffsetY);
+                        ctx.scale(1, 0.5);
+                        
+                        const shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, shadowRadius);
+                        shadowGrad.addColorStop(0, `rgba(0, 0, 0, ${shadowOpacity})`);
+                        shadowGrad.addColorStop(0.4, `rgba(0, 0, 0, ${shadowOpacity * 0.65})`);
+                        shadowGrad.addColorStop(0.8, `rgba(0, 0, 0, ${shadowOpacity * 0.2})`);
+                        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                        
+                        ctx.fillStyle = shadowGrad;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, shadowRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    return;
+                }
 
                 const maxZ = entity.type === 'ball' ? 50.0 : 25.0;
                 const zScale = Math.max(0.15, 1.0 - (zVal / maxZ) * 0.7);
