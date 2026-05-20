@@ -54,6 +54,8 @@ export class Car {
         this.flipTimer = 0;
         this.flipVisualAngle = 0;
         this.flipCooldownTimer = 0;
+        this.wallTractionTimer = 0;
+        this.lastWallNormal = null;
     }
 
     setAppearance(imgPath, hue = this.hue, saturate = this.saturate) {
@@ -303,6 +305,7 @@ export class Car {
         if (gameState === 'playing' || gameState === 'goalScored') { 
             this.move(timeScale);
             if (this.skidMarkTimer > 0) this.skidMarkTimer--;
+            if (this.wallTractionTimer > 0) this.wallTractionTimer -= timeScale;
             
             // Efectos visuales de huellas y humo (solo en el suelo)
             if (this.z === 0) {

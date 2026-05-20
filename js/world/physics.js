@@ -38,6 +38,10 @@ export function checkPolygonCollision(entity, polygon) {
                 const actualOverlap = Math.max(0, overlap - allowedPenetration);
                 entity.x += nx * actualOverlap;
                 entity.y += ny * actualOverlap;
+
+                // Tracción e información de contacto con la pared
+                entity.wallTractionTimer = 15;
+                entity.lastWallNormal = { x: nx, y: ny };
             } else {
                 entity.x += nx * overlap;
                 entity.y += ny * overlap;
@@ -55,8 +59,8 @@ export function checkPolygonCollision(entity, polygon) {
         const dot = entity.vx * closestNormal.x + entity.vy * closestNormal.y;
         if (dot < 0) {
             const isBall = (entity.onWallTimer !== undefined);
-            const bounce = isBall ? CONST.CONFIG.BALL_BOUNCINESS : 0.04; // Rebote mínimo para coche (rampa suave)
-            const friction = isBall ? 0.98 : 0.95; // Fricción muy baja para deslizarse por la rampa
+            const bounce = isBall ? CONST.CONFIG.BALL_BOUNCINESS : 0.18; // Rebote elástico ligero para coche (no se queda pegado)
+            const friction = isBall ? 0.98 : 0.92; // Deslizamiento controlado por la rampa
 
             // Componente Normal (Rebote)
             const vNormalX = closestNormal.x * dot;
@@ -103,8 +107,8 @@ export function checkPolygonCollision(entity, polygon) {
 export function applyTirePhysics(car, timeScale) {
     if (car.isExploded) return;
     
-    // Si el coche está en el aire, no hay fricción de neumáticos (inercia pura en el aire)
-    if (car.z > 0) return;
+    // Si el coche está en el aire, no hay fricción de neumáticos (a menos que esté subiendo por la rampa de la pared)
+    if (car.z > 0 && !(car.wallTractionTimer > 0)) return;
     
     // 1. Vectores de dirección del coche
     const forwardX = Math.sin(car.angle);
@@ -450,6 +454,44 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
                 });
                 tx = best.x; ty = best.y;
             }
+        }
+    }
+
+    // --- 3.5. EVASIÓN INTELIGENTE DE PAREDES (IA) ---
+    // Si el bot está tocando una pared/rampa o estuvo en contacto reciente
+    if (ai.wallTractionTimer > 0 && ai.lastWallNormal) {
+        // Comprobar si el objetivo tx, ty nos forzaría a empujar directamente hacia fuera del campo (contra el muro)
+        const toTargetX = tx - ai.x;
+        const toTargetY = ty - ai.y;
+        const distToTarget = Math.hypot(toTargetX, toTargetY);
+        
+        if (distToTarget > 20) {
+            const dxNorm = toTargetX / distToTarget;
+            const dyNorm = toTargetY / distToTarget;
+            // Producto punto entre el vector del objetivo y la normal hacia el interior del campo (apunta hacia adentro)
+            const dotWall = dxNorm * ai.lastWallNormal.x + dyNorm * ai.lastWallNormal.y;
+            
+            // Si el objetivo está detrás del muro (dotWall < -0.15)
+            if (dotWall < -0.15) {
+                // Tangente a la pared: perpendicular a la normal
+                const txTan = -ai.lastWallNormal.y;
+                const tyTan = ai.lastWallNormal.x;
+                
+                // Determinar qué dirección de la tangente nos acerca más al objetivo real
+                const dotTan = toTargetX * txTan + toTargetY * tyTan;
+                const tangentSign = dotTan >= 0 ? 1 : -1;
+                
+                // Redirigir el objetivo del bot a lo largo de la pared (deslizamiento tangente) 
+                // e introducir un leve vector hacia el interior del campo (normal de la pared)
+                tx = ai.x + txTan * tangentSign * 160 + ai.lastWallNormal.x * 60;
+                ty = ai.y + tyTan * tangentSign * 160 + ai.lastWallNormal.y * 60;
+            }
+        }
+
+        // Salida de Emergencia por Atasco Crítico: si lleva tiempo parado contra la pared, forzar salida directa al centro
+        if (ai.stuckTimer > 10) {
+            tx = ai.x + ai.lastWallNormal.x * 320;
+            ty = ai.y + ai.lastWallNormal.y * 320;
         }
     }
 
