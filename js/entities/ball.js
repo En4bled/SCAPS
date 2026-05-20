@@ -115,7 +115,7 @@ export class Ball {
         ctx.rotate(this.rotationAngle); 
         
         // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
-        const zoomScale = 1.0 + Math.min(1.0, this.z / ballMaxZ) * 0.18;
+        const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
         const renderRadius = this.visualRadius * zoomScale;
         
         if (this.img && this.img.complete) {
