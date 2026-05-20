@@ -645,8 +645,24 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
         const dxGoal = enemyGoal.x - ball.x;
         const dyGoal = enemyGoal.y - ball.y;
         const dGoal = Math.max(1, Math.hypot(dxGoal, dyGoal));
-        tx = ball.x - (dxGoal / dGoal) * 80;
-        ty = ball.y - (dyGoal / dGoal) * 80;
+        
+        // Comprobar si ya estamos bien alineados detrás del balón para chutar
+        const dxBotToBall = ball.x - ai.x;
+        const dyBotToBall = ball.y - ai.y;
+        const distBotToBall = Math.max(1, Math.hypot(dxBotToBall, dyBotToBall));
+        
+        // Producto escalar para ver si el vector Bot->Balón es similar al vector Balón->Portería
+        const dotProduct = ((dxBotToBall / distBotToBall) * (dxGoal / dGoal)) + ((dyBotToBall / distBotToBall) * (dyGoal / dGoal));
+        
+        if (dotProduct > 0.85) {
+            // Ya estamos alineados: cargar contra el balón (con leve predicción)
+            tx = ball.x + (ball.vx || 0) * 12;
+            ty = ball.y + (ball.vy || 0) * 12;
+        } else {
+            // No estamos alineados: buscar posición (offset) detrás del balón
+            tx = ball.x - (dxGoal / dGoal) * 80;
+            ty = ball.y - (dyGoal / dGoal) * 80;
+        }
     } else if (role === 'DEFEND') {
         // Ponerse en línea
         tx = myGoal.x + (ball.x - myGoal.x) * 0.3;
@@ -721,15 +737,14 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
 
     // --- 4. CONDUCCIÓN INTELIGENTE ---
     let shouldAccelerate = true;
-
     // Si el defensor ya está en zona defensiva cercana al objetivo, se detiene
     if (role === 'DEFEND' && distToTarget < 70) {
         shouldAccelerate = false;
         if (ai.speed > 0.1) {
             keysPressed[controls.down] = true; // Freno activo
         }
-    } else if (distToTarget < 35) {
-        // En cualquier rol, si estamos a punto de llegar exactamente al objetivo, desaceleramos
+    } else if (role !== 'ATTACK' && distToTarget < 35) {
+        // En roles de posicionamiento (no ataque directo), si estamos a punto de llegar al objetivo, desaceleramos
         shouldAccelerate = false;
         if (ai.speed > 0.1) {
             keysPressed[controls.down] = true; // Frenar suavemente
