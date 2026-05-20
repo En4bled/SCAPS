@@ -338,7 +338,8 @@ export function playSound(type, intensity = 1.0) {
         const baseFreq = 80 + (intensity * 120);
         osc.frequency.setValueAtTime(baseFreq, now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
-        gainNode.gain.setValueAtTime(1.5 * intensity * sfxVolume, now);
+        // Reducido el multiplicador de 1.5 a 0.38 para evitar clipping y distorsión digital
+        gainNode.gain.setValueAtTime(0.38 * intensity * sfxVolume, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
         osc.start(now);
         osc.stop(now + 0.2);

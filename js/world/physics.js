@@ -76,7 +76,7 @@ export function checkPolygonCollision(entity, polygon) {
                 entity.vy = vTangentY * friction - vNormalY * bounce;
 
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
-                entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
+                entity.targetRadius = entity.radius; // Mantener tamaño físico real sin agrandamiento visual
                 
                 if (entity.vz !== undefined) {
                     const wallBounceZ = Math.abs(dot) * bounce * 0.04 + 0.3;
@@ -291,12 +291,12 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             if (car.isFlipping) {
                 // VOLTERETA FRONTAL (Front Flip): Power Shot súper cargado con elevación extra
                 hitForceMultiplier = 2.15;
-                ball.targetRadius = ball.radius * 1.8;
+                ball.targetRadius = ball.radius; // Mantener tamaño constante
                 zLift = 3.6;
                 if (car.isPlayer) addHitStop(4); // Pausa dramática al golpear con Flip
             } else if (dotFront > 0.7) { // Impacto frontal estándar
                 hitForceMultiplier = 1.6;
-                ball.targetRadius = ball.radius * 1.5;
+                ball.targetRadius = ball.radius; // Mantener tamaño constante
                 zLift = 2.2;
             } else if (dotFront > 0.3) { // Impacto diagonal
                 hitForceMultiplier = 1.25;
