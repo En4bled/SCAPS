@@ -373,8 +373,8 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                         // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
                         ball.vz = Math.min(ball.vz || 0, -1.0);
                     } else {
-                        // Capped a un valor moderado para evitar vuelos infinitos
-                        ball.vz = Math.max(ball.vz || 0, Math.min(5.5, hitLift));
+                        // Capped a un valor que permite una elevación máxima controlada (~31px de altura pico)
+                        ball.vz = Math.max(ball.vz || 0, Math.min(4.3, hitLift));
                     }
                 }
 

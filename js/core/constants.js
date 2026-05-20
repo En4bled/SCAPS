@@ -72,7 +72,7 @@ export const CONFIG = {
     CAR_LATERAL_GRIP_DRIFT: 0.92,      // Agarre lateral reducido al derrapar (multiplicador por frame, mayor = más deslizamiento)
     CAR_ELASTICITY: 0.45,              // Elasticidad en colisión coche-coche (restitución)
     CAR_WALL_RESTITUTION: 0.6,         // Elasticidad al chocar contra las paredes
-    CAR_JUMP_FORCE: 4.6,               // Fuerza inicial de salto vertical en Z
+    CAR_JUMP_FORCE: 3.0,               // Fuerza inicial de salto vertical en Z
     CAR_GRAVITY: 0.22,                 // Gravedad aplicada al coche en Z
     CAR_FLIP_IMPULSE: 1.2,            // Impulso horizontal añadido por el Front/Back Flip (más sutil y controlado)
     CAR_FLIP_DURATION: 32,             // Duración en frames de la animación de voltereta y Power Shot (alineada con la caída)

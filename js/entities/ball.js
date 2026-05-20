@@ -46,9 +46,10 @@ export class Ball {
         ctx.save(); 
         ctx.translate(this.x, this.y); 
         
-        // Dibujar Sombra Dinámica (Desplazada y más ajustada al volumen)
+        // Dibujar Sombra Dinámica (Desplazada, escalada y translúcida)
         ctx.beginPath();
-        const shadowScale = Math.max(0.3, 1 - (this.z / 350));
+        const ballMaxZ = 32.0;
+        const shadowScale = Math.max(0.35, 1.0 - (this.z / ballMaxZ) * 0.65);
         ctx.scale(1, 0.5); // Sombra ovalada
         // Añadimos un pequeño offset (x:8, y:15) para simular una luz en ángulo
         // Y reducimos el tamaño base al 85% del radio para que no asome demasiado en reposo
@@ -61,8 +62,9 @@ export class Ball {
         ctx.translate(0, -this.z);
         ctx.rotate(this.rotationAngle); 
         
-        // Mantener el tamaño visual constante para evitar distorsiones al ganar altura en Z
-        const renderRadius = this.visualRadius;
+        // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
+        const zoomScale = 1.0 + Math.min(1.0, this.z / ballMaxZ) * 0.18;
+        const renderRadius = this.visualRadius * zoomScale;
         
         if (this.img && this.img.complete) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
@@ -115,16 +117,16 @@ export class Ball {
         
         if (this.z < 0) {
             this.z = 0;
-            // Bote elástico en el suelo (Balón pesado, bote de fútbol real)
-            if (this.vz < -2) {
-                this.vz *= -0.55; // Factor de restitución vertical ajustado para mejor jugabilidad (fútbol estándar)
+            // Bote elástico en el suelo (Permitir pequeños rebotes sucesivos suaves)
+            if (this.vz < -0.4) {
+                this.vz *= -0.50; // Factor de restitución vertical
                 
                 // Fricción por impacto: chocar contra el suelo absorbe inercia horizontal (rebote más orgánico)
-                this.vx *= 0.82;
-                this.vy *= 0.82;
+                this.vx *= 0.86;
+                this.vy *= 0.86;
                 
-                // Sonido suave proporcional al bote, para no saturar
-                playSound('ball_hit', Math.min(0.3, Math.abs(this.vz) * 0.05));
+                // Sonido suave proporcional a la fuerza del bote
+                playSound('ball_hit', Math.min(0.25, Math.abs(this.vz) * 0.08));
             } else {
                 this.vz = 0;
             }

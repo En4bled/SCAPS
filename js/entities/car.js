@@ -91,7 +91,8 @@ export class Car {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         
-        const shadowScale = Math.max(0.45, 1.0 - (this.z / 250));
+        const carMaxZ = 20.0;
+        const shadowScale = Math.max(0.4, 1.0 - (this.z / carMaxZ) * 0.6);
         ctx.beginPath();
         ctx.ellipse(0, 4, (this.width / 2.2) * shadowScale, (this.height / 2.2) * shadowScale, 0, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
@@ -102,6 +103,10 @@ export class Car {
         ctx.save();
         ctx.translate(this.x, this.y - this.z); // Trasladar en Y vertical hacia arriba
         ctx.rotate(this.angle);
+
+        // Zoom suave del coche según su altura en Z (hasta un 15% más grande a máx altura)
+        const zoomScale = 1.0 + Math.min(1.0, this.z / carMaxZ) * 0.15;
+        ctx.scale(zoomScale, zoomScale);
 
         // Si está haciendo un Front/Back Flip, simular voltereta con Squash & Stretch y Relieve 3D
         if (this.isFlipping) {
