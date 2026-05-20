@@ -82,7 +82,7 @@ export function checkPolygonCollision(entity, polygon) {
                     entity.vz = 0;
                 }
                 if (Math.abs(dot) > 8) addScreenShake(Math.abs(dot) * 0.3);
-                playSound('wall_hit', 0.5);
+                if (Math.abs(dot) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(dot) * 0.1));
             }
         }
     } else {

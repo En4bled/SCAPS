@@ -187,16 +187,16 @@ export class Ball {
             const top = CONST.CONFIG.GOAL_TOP.y - CONST.CONFIG.GOAL_TOP.w/2;
             const bottom = CONST.CONFIG.GOAL_TOP.y + CONST.CONFIG.GOAL_TOP.w/2;
             const back = CONST.CONFIG.GOAL_TOP.x - CONST.CONFIG.GOAL_TOP.d;
-            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
-            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
-            if (this.x - this.radius < back) { this.x = back + this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
+            if (this.y - this.radius < top) { this.y = top + this.radius; if (Math.abs(this.vy) > 1.0) playSound('wall_hit', 0.5); this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; if (Math.abs(this.vy) > 1.0) playSound('wall_hit', 0.5); this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x - this.radius < back) { this.x = back + this.radius; if (Math.abs(this.vx) > 1.0) playSound('wall_hit', 0.5); this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
         } else if (inGoalRight) {
             const top = CONST.CONFIG.GOAL_BOTTOM.y - CONST.CONFIG.GOAL_BOTTOM.w/2;
             const bottom = CONST.CONFIG.GOAL_BOTTOM.y + CONST.CONFIG.GOAL_BOTTOM.w/2;
             const back = CONST.CONFIG.GOAL_BOTTOM.x + CONST.CONFIG.GOAL_BOTTOM.d;
-            if (this.y - this.radius < top) { this.y = top + this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
-            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
-            if (this.x + this.radius > back) { this.x = back - this.radius; this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; playSound('wall_hit', 0.5); }
+            if (this.y - this.radius < top) { this.y = top + this.radius; if (Math.abs(this.vy) > 1.0) playSound('wall_hit', 0.5); this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.y + this.radius > bottom) { this.y = bottom - this.radius; if (Math.abs(this.vy) > 1.0) playSound('wall_hit', 0.5); this.vy *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
+            if (this.x + this.radius > back) { this.x = back - this.radius; if (Math.abs(this.vx) > 1.0) playSound('wall_hit', 0.5); this.vx *= -CONST.CONFIG.BALL_WALL_SLOWDOWN_FACTOR; }
         }
     }
 

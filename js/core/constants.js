@@ -79,7 +79,7 @@ export const CONFIG = {
 
     // Físicas de Balón
     BALL_BOUNCINESS: 0.88, // 1.3 rompía las leyes de la termodinámica generando energía de la nada
-    BALL_FRICTION: 0.991, // Más fricción en el césped (el aire usará 0.998)
+    BALL_FRICTION: 0.996, // Más inercia para que deslice más fácilmente en el campo (antes 0.991)
     BALL_HIT_FORCE: 10.0, // Aumentado para tiros mucho más potentes (antes 7.5)
     BALL_MAX_SPEED: 25.0, // Subido masivamente (antes 14) porque ahora tenemos red de seguridad anti-tunneling
     BALL_BASE_RADIUS: 55,
