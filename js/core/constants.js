@@ -52,7 +52,7 @@ export const CONFIG = {
 
     // Físicas de Coche
     CAR_ACCEL: 0.045,
-    CAR_MAX_SPEED: 2.0,
+    CAR_MAX_SPEED: 3.0,
     CAR_BOOST_ACCEL: 0.075,
     CAR_TURN_SPEED: 0.05,
     CAR_FRICTION: 0.985,
@@ -75,13 +75,13 @@ export const CONFIG = {
     CAR_JUMP_FORCE: 3.0,               // Fuerza inicial de salto vertical en Z
     CAR_GRAVITY: 0.22,                 // Gravedad aplicada al coche en Z
     CAR_FLIP_IMPULSE: 1.2,            // Impulso horizontal añadido por el Front/Back Flip (más sutil y controlado)
-    CAR_FLIP_DURATION: 32,             // Duración en frames de la animación de voltereta y Power Shot (alineada con la caída)
+    CAR_FLIP_DURATION: 42,             // Duración en frames de la animación de voltereta y Power Shot (alineada con la caída)
 
     // Físicas de Balón
-    BALL_BOUNCINESS: 0.88, // 1.3 rompía las leyes de la termodinámica generando energía de la nada
+    BALL_BOUNCINESS: 2.0, // Aumentado por defecto para facilitar rebotes
     BALL_FRICTION: 0.996, // Más inercia para que deslice más fácilmente en el campo (antes 0.991)
     BALL_HIT_FORCE: 10.0, // Aumentado para tiros mucho más potentes (antes 7.5)
-    BALL_MAX_SPEED: 25.0, // Subido masivamente (antes 14) porque ahora tenemos red de seguridad anti-tunneling
+    BALL_MAX_SPEED: 18.0, // Reducido para evitar que sea demasiado incontrolable
     BALL_BASE_RADIUS: 55,
     BALL_WALL_SLOWDOWN_FACTOR: 0.8, // Las paredes no deben frenar tanto al balón
     BALL_WALL_VISUAL_MULTIPLIER: 1.6,

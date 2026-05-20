@@ -109,11 +109,6 @@ export class Car {
         const zoomScale = 1.0 + Math.min(1.0, this.z / carMaxZ) * 0.15;
         ctx.scale(zoomScale, zoomScale);
 
-        // Si está haciendo un Front/Back Flip, simular voltereta con Squash & Stretch y Relieve 3D
-        if (this.isFlipping) {
-            ctx.scale(scaleX, scaleY);
-        }
-
         // Efecto visual Supersónico (Vibración/Brillo opcional aquí)
         if (this.isSupersonic) {
             ctx.shadowBlur = 15;
@@ -122,18 +117,21 @@ export class Car {
 
         if (this.img && this.img.complete) {
             if (this.isFlipping) {
-                const numLayers = 7;
-                const maxDepth = 10; // Altura máxima en píxeles de relieve del chasis
-                // La dirección del offset del relieve depende del seno del ángulo de giro y la dirección del flip
-                const depthStep = (maxDepth / numLayers) * Math.sin(this.flipVisualAngle) * this.flipDirection;
+                const numLayers = 10; // Mayor resolución de capas (10 en lugar de 7)
+                const maxDepth = 15; // Mayor espesor del volumen (15px) para apreciarse mejor
+                const sinVal = Math.sin(this.flipVisualAngle);
 
                 for (let i = 0; i < numLayers; i++) {
                     ctx.save();
-                    // Desplazar progresivamente cada capa a lo largo del eje Y local
-                    ctx.translate(0, -i * depthStep);
+                    // 1. Trasladar la capa en el espacio 2D sin escalar para evitar el aplastamiento del Y-scale
+                    const progress = i / (numLayers - 1); // 0 (base) a 1 (superficie superior)
+                    const offset = -progress * maxDepth * sinVal * this.flipDirection;
+                    ctx.translate(0, offset);
+
+                    // 2. Aplicar la escala de rotación del chasis a cada capa individualmente
+                    ctx.scale(scaleX, scaleY);
 
                     // El factor de brillo simula profundidad (base más oscura, superficie más clara)
-                    const progress = i / (numLayers - 1); // 0 (base) a 1 (superficie superior)
                     let brightness = 0.35 + progress * 0.65;
 
                     // Si el chasis está boca abajo (scaleY < 0), invertimos el brillo y oscurecemos
@@ -165,10 +163,15 @@ export class Car {
             }
         } else {
             // Fallback ultra-simple (Rectángulo de color o chasis negro)
+            ctx.save();
+            if (this.isFlipping) {
+                ctx.scale(scaleX, scaleY);
+            }
             ctx.fillStyle = (scaleY < 0) ? '#151515' : this.color;
             ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
             ctx.strokeStyle = (scaleY < 0) ? '#333' : 'white';
             ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+            ctx.restore();
         }
         ctx.restore();
     }
@@ -194,6 +197,7 @@ export class Car {
 
         // Aceleración progresiva: se suaviza a medida que la velocidad del coche se acerca al límite
         const currentSpeedBeforeAccel = Math.sqrt(this.vx**2 + this.vy**2);
+        this.speed = currentSpeedBeforeAccel; // Actualizar el escalar para que la IA y Audio lo puedan leer correctamente
         const speedRatio = Math.min(1.0, currentSpeedBeforeAccel / maxSpeed);
         const progressiveFactor = Math.max(0.15, 1.0 - Math.pow(speedRatio, 1.4));
         currentAccel *= progressiveFactor;
@@ -387,7 +391,8 @@ export class Car {
         }
 
         // --- ESTADO SUPERSÓNICO ---
-        this.isSupersonic = (currentSpeed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.9);
+        // Exige alcanzar el 97% de la velocidad máxima de boost, haciendo más difícil la demolición accidental.
+        this.isSupersonic = (currentSpeed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.97);
 
         if (gameState === 'playing' || gameState === 'goalScored') { 
             this.move(timeScale);

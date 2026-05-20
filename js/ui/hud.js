@@ -1,6 +1,6 @@
 import * as CONST from '../core/constants.js';
 
-export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode = false) {
+export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode = false, ball = null, cameraState = null) {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
     
@@ -157,6 +157,110 @@ export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTra
     ctx.font = 'bold 22px Rajdhani, sans-serif';
     ctx.letterSpacing = '2px';
     ctx.fillText("BOOST", boostX, boostY + 45);
+
+    // --- INDICADOR DE BALÓN FUERA DE PANTALLA ---
+    if (ball && cameraState && player1 && !player1.isExploded) {
+        // 1. Proyectar posición del balón a coordenadas de pantalla
+        const bx = ball.x;
+        const by = ball.y;
+        
+        const x1 = bx - cameraState.x;
+        const y1 = by - cameraState.y;
+        
+        const x2 = x1 * cameraState.fov;
+        const y2 = y1 * cameraState.fov;
+        
+        const cos = Math.cos(cameraState.rot);
+        const sin = Math.sin(cameraState.rot);
+        const rx = x2 * cos - y2 * sin;
+        const ry = x2 * sin + y2 * cos;
+        
+        const screenX = rx + canvas.width / 2;
+        const screenY = ry + canvas.height / 2 + cameraState.vOffset;
+        
+        // 2. Comprobar si está fuera de los límites de la pantalla (con un margen de seguridad)
+        const margin = 40;
+        const isOffscreen = screenX < margin || screenX > canvas.width - margin || 
+                            screenY < margin || screenY > canvas.height - margin;
+                            
+        if (isOffscreen) {
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const dx = screenX - cx;
+            const dy = screenY - cy;
+            
+            const dist = Math.hypot(dx, dy);
+            if (dist > 10) {
+                // Encontrar intersección con el rectángulo de la pantalla
+                const minX = margin;
+                const maxX = canvas.width - margin;
+                const minY = margin;
+                const maxY = canvas.height - margin;
+                
+                let t = Infinity;
+                if (dx < 0) {
+                    const tX = (minX - cx) / dx;
+                    if (tX > 0 && tX < t) t = tX;
+                } else if (dx > 0) {
+                    const tX = (maxX - cx) / dx;
+                    if (tX > 0 && tX < t) t = tX;
+                }
+                
+                if (dy < 0) {
+                    const tY = (minY - cy) / dy;
+                    if (tY > 0 && tY < t) t = tY;
+                } else if (dy > 0) {
+                    const tY = (maxY - cy) / dy;
+                    if (tY > 0 && tY < t) t = tY;
+                }
+                
+                if (t < 1.0) {
+                    const ix = cx + dx * t;
+                    const iy = cy + dy * t;
+                    const angle = Math.atan2(dy, dx);
+                    const distanceMeters = Math.round(Math.hypot(ball.x - player1.x, ball.y - player1.y) / 10);
+                    
+                    // Dibujar el indicador
+                    ctx.save();
+                    ctx.translate(ix, iy);
+                    ctx.rotate(angle);
+                    
+                    // Flecha con glow
+                    ctx.shadowColor = '#f90';
+                    ctx.shadowBlur = 12;
+                    ctx.fillStyle = '#ff9500';
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(-5, -10);
+                    ctx.lineTo(-1, 0);
+                    ctx.lineTo(-5, 10);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Círculo para la distancia
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.arc(-22, 0, 18, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(15, 20, 25, 0.85)';
+                    ctx.strokeStyle = '#ff9500';
+                    ctx.lineWidth = 2;
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Texto rotado en sentido opuesto para que se lea horizontal
+                    ctx.rotate(-angle);
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Rajdhani, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${distanceMeters}m`, -22, 0);
+                    
+                    ctx.restore();
+                }
+            }
+        }
+    }
 
     ctx.restore();
 }

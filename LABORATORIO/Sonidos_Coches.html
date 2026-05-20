@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Laboratorio de Motores Arcade - SCAPS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050510;
+            --panel-bg: #0a0a1a;
+            --border-color: #ffaa33;
+            --text-color: #ffeedd;
+            --accent: #ff3300;
+            --accent-glow: rgba(255, 51, 0, 0.6);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--border-color);
+            margin-bottom: 5px;
+            color: #ffaa33;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(255, 170, 51, 0.2);
+            padding: 30px;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90vw;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #ffcc88;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--border-color);
+            cursor: pointer;
+        }
+
+        .value-display {
+            font-family: 'Share Tech Mono', monospace;
+            float: right;
+            color: #fff;
+        }
+
+        .btn-play {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: transparent;
+            font-family: 'Share Tech Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            width: 100%;
+        }
+
+        .btn-play:hover {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        select {
+            width: 100%;
+            background: #000;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 30px;
+        }
+
+        hr {
+            border: 1px solid #332211;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>LABORATORIO MOTORES COMBUSTIÓN</h1>
+    <p>Simulador Arcade mediante WaveShaping y Ruido Blanco</p>
+
+    <div class="container">
+        
+        <button class="btn-play" id="btn-toggle">INICIAR MOTOR (OFF)</button>
+        
+        <div class="control-group" style="margin-top: 20px;">
+            <label>Presets Arcade Curados</label>
+            <select id="preset-select" onchange="applyPreset(this.value)">
+                <!-- Llenado por JS -->
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>RPM (Acelerador) <span class="value-display" id="val-rpm">0%</span></label>
+            <input type="range" id="rpm" min="0" max="100" value="0" step="1">
+        </div>
+
+        <hr>
+
+        <div class="control-group">
+            <label>Tipo de Onda (Oscilador Base)</label>
+            <select id="wave-type">
+                <option value="sawtooth">Sawtooth (Serrado - Motores Agresivos)</option>
+                <option value="square">Square (Cuadrado - Motores Clásicos/Graves)</option>
+                <option value="triangle">Triangle (Triángulo - Suave)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Distorsión (Grit / WaveShaper) <span class="value-display" id="val-grit">400</span></label>
+            <input type="range" id="grit" min="0" max="1000" value="400" step="10">
+        </div>
+
+        <div class="control-group">
+            <label>Ruido de Escape (White Noise) <span class="value-display" id="val-noise">30%</span></label>
+            <input type="range" id="noise" min="0" max="100" value="30" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>Frecuencia Base (Hz al ralentí) <span class="value-display" id="val-base-freq">30</span></label>
+            <input type="range" id="base-freq" min="10" max="150" value="30" step="1">
+        </div>
+
+        <div class="control-group">
+            <label>Multiplicador de Freq (Max RPM) <span class="value-display" id="val-freq-mult">150</span></label>
+            <input type="range" id="freq-mult" min="50" max="800" value="150" step="10">
+        </div>
+
+        <div class="control-group">
+            <label>Filtro Lowpass (Corte Base Hz) <span class="value-display" id="val-filter-base">150</span></label>
+            <input type="range" id="filter-base" min="50" max="2000" value="150" step="10">
+        </div>
+
+        <div class="control-group">
+            <label>Filtro Apertura (Aumento RPM) <span class="value-display" id="val-filter-mult">800</span></label>
+            <input type="range" id="filter-mult" min="100" max="5000" value="800" step="50">
+        </div>
+
+        <div class="control-group">
+            <label>Cilindros Extra (Detune Cents) <span class="value-display" id="val-detune">15</span></label>
+            <input type="range" id="detune" min="0" max="100" value="15" step="1">
+        </div>
+
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let osc1 = null;
+        let osc2 = null;
+        let noiseNode = null;
+        
+        let waveShaper = null;
+        let filter = null;
+        let noiseFilter = null;
+        let noiseGain = null;
+        let masterGain = null;
+        
+        let isPlaying = false;
+
+        const ui = {
+            btnToggle: document.getElementById('btn-toggle'),
+            presetSelect: document.getElementById('preset-select'),
+            rpm: document.getElementById('rpm'),
+            waveType: document.getElementById('wave-type'),
+            grit: document.getElementById('grit'),
+            noise: document.getElementById('noise'),
+            baseFreq: document.getElementById('base-freq'),
+            freqMult: document.getElementById('freq-mult'),
+            filterBase: document.getElementById('filter-base'),
+            filterMult: document.getElementById('filter-mult'),
+            detune: document.getElementById('detune')
+        };
+
+        const presets = {
+            muscle_v8: { name: 'V8 Muscle (Clásico USA)', wave: 'square', grit: 600, noise: 40, baseFreq: 22, freqMult: 90, filterBase: 80, filterMult: 600, detune: 18 },
+            outrun_testarossa: { name: 'V12 Outrun (Testarossa 16-bit)', wave: 'sawtooth', grit: 400, noise: 20, baseFreq: 35, freqMult: 220, filterBase: 120, filterMult: 900, detune: 12 },
+            daytona_nascar: { name: 'NASCAR (Daytona Arcade)', wave: 'sawtooth', grit: 800, noise: 50, baseFreq: 45, freqMult: 250, filterBase: 150, filterMult: 1200, detune: 25 },
+            tuner_inline4: { name: 'Tuner Raspy (Inline-4)', wave: 'sawtooth', grit: 300, noise: 60, baseFreq: 30, freqMult: 180, filterBase: 100, filterMult: 1500, detune: 8 },
+            diesel_truck: { name: 'Camión Diésel Pesado', wave: 'square', grit: 900, noise: 30, baseFreq: 15, freqMult: 60, filterBase: 50, filterMult: 400, detune: 22 },
+            rally_groupb: { name: 'Rally Group B (Turbo)', wave: 'sawtooth', grit: 500, noise: 80, baseFreq: 38, freqMult: 200, filterBase: 130, filterMult: 2000, detune: 15 },
+            f1_v10: { name: 'Fórmula 1 (V10 Screamer)', wave: 'sawtooth', grit: 200, noise: 15, baseFreq: 60, freqMult: 500, filterBase: 250, filterMult: 3000, detune: 5 },
+            rotary_rx7: { name: 'Rotativo (RX-7)', wave: 'triangle', grit: 700, noise: 45, baseFreq: 45, freqMult: 300, filterBase: 200, filterMult: 1800, detune: 10 },
+            chopper_bike: { name: 'Moto Chopper (V-Twin)', wave: 'square', grit: 500, noise: 25, baseFreq: 18, freqMult: 100, filterBase: 70, filterMult: 500, detune: 30 },
+            sport_bike: { name: 'Moto Deportiva (Sega Rally)', wave: 'sawtooth', grit: 150, noise: 35, baseFreq: 55, freqMult: 450, filterBase: 180, filterMult: 2200, detune: 8 }
+        };
+
+        for (const key in presets) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = presets[key].name;
+            ui.presetSelect.appendChild(opt);
+        }
+
+        window.applyPreset = (key) => {
+            if (!key) return;
+            const p = presets[key];
+            ui.waveType.value = p.wave;
+            ui.grit.value = p.grit;
+            ui.noise.value = p.noise;
+            ui.baseFreq.value = p.baseFreq;
+            ui.freqMult.value = p.freqMult;
+            ui.filterBase.value = p.filterBase;
+            ui.filterMult.value = p.filterMult;
+            ui.detune.value = p.detune;
+            updateDisplays();
+            updateAudio();
+        };
+
+        function updateDisplays() {
+            document.getElementById('val-rpm').innerText = ui.rpm.value + '%';
+            document.getElementById('val-grit').innerText = ui.grit.value;
+            document.getElementById('val-noise').innerText = ui.noise.value + '%';
+            document.getElementById('val-base-freq').innerText = ui.baseFreq.value;
+            document.getElementById('val-freq-mult').innerText = ui.freqMult.value;
+            document.getElementById('val-filter-base').innerText = ui.filterBase.value;
+            document.getElementById('val-filter-mult').innerText = ui.filterMult.value;
+            document.getElementById('val-detune').innerText = ui.detune.value;
+        }
+
+        function makeDistortionCurve(amount) {
+            const k = typeof amount === 'number' ? amount : 50;
+            const n_samples = 44100;
+            const curve = new Float32Array(n_samples);
+            const deg = Math.PI / 180;
+            for (let i = 0; i < n_samples; ++i) {
+                const x = i * 2 / n_samples - 1;
+                curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+            }
+            return curve;
+        }
+
+        function createWhiteNoiseBuffer(ctx) {
+            const bufferSize = 2 * ctx.sampleRate;
+            const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            return noiseBuffer;
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (!osc1) {
+                osc1 = audioCtx.createOscillator();
+                osc2 = audioCtx.createOscillator(); 
+                
+                waveShaper = audioCtx.createWaveShaper();
+                waveShaper.oversample = '4x';
+                
+                filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+
+                // Setup exhaust noise
+                noiseNode = audioCtx.createBufferSource();
+                noiseNode.buffer = createWhiteNoiseBuffer(audioCtx);
+                noiseNode.loop = true;
+                
+                noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.Q.value = 0.5;
+                
+                noiseGain = audioCtx.createGain();
+                noiseGain.gain.value = 0;
+
+                masterGain = audioCtx.createGain();
+
+                // Graph: Oscs -> WaveShaper (Distortion) -> Lowpass Filter -> Master
+                osc1.connect(waveShaper);
+                osc2.connect(waveShaper);
+                waveShaper.connect(filter);
+                filter.connect(masterGain);
+
+                // Graph: Noise -> Bandpass -> NoiseGain -> Master
+                noiseNode.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+
+                masterGain.connect(audioCtx.destination);
+                
+                masterGain.gain.value = 0;
+                
+                osc1.start();
+                osc2.start();
+                noiseNode.start();
+            }
+        }
+
+        function toggleMotor() {
+            if (!isPlaying) {
+                initAudio();
+                isPlaying = true;
+                masterGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 0.1);
+                ui.btnToggle.innerText = "APAGAR MOTOR (ON)";
+                ui.btnToggle.style.borderColor = "#0f5";
+                ui.btnToggle.style.color = "#0f5";
+                updateAudio();
+            } else {
+                isPlaying = false;
+                masterGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.1);
+                ui.btnToggle.innerText = "INICIAR MOTOR (OFF)";
+                ui.btnToggle.style.borderColor = "var(--accent)";
+                ui.btnToggle.style.color = "var(--accent)";
+            }
+        }
+
+        function updateAudio() {
+            if (!isPlaying || !osc1) return;
+            
+            const now = audioCtx.currentTime;
+            const rpmPercent = parseFloat(ui.rpm.value) / 100.0;
+            
+            // Apply distortion curve
+            const gritVal = parseFloat(ui.grit.value);
+            waveShaper.curve = makeDistortionCurve(gritVal);
+            
+            const bFreq = parseFloat(ui.baseFreq.value);
+            const fMult = parseFloat(ui.freqMult.value);
+            const fltBase = parseFloat(ui.filterBase.value);
+            const fltMult = parseFloat(ui.filterMult.value);
+            const dTune = parseFloat(ui.detune.value);
+
+            osc1.type = ui.waveType.value;
+            osc2.type = ui.waveType.value;
+            
+            osc1.detune.setTargetAtTime(0, now, 0.1);
+            osc2.detune.setTargetAtTime(dTune, now, 0.1);
+
+            const targetFreq = bFreq + (rpmPercent * fMult);
+            osc1.frequency.setTargetAtTime(targetFreq, now, 0.1);
+            osc2.frequency.setTargetAtTime(targetFreq * 1.01, now, 0.1); // Phase offset
+
+            const targetFilter = fltBase + (rpmPercent * fltMult);
+            filter.frequency.setTargetAtTime(targetFilter, now, 0.1);
+            
+            // Noise (Exhaust Flow)
+            const noisePercent = parseFloat(ui.noise.value) / 100.0;
+            // A más RPM, más sopla el aire de escape y más agudo es el soplido
+            const exhaustVol = noisePercent * (0.2 + rpmPercent * 0.8) * 0.5;
+            noiseGain.gain.setTargetAtTime(exhaustVol, now, 0.1);
+            noiseFilter.frequency.setTargetAtTime(300 + (rpmPercent * 1500), now, 0.1);
+            
+            const vol = 0.3 + (rpmPercent * 0.2);
+            masterGain.gain.setTargetAtTime(vol, now, 0.1);
+        }
+
+        // Listeners
+        ui.btnToggle.addEventListener('click', toggleMotor);
+        
+        ['rpm', 'waveType', 'grit', 'noise', 'baseFreq', 'freqMult', 'filterBase', 'filterMult', 'detune'].forEach(id => {
+            ui[id].addEventListener('input', () => {
+                updateDisplays();
+                updateAudio();
+            });
+        });
+
+        // Cargar default UI
+        setTimeout(() => applyPreset(ui.presetSelect.value), 100);
+
+    </script>
+</body>
+</html>

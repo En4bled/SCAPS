@@ -21,6 +21,28 @@ const EDITABLE_PARAMS = [
 // Copia de los valores originales para resetear
 const DEFAULT_VALUES = {};
 
+function getSliderValueFromReal(param, realVal) {
+    const base = DEFAULT_VALUES[param.key] !== undefined ? DEFAULT_VALUES[param.key] : CONST.CONFIG[param.key];
+    if (realVal === base) return 0;
+    if (realVal > base) {
+        if (param.max === base) return 0;
+        return (realVal - base) / (param.max - base) * 5;
+    } else {
+        if (param.min === base) return 0;
+        return -(base - realVal) / (base - param.min) * 5;
+    }
+}
+
+function getRealValueFromSlider(param, sliderVal) {
+    const base = DEFAULT_VALUES[param.key] !== undefined ? DEFAULT_VALUES[param.key] : CONST.CONFIG[param.key];
+    if (sliderVal === 0) return base;
+    if (sliderVal > 0) {
+        return base + (param.max - base) * (sliderVal / 5);
+    } else {
+        return base - (base - param.min) * (-sliderVal / 5);
+    }
+}
+
 export function showToast(message, color = 'var(--theme-color)') {
     let toast = document.getElementById('scaps-toast');
     if (!toast) {
@@ -140,10 +162,10 @@ export function initPhysicsEditor(toggleCallback) {
 
         const slider = document.createElement('input');
         slider.type = 'range';
-        slider.min = param.min;
-        slider.max = param.max;
-        slider.step = param.step;
-        slider.value = CONST.CONFIG[param.key];
+        slider.min = -5;
+        slider.max = 5;
+        slider.step = 0.5; // Permite pasos intermedios para mayor precisión
+        slider.value = getSliderValueFromReal(param, CONST.CONFIG[param.key]);
         slider.id = `slider-${param.key}`;
         slider.style.cssText = 'flex: 1; accent-color: #fff; cursor: pointer; height: 12px; transition: outline 0.1s ease;';
 
@@ -164,13 +186,14 @@ export function initPhysicsEditor(toggleCallback) {
             e.stopPropagation();
             const def = DEFAULT_VALUES[param.key];
             CONST.CONFIG[param.key] = def;
-            slider.value = def;
+            slider.value = 0; // El valor por defecto siempre es 0 en el centro
             valueDisplay.textContent = def.toFixed(param.step < 0.01 ? 3 : 2);
             updateResetVisibility();
         };
 
         slider.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
+            const sliderVal = parseFloat(e.target.value);
+            const val = getRealValueFromSlider(param, sliderVal);
             valueDisplay.textContent = val.toFixed(param.step < 0.01 ? 3 : 2);
             CONST.CONFIG[param.key] = val;
             updateResetVisibility();
@@ -210,7 +233,7 @@ export function initPhysicsEditor(toggleCallback) {
                 CONST.CONFIG[param.key] = def;
                 const s = document.getElementById(`slider-${param.key}`);
                 const d = document.getElementById(`val-${param.key}`);
-                if (s) s.value = def;
+                if (s) s.value = 0;
                 if (d) d.textContent = def.toFixed(param.step < 0.01 ? 3 : 2);
             });
             initPhysicsEditor(); // Regenerar para actualizar visibilidades
@@ -279,7 +302,7 @@ export function initPhysicsEditor(toggleCallback) {
                             CONST.CONFIG[p.key] = val;
                             const s = document.getElementById(`slider-${p.key}`);
                             const d = document.getElementById(`val-${p.key}`);
-                            if (s) s.value = val;
+                            if (s) s.value = getSliderValueFromReal(p, val);
                             if (d) d.textContent = val.toFixed(p.step < 0.01 ? 3 : 2);
                         }
                     });
@@ -403,8 +426,8 @@ export function toggleEditor(show) {
                 const slider = document.getElementById(`slider-${param.key}`);
                 const display = document.getElementById(`val-${param.key}`);
                 if (slider && display) {
-                    slider.value = CONST.CONFIG[param.key];
-                    display.textContent = CONST.CONFIG[param.key];
+                    slider.value = getSliderValueFromReal(param, CONST.CONFIG[param.key]);
+                    display.textContent = CONST.CONFIG[param.key].toFixed(param.step < 0.01 ? 3 : 2);
                 }
             });
 

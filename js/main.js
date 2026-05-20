@@ -2233,7 +2233,13 @@ function renderFrame() {
 
     // Solo dibujar nombres y HUD si estamos en partida
     drawCarNames(ctx, allCars, player1, cameraMode, gameState);
-    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode);
+    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode, ball, {
+        x: currentCamX,
+        y: currentCamY,
+        rot: currentRotation,
+        fov: window.currentFOV,
+        vOffset: currentVOffset
+    });
     drawFeed(ctx, canvas);
 
     ctx.restore();
@@ -2301,7 +2307,7 @@ function updateAll(dt) {
             if (car !== player1) {
                 const aiKeys = {};
                 if (!isTrainingMode) {
-                    updateCarAI(car, ball, boostPads, gameState, aiKeys, allCars);
+                    updateCarAI(car, ball, allCars, boostPads, car.controls, aiKeys);
                 }
                 car.update(aiKeys, gameState, particles, skidMarks, timeScale);
                 applyTirePhysics(car, timeScale);
@@ -2625,7 +2631,7 @@ function showGameOver() {
             });
             
             sortedCars.forEach(car => {
-                const color = car.team === 'blue' ? '#5ad' : '#f90';
+                const color = car.color === '#5ad' ? '#5ad' : '#f90';
                 const isPlayer = (car === player1);
                 const nameStyle = isPlayer ? `color: #fff; font-weight: bold; text-shadow: 0 0 8px ${color};` : `color: ${color};`;
                 const bgStyle = isPlayer ? `background: rgba(255,255,255,0.15); border-left: 3px solid ${color};` : `border-left: 3px solid transparent;`;
@@ -2648,7 +2654,7 @@ function showGameOver() {
         if (player1) {
             earnedXP += (player1.goals || 0) * 100;
             earnedXP += (player1.assists || 0) * 50;
-            if ((score.blue > score.orange && player1.team === 'blue') || (score.orange > score.blue && player1.team === 'orange')) {
+            if ((score.blue > score.orange && player1.color === '#5ad') || (score.orange > score.blue && player1.color === '#f90')) {
                 earnedXP += 250; // Victoria
             }
         }

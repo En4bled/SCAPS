@@ -28,19 +28,28 @@ export function drawDynamicShadows(ctx, entities, lights) {
                 const angle = Math.atan2(dy, dx);
                 const effIntensity = light.intensity || 1;
                 
-                // --- SOMBRAS DE SPRITE REFINADAS ---
-                const shadowLen = (dist / 12) * (1.3 - Math.min(0.8, effIntensity * 0.3));
-                const opacity = Math.min(0.35, (1 - (dist / lRadius)) * 0.4 * effIntensity);
-                if (opacity <= 0.05) return;
+                // --- SOMBRAS DE SPRITE REFINADAS CON ALTURA Z ---
+                const zVal = entity.z || 0;
+                
+                // Si el balón está muy alto, desactivamos su sombra proyectada dinámica 
+                // para que no interfiera con la retícula de caída (cruz y círculo)
+                if (entity.type === 'ball' && zVal > 25) return;
+
+                const maxZ = entity.type === 'ball' ? 50.0 : 25.0;
+                const zScale = Math.max(0.15, 1.0 - (zVal / maxZ) * 0.7);
+                const shadowLen = (dist / 12) * (1.3 - Math.min(0.8, effIntensity * 0.3)) * zScale;
+                const opacity = Math.min(0.35, (1 - (dist / lRadius)) * 0.4 * effIntensity) * zScale;
+                if (opacity <= 0.03) return;
 
                 ctx.save();
-                const offset = 8 + (dist / 120);
+                // El offset del haz de luz se contrae a medida que se eleva el objeto
+                const offset = (8 + (dist / 120)) * zScale;
                 ctx.translate(entity.x + Math.cos(angle) * offset, entity.y + Math.sin(angle) * offset);
                 ctx.rotate(angle);
                 
-                // Inclinación suave
+                // Inclinación suave y escalado tridimensional según la altura Z
                 ctx.transform(1, 0, shadowLen/120, 1, 0, 0);
-                ctx.scale(1 + shadowLen/300, 1);
+                ctx.scale((1 + shadowLen/300) * zScale, zScale);
                 
                 // Filtro de silueta suave (Solo si hay imagen)
                 if (entity.img && entity.img.complete) {

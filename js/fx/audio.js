@@ -132,39 +132,87 @@ export function initAudio(playerCar = null, allCars = null) {
 
     if (!allCars) return;
 
-    // Detener y desconectar osciladores existentes antes de sobrescribir para evitar fugas de sonido en el menú
+    // Motores Sintéticos de Alta Fidelidad (Arcade Overhaul)
     if (motorAudios.length > 0) {
         motorAudios.forEach(item => {
             try {
-                item.gain.gain.cancelScheduledValues(audioCtx.currentTime);
-                item.osc.stop();
-                item.osc.disconnect();
+                item.masterEngineGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                item.osc1.stop();
+                item.osc1.disconnect();
+                item.osc2.stop();
+                item.osc2.disconnect();
+                item.noiseNode.stop();
+                item.noiseNode.disconnect();
             } catch(e) {}
         });
         motorAudios = [];
     }
 
+    function makeDistortionCurve(amount) {
+        const k = amount;
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i) {
+            const x = i * 2 / n_samples - 1;
+            curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+        }
+        return curve;
+    }
+
+    function createWhiteNoiseBuffer(ctx) {
+        const bufferSize = 2 * ctx.sampleRate;
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        return noiseBuffer;
+    }
+
     // Motores Sintéticos de Alta Fidelidad
     motorAudios = [];
     allCars.forEach(car => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const filter = audioCtx.createBiquadFilter();
-
-        osc.type = 'triangle';
-        osc.frequency.value = 40; 
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator(); 
         
+        const waveShaper = audioCtx.createWaveShaper();
+        waveShaper.oversample = '4x';
+        
+        const filter = audioCtx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.value = 400;
 
-        gain.gain.value = 0; 
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = createWhiteNoiseBuffer(audioCtx);
+        noiseNode.loop = true;
+        
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.Q.value = 0.5;
+        
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.value = 0;
 
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(masterGain); 
-        osc.start();
+        const masterEngineGain = audioCtx.createGain();
 
-        motorAudios.push({ car, osc, gain, filter });
+        osc1.connect(waveShaper);
+        osc2.connect(waveShaper);
+        waveShaper.connect(filter);
+        filter.connect(masterEngineGain);
+
+        noiseNode.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterEngineGain);
+
+        masterEngineGain.connect(masterGain);
+        
+        masterEngineGain.gain.value = 0;
+        
+        osc1.start();
+        osc2.start();
+        noiseNode.start();
+
+        motorAudios.push({ car, osc1, osc2, waveShaper, filter, noiseNode, noiseFilter, noiseGain, masterEngineGain, makeDistortionCurve });
     });
 }
 
@@ -174,11 +222,15 @@ export function stopAllMotors() {
 
     motorAudios.forEach(item => {
         try {
-            item.gain.gain.cancelScheduledValues(audioCtx.currentTime);
-            item.gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            item.masterEngineGain.gain.cancelScheduledValues(audioCtx.currentTime);
+            item.masterEngineGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
             setTimeout(() => {
-                item.osc.stop();
-                item.osc.disconnect();
+                item.osc1.stop();
+                item.osc1.disconnect();
+                item.osc2.stop();
+                item.osc2.disconnect();
+                item.noiseNode.stop();
+                item.noiseNode.disconnect();
             }, 150);
         } catch(e) {}
     });
@@ -197,40 +249,55 @@ export function updateAudio() {
     const now = audioCtx.currentTime;
     motorAudios.forEach(item => {
         const car = item.car;
-        const speedPercent = Math.min(Math.abs(car.speed) / 3.2, 1.0);
         
-        // Rugido del motor: Multiplicar tono por boost o velocidad supersónica
-        let boostFactor = car.isBoosting ? 1.5 : 1.0;
-        if (car.isSupersonic) boostFactor = 1.8;
+        let perceivedSpeed = Math.abs(car.speed);
+        if (car.isFlipping) perceivedSpeed = Math.min(perceivedSpeed, 2.0);
+        const rpmPercent = Math.min(perceivedSpeed / 3.2, 1.0);
+        
+        let boostFactor = (car.isBoosting && !car.isFlipping) ? 1.15 : 1.0;
+        if (car.isSupersonic && !car.isFlipping) boostFactor = 1.25;
 
-        // Frecuencia con suavizado mayor (0.15)
-        // Ralentí a 60Hz para que sea más audible
-        const targetFreq = (60 + (speedPercent * 120)) * boostFactor;
-        item.osc.frequency.setTargetAtTime(targetFreq, now, 0.15);
+        // Preset Daytona NASCAR Arcade (Hardcoded as best match for the game)
+        // wave: 'sawtooth', grit: 800, noise: 50, baseFreq: 45, freqMult: 250, filterBase: 150, filterMult: 1200, detune: 25
         
-        // Filtro más agresivo para evitar "clipping" de agudos, se abre con el boost
-        const targetFilter = (150 + (speedPercent * 600)) * boostFactor;
+        item.waveShaper.curve = item.makeDistortionCurve(800);
+        item.osc1.type = 'sawtooth';
+        item.osc2.type = 'sawtooth';
+        
+        item.osc1.detune.setTargetAtTime(0, now, 0.15);
+        item.osc2.detune.setTargetAtTime(25, now, 0.15);
+
+        // Se ha reducido el multiplicador de pitch (antes 250) a 120 para que no sea tan agudo al alcanzar vel. máxima
+        // Reducimos el multiplicador de pitch aún más para un tono más grave y ronco
+        const targetFreq = (50 + (rpmPercent * 70)) * boostFactor;
+        item.osc1.frequency.setTargetAtTime(targetFreq, now, 0.15);
+        item.osc2.frequency.setTargetAtTime(targetFreq * 1.01, now, 0.15);
+
+        // Bajamos drásticamente el filtro pasa-bajos para eliminar los armónicos agudos de la distorsión
+        const targetFilter = (100 + (rpmPercent * 300)) * boostFactor;
         item.filter.frequency.setTargetAtTime(targetFilter, now, 0.15);
+
+        const exhaustVol = (40 / 100.0) * (0.2 + rpmPercent * 0.8) * 0.4;
+        item.noiseGain.gain.setTargetAtTime(exhaustVol, now, 0.15);
+        item.noiseFilter.frequency.setTargetAtTime(200 + (rpmPercent * 600), now, 0.15);
 
         let finalVol = 0;
         if (car.isExploded) {
             finalVol = 0;
         } else if (car === playerCarRef) {
-            // Ralentí a 0.15 para que se escuche bien antes de empezar, incrementado en boost
-            const baseVol = 0.15 + (speedPercent * 0.1);
-            finalVol = car.isBoosting ? baseVol * 1.4 : baseVol;
+            const baseVol = 0.3 + (rpmPercent * 0.2);
+            finalVol = (car.isBoosting && !car.isFlipping) ? baseVol * 1.4 : baseVol;
         } else {
             const dx = car.x - playerCarRef.x;
             const dy = car.y - playerCarRef.y;
             const distSq = dx*dx + dy*dy;
-            const maxDistSq = 1800 * 1800; // Radio de audición
+            const maxDistSq = 1800 * 1800;
             
             let spatialMult = Math.max(0, 1.0 - (distSq / maxDistSq));
-            // Los otros coches suenan mucho más bajo para evitar "bola de ruido"
-            const baseVol = spatialMult * 0.04 * (0.5 + speedPercent * 0.5);
+            const baseVol = spatialMult * 0.04 * (0.3 + rpmPercent * 0.2);
             finalVol = car.isBoosting ? baseVol * 1.4 : baseVol;
         }
-        item.gain.gain.setTargetAtTime(finalVol * sfxVolume, now, 0.15);
+        item.masterEngineGain.gain.setTargetAtTime(finalVol * sfxVolume, now, 0.15);
     });
 }
 
@@ -384,11 +451,11 @@ export function setBoostSound(active) {
         filter.frequency.value = 1200;
         
         boostGain = audioCtx.createGain();
-        boostGain.gain.value = 0.15;
+        boostGain.gain.value = 0.05 * sfxVolume; // Reducido a 0.05 y adaptado a sfxVolume
         
         boostNoise.connect(filter);
         filter.connect(boostGain);
-        boostGain.connect(audioCtx.destination);
+        boostGain.connect(masterGain); // Ruteado a masterGain en vez de destino directo
         boostNoise.start();
     } else if (!active && boostNoise) {
         boostGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);

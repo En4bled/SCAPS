@@ -47,17 +47,68 @@ export class Ball {
         ctx.save(); 
         ctx.translate(this.x, this.y); 
         
-        // Dibujar Sombra Dinámica (Desplazada, escalada y translúcida)
-        ctx.beginPath();
-        const ballMaxZ = 32.0;
-        const shadowScale = Math.max(0.35, 1.0 - (this.z / ballMaxZ) * 0.65);
-        ctx.scale(1, 0.5); // Sombra ovalada
-        // Añadimos un pequeño offset (x:8, y:15) para simular una luz en ángulo
-        // Y reducimos el tamaño base al 85% del radio para que no asome demasiado en reposo
-        ctx.arc(8, 15, this.radius * shadowScale * 0.85, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.5 * shadowScale})`;
-        ctx.fill();
-        ctx.scale(1, 2); // Restaurar escala
+        // Dibujar Sombra Dinámica o Retícula de Caída
+        const zThreshold = 25;
+        if (this.z > zThreshold) {
+            ctx.save();
+            ctx.scale(1, 0.5); // Proyección isométrica plana
+
+            // Círculo exterior (Blanco con glow y semitransparente)
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 0.9, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Relleno de fondo oscuro semitransparente para contrastar
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fill();
+
+            // Dibujar la cruz central (+)
+            const crossSize = this.radius * 0.45;
+            ctx.beginPath();
+            ctx.moveTo(-crossSize, 0);
+            ctx.lineTo(crossSize, 0);
+            ctx.moveTo(0, -crossSize);
+            ctx.lineTo(0, crossSize);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Círculo interno decorativo
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 0.25, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 150, 0, 0.5)'; // Tono naranja sutil
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Punto central brillante
+            ctx.beginPath();
+            ctx.arc(0, 0, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffaa00';
+            ctx.fill();
+
+            ctx.restore();
+        } else {
+            // Dibujar Sombra Dinámica Local Mejorada (con degradado radial difuminado en los bordes)
+            ctx.save();
+            ctx.scale(1, 0.5); // Sombra ovalada
+            
+            const shadowRadius = this.radius * Math.max(0.35, 1.0 - (this.z / 32.0) * 0.65) * 0.9;
+            const opacity = Math.max(0.1, 0.55 * (1.0 - (this.z / 32.0) * 0.75));
+
+            const grad = ctx.createRadialGradient(4, 8, 0, 4, 8, shadowRadius);
+            grad.addColorStop(0, `rgba(0, 0, 0, ${opacity})`);
+            grad.addColorStop(0.7, `rgba(0, 0, 0, ${opacity * 0.45})`);
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(4, 8, shadowRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
         
         // Trasladar en Y hacia arriba para simular la altura Z
         ctx.translate(0, -this.z);

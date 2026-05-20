@@ -67,8 +67,8 @@ export function checkPolygonCollision(entity, polygon) {
             let friction = 0.95;
 
             if (isBall) {
-                bounce = CONST.CONFIG.BALL_BOUNCINESS || 0.88;
-                friction = 0.98;
+                bounce = Math.min(0.9, (CONST.CONFIG.BALL_BOUNCINESS || 0.88) * 0.45);
+                friction = 0.90; // Añadimos fricción contra la pared para que pierda velocidad al rebotar o arrastrarse
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 if (Math.abs(vNormal) > 1.5) playSound('wall_hit', Math.min(1.0, Math.abs(vNormal) * 0.1));
                 if (Math.abs(vNormal) > 8) addScreenShake(Math.abs(vNormal) * 0.3);
@@ -154,29 +154,25 @@ export function applyGlobalFriction(ball, cars, timeScale) {
 export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeScale = 1.0) {
     if (car.isExploded) return;
 
-    const isInitialTouch = (car.ballContactCooldown <= 0);
-    if (!isInitialTouch) {
+    if (car.ballContactCooldown === undefined) car.ballContactCooldown = 0;
+
+    // Reducir cooldown SIEMPRE en cada frame, sin importar si estamos tocando el balón
+    if (car.ballContactCooldown > 0) {
         car.ballContactCooldown -= timeScale;
         if (car.ballContactCooldown < 0) car.ballContactCooldown = 0;
-        return; 
     }
 
     const dx = ball.x - car.x;
     const dy = ball.y - car.y;
-    const carHeight = 22;
-    const carCenterZ = car.z + carHeight / 2;
-    const ballCenterZ = ball.z + ball.radius;
-    let dz = ballCenterZ - carCenterZ;
     
-    const xyDist = Math.sqrt(dx * dx + dy * dy);
-    if (xyDist > car.radius && Math.abs(dz) < carHeight/2 + ball.radius * 0.5) {
-        dz = dz * 0.4; 
-    }
+    // Calcular dz real + un pequeño offset de sustentación para que no vaya 100% raso, pero sin lanzarlo a las nubes
+    let dz = (ball.z - car.z) + 12;
 
     const distance3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
     const minDistance = car.radius + ball.radius;
 
     if (distance3D < minDistance) {
+        // POSITIONAL PUSH OUT (SIEMPRE ACTIVO PARA EVITAR ATASCOS / ARRASTRE IRREAL)
         const overlap = minDistance - distance3D;
         const nx = dx / distance3D;
         const ny = dy / distance3D;
@@ -191,6 +187,16 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         ball.x += nx * overlap * ratioBall;
         ball.y += ny * overlap * ratioBall;
         ball.z = Math.max(0, ball.z + nz * overlap * ratioBall);
+
+        // COOLDOWN DE IMPACTO FUERTE (Evita múltiples sonidos e impulsos exponenciales)
+        const isInitialTouch = (car.ballContactCooldown <= 0);
+        if (!isInitialTouch) {
+            // Fricción de arrastre suave si sigue empujando
+            const pushFactor = 0.2;
+            ball.vx += car.vx * pushFactor * ratioBall;
+            ball.vy += car.vy * pushFactor * ratioBall;
+            return;
+        }
 
         const vRelX = ball.vx - car.vx;
         const vRelY = ball.vy - car.vy;
@@ -209,9 +215,8 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         const jY = impulseMagnitude * ny;
         const jZ = impulseMagnitude * nz;
 
-        car.vx -= jX / car.mass;
-        car.vy -= jY / car.mass;
-        car.vz -= jZ / car.mass;
+        // El balón NUNCA hará rebotar a los coches (Masa infinita relativa al balón para recoil)
+        // Eliminado el recoilFactor en car.vx / car.vy
 
         const carSpeedMag = Math.sqrt(car.vx**2 + car.vy**2);
         const forwardX = Math.sin(car.angle);
@@ -220,8 +225,10 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         
         let extraArcadeImpulse = 0;
         if (dotFront > 0.5) {
-            extraArcadeImpulse = CONST.CONFIG.BALL_HIT_FORCE * carSpeedMag * 0.1;
+            extraArcadeImpulse = CONST.CONFIG.BALL_HIT_FORCE * carSpeedMag * 0.15;
             if (car.isFlipping) extraArcadeImpulse *= 1.8;
+            
+            // Eliminado el recoil arcade extra al coche
         }
 
         ball.vx += (jX / ball.mass) + (nx * extraArcadeImpulse);
@@ -273,11 +280,13 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
         const nx = dx / distance;
         const ny = dy / distance;
 
-        const isASupersonic = carA.isSupersonic && !carA.isExploded;
-        const isBSupersonic = carB.isSupersonic && !carB.isExploded;
+        const isASupersonic = carA.isSupersonic && !carA.isExploded && !carA.isFlipping;
+        const isBSupersonic = carB.isSupersonic && !carB.isExploded && !carB.isFlipping;
         let demoOccurred = false;
 
-        if (isASupersonic && isBSupersonic) {
+        const areEnemies = carA.color !== carB.color;
+
+        if (areEnemies && isASupersonic && isBSupersonic) {
             const dotA = Math.sin(carA.angle) * nx + (-Math.cos(carA.angle)) * ny;
             const dotB = Math.sin(carB.angle) * (-nx) + (-Math.cos(carB.angle)) * (-ny);
 
@@ -292,13 +301,13 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
                 explodeCar(carB, explosionParticles, carA);
                 demoOccurred = true;
             }
-        } else if (isASupersonic) {
+        } else if (areEnemies && isASupersonic) {
             const dotA = Math.sin(carA.angle) * nx + (-Math.cos(carA.angle)) * ny;
             if (dotA > 0.6) {
                 explodeCar(carB, explosionParticles, carA);
                 demoOccurred = true;
             }
-        } else if (isBSupersonic) {
+        } else if (areEnemies && isBSupersonic) {
             const dotB = Math.sin(carB.angle) * (-nx) + (-Math.cos(carB.angle)) * (-ny);
             if (dotB > 0.6) {
                 explodeCar(carA, explosionParticles, carB);
@@ -341,7 +350,8 @@ function explodeCar(car, explosionParticles, killer) {
     car.respawnTimer = 180;
     
     for (let i = 0; i < 40; i++) {
-        explosionParticles.push(new ExplosionParticle(car.x, car.y, car.color));
+        const colorOffset = Math.random() * 50 - 25;
+        explosionParticles.push(new ExplosionParticle(car.x, car.y, colorOffset));
     }
     playSound('goal', 0.8);
     addScreenShake(6);

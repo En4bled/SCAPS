@@ -2,62 +2,68 @@ import * as CONST from '../core/constants.js';
 
 /**
  * Inteligencia Artificial de los bots de SCAPS.
- * Mueve los controles virtuales del bot basándose en la posición del balón y los objetivos.
+ * IA Conservadora con Roles Dinámicos y Físicas Avanzadas.
  */
 export function updateCarAI(ai, ball, allCars, boostPads, controls, keysPressed) {
     // 1. Limpiar pulsaciones anteriores
     Object.values(controls).forEach(k => keysPressed[k] = false);
 
-    // --- 1.5. SISTEMA ANTI-ATASCO MEJORADO ---
-    if (Math.abs(ai.speed) < 0.3 && !ai.isUnsticking) {
-        ai.stuckTimer = (ai.stuckTimer || 0) + 1;
-        if (ai.stuckTimer > 20) { // Si lleva ~0.3s parado
-            ai.isUnsticking = true;
-            ai.unstickFrames = 45; // Obligamos a hacer 45 frames ininterrumpidos de maniobra
-        }
-    } else if (Math.abs(ai.speed) >= 0.3 && !ai.isUnsticking) {
-        ai.stuckTimer = 0;
-    }
+    if (ai.isExploded) return;
 
-    // Si está en Modo Pánico, ejecutamos maniobra evasiva ciega
+    // --- MANEJO DE DESATASCO (Si ya está activo) ---
+    // En lugar de ir marcha atrás (que puede bloquearlos contra la pared), 
+    // aceleran hacia delante mientras giran con fuerza para pivotar y zafarse.
     if (ai.isUnsticking) {
         ai.unstickFrames--;
-        keysPressed[controls.down] = true; // Marcha atrás a fondo
-        
-        if ((ai.unstickFrames % 30) < 15) {
-            keysPressed[controls.left] = true;
-        } else {
-            keysPressed[controls.right] = true;
-        }
+        keysPressed[controls.up] = true; 
+        if ((ai.unstickFrames % 30) < 15) keysPressed[controls.left] = true;
+        else keysPressed[controls.right] = true;
 
         if (ai.unstickFrames <= 0) {
             ai.isUnsticking = false;
             ai.stuckTimer = 0;
         }
-        return; // IGNORAR TODA LA IA MIENTRAS SE DESATASCA
+        return; 
     }
 
-    // --- 2. OBJETIVOS Y ROLES ---
+    // --- ROLES DINÁMICOS ---
     const isBlue = ai.color === '#5ad';
     const myGoal = isBlue ? CONST.CONFIG.GOAL_TOP : CONST.CONFIG.GOAL_BOTTOM;
     const enemyGoal = isBlue ? CONST.CONFIG.GOAL_BOTTOM : CONST.CONFIG.GOAL_TOP;
 
     let role = 'ATTACK';
-    const teammate = allCars.find(c => c.color === ai.color && c !== ai);
-    const distToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
-    const ballToMyGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
     
-    if (teammate) {
-        const tDist = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
-        if (tDist < distToBall - 30 && ballToMyGoal > 800) {
-            role = 'SUPPORT';
+    // Buscar compañeros
+    const teammates = allCars.filter(c => c.color === ai.color && c !== ai);
+    
+    if (teammates.length > 0) {
+        const teammate = teammates[0];
+        
+        // Evaluar posiciones respecto a nuestra portería (eje X, ya que el campo es horizontal)
+        const aiDistToOwnGoal = Math.abs(ai.x - myGoal.x);
+        const teammateDistToOwnGoal = Math.abs(teammate.x - myGoal.x);
+        
+        // Si el compañero (jugador humano u otro bot) está por delante de mí (más lejos de mi portería)
+        // entonces yo me quedo atrás a defender de forma conservadora.
+        if (teammateDistToOwnGoal > aiDistToOwnGoal + 200) {
+            role = 'DEFEND';
+        } else if (Math.abs(teammateDistToOwnGoal - aiDistToOwnGoal) <= 200) {
+            // Si estamos paralelos, el más cercano a la pelota ataca
+            const aiDistToBall = Math.hypot(ball.x - ai.x, ball.y - ai.y);
+            const tmDistToBall = Math.hypot(ball.x - teammate.x, ball.y - teammate.y);
+            if (tmDistToBall < aiDistToBall) {
+                role = 'DEFEND';
+            }
         }
     }
-    if (ballToMyGoal < 700 && distToBall > 300) {
+
+    // Si la pelota está críticamente cerca de nuestra portería, TODOS defienden
+    const ballDistToOwnGoal = Math.hypot(ball.x - myGoal.x, ball.y - myGoal.y);
+    if (ballDistToOwnGoal < 800) {
         role = 'DEFEND';
     }
 
-    // --- 3. COORDENADAS OBJETIVO ---
+    // --- NAVEGACIÓN Y COORDENADAS OBJETIVO ---
     let tx, ty;
     if (role === 'ATTACK') {
         const dxGoal = enemyGoal.x - ball.x;
@@ -70,20 +76,26 @@ export function updateCarAI(ai, ball, allCars, boostPads, controls, keysPressed)
         
         const dotProduct = ((dxBotToBall / distBotToBall) * (dxGoal / dGoal)) + ((dyBotToBall / distBotToBall) * (dyGoal / dGoal));
         
-        if (dotProduct > 0.85) {
-            tx = ball.x + (ball.vx || 0) * 12;
-            ty = ball.y + (ball.vy || 0) * 12;
+        // Si está bien alineado para chutar, va directo a la pelota (prediciendo su trayectoria)
+        if (dotProduct > 0.6) {
+            tx = ball.x + (ball.vx || 0) * 15;
+            ty = ball.y + (ball.vy || 0) * 15;
         } else {
-            tx = ball.x - (dxGoal / dGoal) * 80;
-            ty = ball.y - (dyGoal / dGoal) * 80;
+            // Si no, rota alrededor para posicionarse detrás de la pelota
+            tx = ball.x - (dxGoal / dGoal) * 150;
+            ty = ball.y - (dyGoal / dGoal) * 150;
         }
-    } else if (role === 'DEFEND') {
-        tx = myGoal.x + (ball.x - myGoal.x) * 0.3;
-        ty = myGoal.y + (ball.y - myGoal.y) * 0.3;
-    } else if (role === 'SUPPORT') {
-        tx = (ball.x + myGoal.x) / 2;
-        ty = (ball.y + myGoal.y) / 2;
-        if (ai.boost < 30) {
+    } else { // DEFEND
+        // Se posiciona entre el balón y la portería, a una distancia prudencial
+        const dxBall = ball.x - myGoal.x;
+        const dyBall = ball.y - myGoal.y;
+        const dBall = Math.max(1, Math.hypot(dxBall, dyBall));
+        
+        tx = myGoal.x + (dxBall / dBall) * 400; 
+        ty = myGoal.y + (dyBall / dBall) * 400;
+
+        // Si está posicionado defendiendo y le falta turbo, aprovecha para agarrar pastillas cercanas
+        if (ai.boost < 30 && Math.hypot(tx - ai.x, ty - ai.y) < 200) {
             const activePads = boostPads.filter(p => p.active);
             if (activePads.length > 0) {
                 let best = activePads[0];
@@ -95,36 +107,15 @@ export function updateCarAI(ai, ball, allCars, boostPads, controls, keysPressed)
                 tx = best.x; ty = best.y;
             }
         }
-    }
-
-    // --- 3.5. EVASIÓN INTELIGENTE DE PAREDES (IA) ---
-    if (ai.wallTractionTimer > 0 && ai.lastWallNormal) {
-        const toTargetX = tx - ai.x;
-        const toTargetY = ty - ai.y;
-        const distToTarget = Math.hypot(toTargetX, toTargetY);
         
-        if (distToTarget > 20) {
-            const dxNorm = toTargetX / distToTarget;
-            const dyNorm = toTargetY / distToTarget;
-            const dotWall = dxNorm * ai.lastWallNormal.x + dyNorm * ai.lastWallNormal.y;
-            
-            if (dotWall < -0.15) {
-                const txTan = -ai.lastWallNormal.y;
-                const tyTan = ai.lastWallNormal.x;
-                const dotTan = toTargetX * txTan + toTargetY * tyTan;
-                const tangentSign = dotTan >= 0 ? 1 : -1;
-                tx = ai.x + txTan * tangentSign * 160 + ai.lastWallNormal.x * 60;
-                ty = ai.y + tyTan * tangentSign * 160 + ai.lastWallNormal.y * 60;
-            }
-        }
-
-        if (ai.stuckTimer > 10) {
-            tx = ai.x + ai.lastWallNormal.x * 320;
-            ty = ai.y + ai.lastWallNormal.y * 320;
+        // Si el balón está en la zona roja de peligro, sale de la portería para despejar agresivamente
+        if (ballDistToOwnGoal < 600) {
+            tx = ball.x;
+            ty = ball.y;
         }
     }
 
-    // --- 4. CONDUCCIÓN IMPLACABLE ---
+    // --- CONDUCCIÓN Y GIRO ---
     const dx = tx - ai.x;
     const dy = ty - ai.y;
     const distToTarget = Math.hypot(dx, dy);
@@ -137,41 +128,67 @@ export function updateCarAI(ai, ball, allCars, boostPads, controls, keysPressed)
     const absDiff = Math.abs(angleDiff);
 
     let shouldAccelerate = true;
-    if (role === 'DEFEND' && distToTarget < 70) {
+    
+    // Parar si ya está bien colocado en defensa y la pelota no está cerca (deceleración natural)
+    if (role === 'DEFEND' && distToTarget < 50 && ballDistToOwnGoal > 600) {
         shouldAccelerate = false;
-        if (ai.speed > 0.1) {
-            keysPressed[controls.down] = true;
-        }
-    } else if (role !== 'ATTACK' && distToTarget < 35) {
-        shouldAccelerate = false;
-        if (ai.speed > 0.1) {
-            keysPressed[controls.down] = true;
-        }
     }
 
     if (shouldAccelerate) {
-        if (absDiff > Math.PI * 0.7 && distToTarget < 180) {
-            keysPressed[controls.down] = true; // Retroceder
-            if (absDiff > 0.15) {
-                if (angleDiff > 0) keysPressed[controls.left] = true;
-                else keysPressed[controls.right] = true;
-            }
-        } else {
-            keysPressed[controls.up] = true; // Acelerar
-            if (absDiff > 0.15 && distToTarget > 20) {
-                if (angleDiff > 0) keysPressed[controls.right] = true;
-                else keysPressed[controls.left] = true;
-            }
+        // Los bots ya NO van marcha atrás para evitar bucles de bloqueo.
+        // Siempre giran e intentan ir hacia delante.
+        keysPressed[controls.up] = true; // Acelerar
+        if (absDiff > 0.15) {
+            if (angleDiff > 0) keysPressed[controls.right] = true;
+            else keysPressed[controls.left] = true;
         }
     }
 
-    // Derrape
-    if (shouldAccelerate && !keysPressed[controls.down] && absDiff > 1.2 && Math.abs(ai.speed) > 1.0) {
+    // Derrape Conservador
+    if (shouldAccelerate && absDiff > 1.2 && Math.abs(ai.speed) > 1.5) {
         keysPressed[controls.drift] = true;
     }
 
-    // Boost
-    if (shouldAccelerate && !keysPressed[controls.down] && absDiff < 0.3 && ai.boost > 0 && distToTarget > 150) {
+    // Boost (Solo si está bien alineado y hay distancia)
+    if (shouldAccelerate && absDiff < 0.4 && ai.boost > 0 && distToTarget > 200) {
         keysPressed[controls.boost] = true;
+    }
+
+    // --- FÍSICAS AVANZADAS: SALTOS Y FLIPS (CONSERVADORES) ---
+    const distToBallReal = Math.hypot(ball.x - ai.x, ball.y - ai.y);
+    const ballIsAirborne = ball.z > ai.z + 40;
+    
+    // 1. Salto Básico Defensivo / Intercepción
+    // Solo salta si el balón viene por el aire y está muy cerca
+    if (distToBallReal < 180 && ballIsAirborne && absDiff < 0.5 && ai.z < 10) {
+        keysPressed[controls.jump] = true;
+        if (ball.z > 100 && ai.boost > 0) keysPressed[controls.boost] = true;
+    }
+
+    // 2. Front Flip (Doble salto) para chute potente
+    // Si ya está en el aire (pequeño salto inicial o bache), y el balón está a la altura correcta
+    if (ai.z > 10 && ai.z < 80 && !ballIsAirborne) {
+        if (distToBallReal < 150 && absDiff < 0.3) {
+            if (!ai.aiJumpPulse) {
+                ai.aiJumpPulse = true;
+                keysPressed[controls.jump] = false; // Soltamos el salto para registrar el doble tap en el siguiente frame
+            } else {
+                keysPressed[controls.jump] = true; // Segundo salto = Flip
+                keysPressed[controls.up] = true; // Hacia delante
+            }
+        }
+    } else {
+        ai.aiJumpPulse = false;
+    }
+
+    // --- EVALUAR SI ESTAMOS ATASCADOS ---
+    if (shouldAccelerate && Math.abs(ai.speed) < 0.3) {
+        ai.stuckTimer = (ai.stuckTimer || 0) + 1;
+        if (ai.stuckTimer > 40) { // 40 frames (~0.6s) intentando acelerar sin éxito
+            ai.isUnsticking = true;
+            ai.unstickFrames = 45;
+        }
+    } else {
+        ai.stuckTimer = 0;
     }
 }
