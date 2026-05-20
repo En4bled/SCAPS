@@ -121,7 +121,12 @@ export class Car {
                 const maxDepth = 15; // Mayor espesor del volumen (15px) para apreciarse mejor
                 const sinVal = Math.sin(this.flipVisualAngle);
 
-                for (let i = 0; i < numLayers; i++) {
+                // Orden de pintado dinámico (Pintor 3D): si está boca abajo, pintamos desde arriba hacia la base (para que la base quede arriba)
+                const step = scaleY >= 0 ? 1 : -1;
+                const start = scaleY >= 0 ? 0 : numLayers - 1;
+                const end = scaleY >= 0 ? numLayers : -1;
+
+                for (let i = start; i !== end; i += step) {
                     ctx.save();
                     // 1. Trasladar la capa en el espacio 2D sin escalar para evitar el aplastamiento del Y-scale
                     const progress = i / (numLayers - 1); // 0 (base) a 1 (superficie superior)
@@ -151,6 +156,35 @@ export class Car {
                     ctx.filter = filters.join(' ');
 
                     ctx.drawImage(this.img, -this.width / 2, -this.height / 2, this.width, this.height);
+
+                    // 3. Si es la capa base (i === 0) y el coche está boca abajo (scaleY < 0), dibujamos las 4 ruedas en el chasis
+                    if (i === 0 && scaleY < 0) {
+                        ctx.fillStyle = '#0a0a0a'; // Negro goma
+                        ctx.strokeStyle = '#222';  // Borde oscuro
+                        ctx.lineWidth = 1.5;
+
+                        const wWidth = 10;   // Ancho de la rueda
+                        const wHeight = 18;  // Largo de la rueda
+                        const insetX = 4;
+                        const insetY = 12;
+
+                        // Rueda Delantera Izquierda
+                        ctx.fillRect(-this.width / 2 + insetX, -this.height / 2 + insetY, wWidth, wHeight);
+                        ctx.strokeRect(-this.width / 2 + insetX, -this.height / 2 + insetY, wWidth, wHeight);
+
+                        // Rueda Delantera Derecha
+                        ctx.fillRect(this.width / 2 - insetX - wWidth, -this.height / 2 + insetY, wWidth, wHeight);
+                        ctx.strokeRect(this.width / 2 - insetX - wWidth, -this.height / 2 + insetY, wWidth, wHeight);
+
+                        // Rueda Trasera Izquierda
+                        ctx.fillRect(-this.width / 2 + insetX, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                        ctx.strokeRect(-this.width / 2 + insetX, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+
+                        // Rueda Trasera Derecha
+                        ctx.fillRect(this.width / 2 - insetX - wWidth, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                        ctx.strokeRect(this.width / 2 - insetX - wWidth, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                    }
+
                     ctx.restore();
                 }
                 ctx.filter = 'none';
@@ -171,6 +205,26 @@ export class Car {
             ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
             ctx.strokeStyle = (scaleY < 0) ? '#333' : 'white';
             ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+
+            // Ruedas en el fallback si está boca abajo
+            if (scaleY < 0) {
+                ctx.fillStyle = '#0a0a0a';
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 1;
+                const wWidth = 10;
+                const wHeight = 18;
+                const insetX = 4;
+                const insetY = 12;
+
+                ctx.fillRect(-this.width / 2 + insetX, -this.height / 2 + insetY, wWidth, wHeight);
+                ctx.strokeRect(-this.width / 2 + insetX, -this.height / 2 + insetY, wWidth, wHeight);
+                ctx.fillRect(this.width / 2 - insetX - wWidth, -this.height / 2 + insetY, wWidth, wHeight);
+                ctx.strokeRect(this.width / 2 - insetX - wWidth, -this.height / 2 + insetY, wWidth, wHeight);
+                ctx.fillRect(-this.width / 2 + insetX, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                ctx.strokeRect(-this.width / 2 + insetX, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                ctx.fillRect(this.width / 2 - insetX - wWidth, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+                ctx.strokeRect(this.width / 2 - insetX - wWidth, this.height / 2 - insetY - wHeight, wWidth, wHeight);
+            }
             ctx.restore();
         }
         ctx.restore();
