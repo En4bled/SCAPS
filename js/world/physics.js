@@ -418,12 +418,13 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
         const relSpeedNormal = relVx * nx + relVy * ny;
 
         if (relSpeedNormal > 0) {
-            // Restitución elástica controlada en base a la constante de configuración
+            // Aumentar ligeramente el coeficiente para un rebote horizontal más visible y satisfactorio
             const restitution = CONST.CONFIG.CAR_ELASTICITY; 
-            const impulse = -(1 + restitution) * relSpeedNormal;
+            const elasticMultiplier = 1.35 + restitution * 0.8;
+            const impulse = -elasticMultiplier * relSpeedNormal;
             
-            if (impulse > 3 && (carA.isPlayer || carB.isPlayer)) {
-                addScreenShake(impulse * 0.8);
+            if (Math.abs(impulse) > 2 && (carA.isPlayer || carB.isPlayer)) {
+                addScreenShake(Math.abs(impulse) * 0.65);
             }
 
             const j = impulse / 2; // Asumimos masas iguales para un comportamiento de choque limpio
@@ -432,6 +433,23 @@ export function checkCarCarCollision(carA, carB, explosionParticles) {
             carA.vy += j * ny;
             carB.vx -= j * nx; 
             carB.vy -= j * ny;
+
+            // --- ELEVACIÓN EN Z (Trayectoria parabólica en el aire) ---
+            if (relSpeedNormal > 0.35) {
+                // Elevación proporcional a la velocidad relativa de impacto
+                const lift = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 0.8, relSpeedNormal * 0.72 + 0.3);
+                
+                carA.vz = Math.max(carA.vz || 0, lift);
+                carB.vz = Math.max(carB.vz || 0, lift);
+                
+                // Forzar inicio de elevación si estaban pegados al suelo
+                if (carA.z === 0) carA.z = 0.1;
+                if (carB.z === 0) carB.z = 0.1;
+                
+                // Cancelar cualquier estado previo de salto o flip para física aérea limpia
+                carA.isJumping = false; carA.isFlipping = false;
+                carB.isJumping = false; carB.isFlipping = false;
+            }
             
             // Solo reproducir sonido si el impacto es lo suficientemente fuerte (>0.5)
             if (relSpeedNormal > 0.5) {
