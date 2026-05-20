@@ -126,10 +126,15 @@ export class Ball {
         // Rotación del eje Z (spin / rosca)
         ctx.rotate(this.rotationAngle);
         
-        // Desplazamiento orbital dinámico de la textura interna (rodamiento 3D)
-        const shiftAmp = renderRadius * 0.28;
-        const shiftX = Math.sin(this.rollDistance / this.radius) * shiftAmp;
-        const shiftY = Math.cos(this.rollDistance / this.radius) * shiftAmp;
+        // Desplazamiento dinámico de la textura alineado con la dirección del movimiento (rodamiento 3D direccional)
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const moveAngle = speed > 0.1 ? Math.atan2(this.vy, this.vx) : 0;
+        
+        // Oscilación sinusoidal direccional continua y suave sin saltos para la textura interna
+        const shiftAmp = renderRadius * 0.22;
+        const shiftDist = Math.sin(this.rollDistance / (this.radius * 0.85)) * shiftAmp;
+        const shiftX = -Math.cos(moveAngle) * shiftDist;
+        const shiftY = -Math.sin(moveAngle) * shiftDist;
         
         // Escalamos un poco más la textura interna (1.5x) para que al desplazarse por rodadura nunca exponga bordes transparentes
         const texSize = renderRadius * 1.5;
