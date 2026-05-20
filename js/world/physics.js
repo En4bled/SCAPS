@@ -91,8 +91,42 @@ export function checkPolygonCollision(entity, polygon) {
         const z = entity.z || 0;
         const slopeFactor = 0.65;
         const maxPenetration = 30;
-        const allowedPenetration = Math.min(maxPenetration, z * slopeFactor);
         
+        // Si el coche está haciendo un flip y colisiona con la pared, rebota limpiamente sin quedarse atascado
+        if (entity.isFlipping) {
+            const isOnWall = (closestDist < entity.radius);
+            if (isOnWall) {
+                // Resolver colisión empujando fuera de la pared por completo
+                entity.x += nx * overlap;
+                entity.y += ny * overlap;
+                
+                if (entity.vx !== undefined) {
+                    const vNormal = entity.vx * nx + entity.vy * ny;
+                    if (vNormal < 0) {
+                        const tx = -ny;
+                        const ty = nx;
+                        const vTangent = entity.vx * tx + entity.vy * ty;
+                        
+                        // Rebote fuerte y limpio siguiendo la trayectoria reflejada
+                        const bounce = 0.45;
+                        const reboundedNormal = -vNormal * bounce;
+                        entity.vx = reboundedNormal * nx + vTangent * 0.85 * tx;
+                        entity.vy = reboundedNormal * ny + vTangent * 0.85 * ty;
+                        
+                        // Cancelar el flip y aplicar un pequeño rebote vertical
+                        entity.isFlipping = false;
+                        entity.vz = CONST.CONFIG.CAR_JUMP_FORCE * 0.35;
+                        
+                        addScreenShake(Math.abs(vNormal) * 0.5);
+                        playSound('wall_hit', 0.6);
+                    }
+                }
+                entity.speed = Math.sqrt(entity.vx ** 2 + entity.vy ** 2);
+                return;
+            }
+        }
+        
+        const allowedPenetration = Math.min(maxPenetration, z * slopeFactor);
         const isOnWall = (closestDist < entity.radius);
 
         if (isOnWall) {
@@ -291,9 +325,9 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             
             // ELEVACIÓN EJE Z (Efecto aéreo para juego aéreo fluido)
             if (ball.vz !== undefined) {
-                // Impulso y zLift reducidos para mantener el balón en un rango de altura jugable y realista
-                ball.vz += impulse * 0.10 + (zLift * 0.50);
-                if (ball.vz > 7.5) ball.vz = 7.5; // Límite de altura máximo ajustado de 10.5 a 7.5
+                // Usar Math.max no aditivo para evitar la elevación infinita por toques consecutivos
+                const hitLift = impulse * 0.11 + (zLift * 0.55);
+                ball.vz = Math.max(ball.vz || 0, Math.min(6.5, hitLift));
             }
 
             // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
