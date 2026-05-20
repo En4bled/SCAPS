@@ -30,8 +30,19 @@ export function checkPolygonCollision(entity, polygon) {
             const nx = (entity.x - projX) / dist;
             const ny = (entity.y - projY) / dist;
             const overlap = entity.radius - dist;
-            entity.x += nx * overlap;
-            entity.y += ny * overlap;
+            
+            const isBall = (entity.onWallTimer !== undefined);
+            if (!isBall) {
+                // Rampa 3D: Permitir que el coche penetre la valla visualmente a medida que sube en Z
+                const allowedPenetration = Math.min(30, (entity.z || 0) * 0.65);
+                const actualOverlap = Math.max(0, overlap - allowedPenetration);
+                entity.x += nx * actualOverlap;
+                entity.y += ny * actualOverlap;
+            } else {
+                entity.x += nx * overlap;
+                entity.y += ny * overlap;
+            }
+
             if (dist < closestDist) {
                 closestDist = dist;
                 closestNormal = { x: nx, y: ny };
@@ -43,8 +54,9 @@ export function checkPolygonCollision(entity, polygon) {
     if (hasCollision && entity.vx !== undefined) {
         const dot = entity.vx * closestNormal.x + entity.vy * closestNormal.y;
         if (dot < 0) {
-            const bounce = (entity.onWallTimer !== undefined) ? CONST.CONFIG.BALL_BOUNCINESS : CONST.CONFIG.CAR_WALL_BOUNCE;
-            const friction = (entity.onWallTimer !== undefined) ? 0.98 : 0.85; // Menos fricción para el balón
+            const isBall = (entity.onWallTimer !== undefined);
+            const bounce = isBall ? CONST.CONFIG.BALL_BOUNCINESS : 0.04; // Rebote mínimo para coche (rampa suave)
+            const friction = isBall ? 0.98 : 0.95; // Fricción muy baja para deslizarse por la rampa
 
             // Componente Normal (Rebote)
             const vNormalX = closestNormal.x * dot;
@@ -58,7 +70,7 @@ export function checkPolygonCollision(entity, polygon) {
             entity.vx = vTangentX * friction - vNormalX * bounce;
             entity.vy = vTangentY * friction - vNormalY * bounce;
 
-            if (entity.onWallTimer !== undefined) {
+            if (isBall) {
                 entity.onWallTimer = CONST.CONFIG.BALL_WALL_DURATION;
                 entity.targetRadius = entity.radius * CONST.CONFIG.BALL_WALL_VISUAL_MULTIPLIER;
                 // Añadir un pequeño bote en Z al chocar contra la pared (más suave y controlado)
@@ -70,9 +82,15 @@ export function checkPolygonCollision(entity, polygon) {
                 playSound('wall_hit', 0.5);
             } else if (entity.speed !== undefined) {
                 entity.speed = Math.sqrt(entity.vx**2 + entity.vy**2);
+                
+                // Rampa 3D: Convertir la inercia normal del choque frontal en impulso vertical Z
+                const wallClimbForce = Math.abs(dot) * 0.72;
+                entity.vz = Math.min(CONST.CONFIG.CAR_JUMP_FORCE * 1.15, (entity.vz || 0) + wallClimbForce);
+                if (entity.z === 0) entity.z = 0.5;
+
                 // No modificar el ángulo del chasis para conservar orientación al rebotar
                 if (Math.abs(dot) > 4) addScreenShake(Math.abs(dot) * 0.4);
-                playSound('wall_hit', 0.4);
+                playSound('wall_hit', 0.3); // Sonido sutil para la rampa
             }
         }
     }
@@ -447,25 +465,57 @@ export function updateCarAI(ai, ball, boostPads, gameState, keysPressed, allCars
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
     const absDiff = Math.abs(angleDiff);
 
-    // En Arcade, el botón de acelerar va pegado con cinta
-    keysPressed[controls.up] = true;
+    // --- 4. CONDUCCIÓN INTELIGENTE ---
+    let shouldAccelerate = true;
 
-    // Si estamos lejos o muy desalineados, girar
-    if (absDiff > 0.15 && distToTarget > 30) {
-        if (angleDiff > 0) {
-            keysPressed[controls.right] = true;
-        } else {
-            keysPressed[controls.left] = true;
+    // Si el defensor ya está en zona defensiva cercana al objetivo, se detiene
+    if (role === 'DEFEND' && distToTarget < 70) {
+        shouldAccelerate = false;
+        if (ai.speed > 0.1) {
+            keysPressed[controls.down] = true; // Freno activo
+        }
+    } else if (distToTarget < 35) {
+        // En cualquier rol, si estamos a punto de llegar exactamente al objetivo, desaceleramos
+        shouldAccelerate = false;
+        if (ai.speed > 0.1) {
+            keysPressed[controls.down] = true; // Frenar suavemente
         }
     }
 
-    // Derrape mágico para hacer giros en U sin atascarse
-    if (absDiff > 1.2 && Math.abs(ai.speed) > 1.0) {
+    if (shouldAccelerate) {
+        // Maniobra inteligente: Marcha atrás si el objetivo está detrás y a corta distancia
+        if (absDiff > Math.PI * 0.7 && distToTarget < 180) {
+            keysPressed[controls.down] = true; // Retroceder
+            
+            // Dirección inversa en reversa
+            if (absDiff > 0.15) {
+                if (angleDiff > 0) {
+                    keysPressed[controls.left] = true;
+                } else {
+                    keysPressed[controls.right] = true;
+                }
+            }
+        } else {
+            keysPressed[controls.up] = true; // Acelerar
+            
+            // Dirección hacia el objetivo
+            if (absDiff > 0.15 && distToTarget > 20) {
+                if (angleDiff > 0) {
+                    keysPressed[controls.right] = true;
+                } else {
+                    keysPressed[controls.left] = true;
+                }
+            }
+        }
+    }
+
+    // Derrape mágico para hacer giros en U rápidos sin atascarse (solo si vamos hacia adelante)
+    if (shouldAccelerate && !keysPressed[controls.down] && absDiff > 1.2 && Math.abs(ai.speed) > 1.0) {
         keysPressed[controls.drift] = true;
     }
 
-    // Usar turbo a muerte si apuntamos al balón
-    if (absDiff < 0.3 && ai.boost > 0 && distToTarget > 150) {
+    // Usar turbo a muerte si apuntamos al objetivo de ataque y no estamos frenando
+    if (shouldAccelerate && !keysPressed[controls.down] && absDiff < 0.3 && ai.boost > 0 && distToTarget > 150) {
         keysPressed[controls.boost] = true;
     }
 }
