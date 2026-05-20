@@ -278,16 +278,21 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
         ball.x += Math.cos(angle) * overlap;
         ball.y += Math.sin(angle) * overlap;
 
-        // Leer vx/vy físicos directos del coche
-        const relativeVelX = ball.vx - car.vx;
-        const relativeVelY = ball.vy - car.vy;
-        const dotProduct = relativeVelX * Math.cos(angle) + relativeVelY * Math.sin(angle);
+        // Usar los vectores normales unitarios del choque
+        const nx = Math.cos(angle);
+        const ny = Math.sin(angle);
 
-        if (dotProduct < 0) {
+        // Velocidad relativa a lo largo del eje normal del impacto
+        const relVx = ball.vx - car.vx;
+        const relVy = ball.vy - car.vy;
+        const relSpeedNormal = relVx * nx + relVy * ny;
+
+        // Solo resolver colisión física si se están moviendo uno hacia el otro
+        if (relSpeedNormal < 0) {
             // --- IMPACTO POR ZONAS (Power Shot / Front Flip) ---
             const forwardX = Math.sin(car.angle);
             const forwardY = -Math.cos(car.angle);
-            const dotFront = Math.cos(angle) * forwardX + Math.sin(angle) * forwardY;
+            const dotFront = nx * forwardX + ny * forwardY; // Qué tan frontal es el golpe
             
             let hitForceMultiplier = 1.0;
             let zLift = 0;
@@ -295,43 +300,46 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
             if (car.isFlipping) {
                 // VOLTERETA FRONTAL (Front Flip): Power Shot súper cargado con elevación extra
                 hitForceMultiplier = 2.15;
-                ball.targetRadius = ball.radius; // Mantener tamaño constante
                 zLift = 3.6;
                 if (car.isPlayer) addHitStop(4); // Pausa dramática al golpear con Flip
             } else if (dotFront > 0.7) { // Impacto frontal estándar
                 hitForceMultiplier = 1.6;
-                ball.targetRadius = ball.radius; // Mantener tamaño constante
                 zLift = 2.2;
             } else if (dotFront > 0.3) { // Impacto diagonal
                 hitForceMultiplier = 1.25;
                 zLift = 1.0;
             }
 
+            // Descomponer velocidad del balón
+            const ballNormalVel = ball.vx * nx + ball.vy * ny;
+            const ballTangentX = ball.vx - ballNormalVel * nx;
+            const ballTangentY = ball.vy - ballNormalVel * ny;
+
+            const carNormalVel = car.vx * nx + car.vy * ny;
+
+            // Restitución elástica pura de canicas/esferas (coeficiente de bote de la pelota)
+            const e = CONST.CONFIG.BALL_BOUNCINESS || 0.65;
+            let newNormalVel = carNormalVel - e * relSpeedNormal;
+
+            // Añadir impulso de golpe activo si el coche empuja hacia el balón
             const carSpeedMag = Math.sqrt(car.vx**2 + car.vy**2);
-            let impulse = ((CONST.CONFIG.BALL_HIT_FORCE * hitForceMultiplier) + (-dotProduct * 1.3) + (carSpeedMag * 1.25)) * timeScale;
+            let kickImpulse = (CONST.CONFIG.BALL_HIT_FORCE * 0.38 * hitForceMultiplier + Math.max(0, carNormalVel) * 1.0) * timeScale;
             
             // --- PINCH LOGIC ---
             if (ball.onWallTimer > 0) {
-                impulse *= 1.4;
+                kickImpulse *= 1.35;
             }
 
-            if (impulse > 8 && car.isPlayer && !car.isFlipping) {
+            newNormalVel += kickImpulse;
+
+            // Asignar nuevas velocidades al balón basándose puramente en la normal esférica (física de canicas)
+            ball.vx = ballTangentX + nx * newNormalVel;
+            ball.vy = ballTangentY + ny * newNormalVel;
+            
+            if (kickImpulse > 5 && car.isPlayer && !car.isFlipping) {
                 addHitStop(3);
             }
 
-            // Descomponer la velocidad actual del balón
-            const ballNormalVel = ball.vx * Math.cos(angle) + ball.vy * Math.sin(angle);
-            const ballTangentX = ball.vx - ballNormalVel * Math.cos(angle);
-            const ballTangentY = ball.vy - ballNormalVel * Math.sin(angle);
-
-            // Velocidad del coche en la dirección del impacto
-            const carNormalVel = car.vx * Math.cos(angle) + car.vy * Math.sin(angle);
-
-            // Establecer la nueva velocidad normal del balón como la del coche más el impulso de rebote (evita arrastres)
-            const newNormalVel = carNormalVel + impulse;
-            ball.vx = ballTangentX + Math.cos(angle) * newNormalVel;
-            ball.vy = ballTangentY + Math.sin(angle) * newNormalVel;
-            
             // ELEVACIÓN EJE Z (Efecto aéreo realista dependiente de la altura del balón sobre el chasis del coche)
             if (ball.vz !== undefined) {
                 const heightDiff = ball.z - car.z; // Positivo si el balón está por encima
@@ -346,7 +354,7 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
                     verticalFactor = Math.max(0, Math.min(1.0, (heightDiff + 8) / 45));
                 }
 
-                const hitLift = (impulse * 0.10 + (zLift * 0.50)) * verticalFactor;
+                const hitLift = (kickImpulse * 0.28 + (zLift * 0.55)) * verticalFactor;
                 
                 if (heightDiff < -8 && !car.isFlipping) {
                     // Si el coche golpea el balón por encima (coche más alto que el balón), se aplasta hacia abajo
@@ -359,15 +367,11 @@ export function checkCarBallCollision(car, ball, touchHistory, gameTime, timeSca
 
             // Transferencia de rotación/giro (spin) según el punto de impacto relativo al chasis
             const hitAngleDifference = angle - car.angle;
-            ball.spin = Math.sin(hitAngleDifference) * (impulse * 0.08);
-            
-            // Guía direccional
-            ball.vx += forwardX * (carSpeedMag * 0.3) * timeScale;
-            ball.vy += forwardY * (carSpeedMag * 0.3) * timeScale;
+            ball.spin = Math.sin(hitAngleDifference) * (kickImpulse * 0.08);
 
-            // TRANSFERENCIA DE MASA: El coche pierde inercia vectorial
-            if (carSpeedMag > 0.5) {
-                const brakeFactor = (dotFront > 0.5) ? 0.85 : 0.95;
+            // TRANSFERENCIA DE MASA: El coche pierde inercia normal por el golpe
+            if (carSpeedMag > 0.5 && carNormalVel > 0) {
+                const brakeFactor = (dotFront > 0.5) ? 0.82 : 0.92;
                 car.vx *= brakeFactor;
                 car.vy *= brakeFactor;
             }
