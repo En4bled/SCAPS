@@ -10,7 +10,7 @@ export class Ball {
         this.radius = CONST.CONFIG.BALL_BASE_RADIUS; 
         this.vx = 0; this.vy = 0; this.vz = 0;
         this.visualRadius = this.radius; this.targetRadius = this.radius; this.onWallTimer = 0; 
-        this.rotationAngle = 0; this.spin = 0; this.isFireball = false; this.fireballTimer = 0; 
+        this.rotationAngle = 0; this.spin = 0; this.rollDistance = 0; this.isFireball = false; this.fireballTimer = 0; 
         this.type = 'ball';
         this.mass = 15;
         this.img = null;
@@ -112,12 +112,25 @@ export class Ball {
         
         // Trasladar en Y hacia arriba para simular la altura Z
         ctx.translate(0, -this.z);
-        ctx.rotate(this.rotationAngle); 
+        ctx.rotate(this.rotationAngle); // Spin del eje Z (rosca)
         
         // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
         const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
         const renderRadius = this.visualRadius * zoomScale;
         
+        // Guardamos el contexto antes del rodamiento 3D (para que la escala de rodamiento no afecte al sombreado circular final)
+        ctx.save();
+        
+        // Aplicar el Rodamiento 3D (giro visual sobre el eje de movimiento)
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (speed > 0.1) {
+            const moveAngle = Math.atan2(this.vy, this.vx);
+            // Rotamos el eje X hacia la dirección del movimiento para aplicar el aplastamiento de rodadura
+            ctx.rotate(moveAngle - this.rotationAngle);
+            ctx.scale(Math.cos(this.rollDistance / this.radius), 1.0);
+            ctx.rotate(-(moveAngle - this.rotationAngle));
+        }
+
         if (this.img && this.img.complete) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
         } else {
@@ -134,6 +147,8 @@ export class Ball {
             ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
         }
+        
+        ctx.restore(); // Restauramos al estado antes de la escala de rodadura
 
         // --- OVERLAY DE SOMBREADO ESFÉRICO FIJO (NO ROTA CON EL BALÓN) ---
         // Deshacemos la rotación local del balón para aplicar el sombreado 3D fijo con luz desde arriba-izquierda
@@ -228,16 +243,17 @@ export class Ball {
             this.vx *= factor; this.vy *= factor; 
         }
 
-        // Rotación física e inercial de la pelota (rodamiento + spin)
+        // Rodamiento 3D y spin físico de la pelota
         if (this.z > 0) {
-            // En el aire: la rotación sigue el spin con una leve fricción del aire
+            // En el aire: sigue rodando por inercia pero más lento, y el spin se conserva más
+            this.rollDistance += currentSpeed * 0.65 * timeScale;
             this.rotationAngle += this.spin * timeScale;
             this.spin *= Math.pow(0.995, timeScale);
         } else {
-            // En el suelo: la rotación depende del rodamiento direccional + spin
-            const rollSpin = (this.vx + this.vy * 0.5) * 0.05;
-            this.rotationAngle += (rollSpin + this.spin) * timeScale;
-            this.spin *= Math.pow(0.95, timeScale); // El spin se disipa rápido al rozar el césped
+            // En el suelo: rueda al 100% de la velocidad física, y el spin se reduce rápido por la fricción del suelo
+            this.rollDistance += currentSpeed * timeScale;
+            this.rotationAngle += this.spin * timeScale;
+            this.spin *= Math.pow(0.95, timeScale);
         }
 
         if (this.onWallTimer > 0) { 
