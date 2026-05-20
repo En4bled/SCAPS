@@ -114,11 +114,7 @@ export class Car {
         const zoomScale = 1.0 + Math.min(1.0, this.z / carMaxZ) * 0.15;
         ctx.scale(zoomScale, zoomScale);
 
-        // Efecto visual Supersónico (Vibración/Brillo opcional aquí)
-        if (this.isSupersonic) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = 'white';
-        }
+
 
         if (this.img && this.img.complete) {
             if (this.isFlipping) {
@@ -472,9 +468,19 @@ export class Car {
             
             // Efectos visuales de huellas y humo (solo en el suelo)
             if (this.z === 0) {
-                if (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
-                    if (this.skidMarkTimer <= 0) { this.spawnSkidMark(skidMarks); this.skidMarkTimer = 4; }
-                    if (this.isDrifting) this.spawnDriftSmoke(particles);
+                if (this.isSupersonic) {
+                    if (this.skidMarkTimer <= 0) {
+                        this.spawnSkidMark(skidMarks, true);
+                        this.skidMarkTimer = 3; // Ligeramente más rápido para efecto de línea continua
+                    }
+                } else if (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
+                    if (this.skidMarkTimer <= 0) {
+                        this.spawnSkidMark(skidMarks, false);
+                        this.skidMarkTimer = 4;
+                    }
+                }
+                if (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4 && this.isDrifting) {
+                    this.spawnDriftSmoke(particles);
                 }
                 if (this.isBoosting) this.spawnParticles(5, this.boostType, particles);
                 else if (currentSpeed > 0.5 && isAccelerating) this.spawnParticles(2, 'smoke', particles);
@@ -571,11 +577,11 @@ export class Car {
         particles.push(new Particle(rearX - s, rearY + c, 'smoke'));
     }
 
-    spawnSkidMark(skidMarks) {
+    spawnSkidMark(skidMarks, isBurning = false) {
         let angleBehind = this.angle + Math.PI;
         let rearX = this.x + Math.sin(angleBehind) * (this.height / 2.5), rearY = this.y - Math.cos(angleBehind) * (this.height / 2.5);
         let s = Math.sin(this.angle + Math.PI/2) * (this.width / 2.2), c = Math.cos(this.angle + Math.PI/2) * (this.width / 2.2);
-        skidMarks.push(new SkidMark(rearX + s, rearY - c, this.angle));
-        skidMarks.push(new SkidMark(rearX - s, rearY + c, this.angle));
+        skidMarks.push(new SkidMark(rearX + s, rearY - c, this.angle, isBurning));
+        skidMarks.push(new SkidMark(rearX - s, rearY + c, this.angle, isBurning));
     }
 }

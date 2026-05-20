@@ -118,16 +118,40 @@ export class ConfettiParticle {
 }
 
 export class SkidMark { 
-    constructor(x, y, angle) { 
+    constructor(x, y, angle, isBurning = false) { 
         this.x = x; this.y = y; this.angle = angle; this.width = 6; this.height = 18; 
-        this.lifespan = 600; this.initialLifespan = 600; 
+        this.lifespan = isBurning ? 120 : 600; // Las marcas de fuego se desvanecen más rápido para un efecto dinámico
+        this.initialLifespan = this.lifespan; 
+        this.isBurning = isBurning;
     }
     update() { this.lifespan--; }
     draw(ctx) {
         if (this.lifespan <= 0) return;
-        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
-        const alpha = (this.lifespan / this.initialLifespan) * 0.3; ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#000'; ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        
+        if (this.isBurning) {
+            const alpha = this.lifespan / this.initialLifespan;
+            ctx.globalAlpha = alpha;
+            ctx.globalCompositeOperation = 'lighter';
+            
+            // Degradado de calor/fuego (amarillo incandescente en el centro, naranja/rojo en los bordes)
+            const grad = ctx.createLinearGradient(-this.width / 2, 0, this.width / 2, 0);
+            grad.addColorStop(0, 'rgba(255, 60, 0, 0.85)');
+            grad.addColorStop(0.5, 'rgba(255, 230, 100, 0.98)');
+            grad.addColorStop(1, 'rgba(255, 60, 0, 0.85)');
+            
+            ctx.fillStyle = grad;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#ff5500';
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        } else {
+            const alpha = (this.lifespan / this.initialLifespan) * 0.3;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        }
         ctx.restore();
     }
 }
