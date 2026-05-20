@@ -55,6 +55,94 @@ export class Ball {
         this.squashVy = 0;
     }
 
+    drawVectorSoccerBall(ctx, r) {
+        // 1. Base blanca del balón
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // 2. Costuras y parches negros
+        ctx.strokeStyle = '#111111';
+        ctx.lineWidth = Math.max(1, r * 0.04);
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        // Dibujar pentágono central
+        const pAngle = -Math.PI / 2;
+        const pr = r * 0.32;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const angle = pAngle + (i * Math.PI * 2 / 5);
+            const px = Math.cos(angle) * pr;
+            const py = Math.sin(angle) * pr;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#1e1e24';
+        ctx.fill();
+        ctx.stroke();
+
+        // Dibujar costuras radiales y parches periféricos
+        for (let i = 0; i < 5; i++) {
+            const angle = pAngle + (i * Math.PI * 2 / 5);
+            const startX = Math.cos(angle) * pr;
+            const startY = Math.sin(angle) * pr;
+            
+            // Costura exterior
+            const extAngle = angle;
+            const extX = Math.cos(extAngle) * r * 0.68;
+            const extY = Math.sin(extAngle) * r * 0.68;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(extX, extY);
+            ctx.stroke();
+
+            // Parches periféricos (trapecios que simulan pentágonos en perspectiva de borde)
+            ctx.save();
+            ctx.translate(extX, extY);
+            ctx.rotate(angle);
+
+            ctx.beginPath();
+            const pw = r * 0.20;
+            const ph = r * 0.16;
+            ctx.moveTo(-pw, 0);
+            ctx.lineTo(-pw * 0.5, ph);
+            ctx.lineTo(pw * 0.5, ph);
+            ctx.lineTo(pw, 0);
+            ctx.lineTo(0, -ph * 0.6);
+            ctx.closePath();
+            ctx.fillStyle = '#1e1e24';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Costuras de interconexión para formar los hexágonos periféricos
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const angle1 = pAngle + (i * Math.PI * 2 / 5);
+            const ext1X = Math.cos(angle1) * r * 0.68;
+            const ext1Y = Math.sin(angle1) * r * 0.68;
+
+            const midAngle = angle1 + Math.PI / 5;
+            const edgeX = Math.cos(midAngle) * r * 0.86;
+            const edgeY = Math.sin(midAngle) * r * 0.86;
+
+            const angle2 = pAngle + (((i + 1) % 5) * Math.PI * 2 / 5);
+            const ext2X = Math.cos(angle2) * r * 0.68;
+            const ext2Y = Math.sin(angle2) * r * 0.68;
+
+            ctx.moveTo(ext1X, ext1Y);
+            ctx.lineTo(edgeX, edgeY);
+            ctx.lineTo(ext2X, ext2Y);
+        }
+        ctx.stroke();
+    }
+
     spawnFireParticles(explosionParticles) {
         for (let i = 0; i < 3; i++) { 
             const colorOffset = Math.random() * 50 - 25;
@@ -65,132 +153,106 @@ export class Ball {
     }
 
     drawNormalBall(ctx) {
-        ctx.save(); 
-        ctx.translate(this.x, this.y); 
+        // --- 1. DIBUJAR SOMBRA PROYECTADA EN EL SUELO ---
+        // La sombra se dibuja primero (debajo del balón) y se proyecta dinámicamente según la altura
+        ctx.save();
+        // Desplazamiento de la sombra basado en la altura Z (luz desde arriba-izquierda)
+        const shadowOffsetX = this.z * 0.35;
+        const shadowOffsetY = this.z * 0.45;
+        ctx.translate(this.x + shadowOffsetX, this.y + shadowOffsetY);
+        ctx.scale(1, 0.5); // Proyección ovalada isométrica plana
         
-        // Dibujar Sombra Dinámica o Retícula de Caída
-        const zThreshold = 25;
-        if (this.z > zThreshold) {
+        const heightFactor = Math.min(1.0, this.z / 150.0);
+        const shadowRadius = this.radius * (1.0 + heightFactor * 0.45); // Se expande y difumina con la altura
+        const shadowOpacity = 0.60 * (1.0 - heightFactor * 0.85); // Pierde opacidad con la altura
+        
+        const shadowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, shadowRadius);
+        shadowGrad.addColorStop(0, `rgba(0, 0, 0, ${shadowOpacity})`);
+        shadowGrad.addColorStop(0.35, `rgba(0, 0, 0, ${shadowOpacity * 0.7})`);
+        shadowGrad.addColorStop(0.75, `rgba(0, 0, 0, ${shadowOpacity * 0.25})`);
+        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = shadowGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, shadowRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // --- 2. DIBUJAR LA RETÍCULA DE CAÍDA (SI ESTÁ ALTO EN EL AIRE) ---
+        if (this.z > 25.0) {
             ctx.save();
-            ctx.scale(1, 0.5); // Proyección isométrica plana
-
-            // Círculo exterior (Blanco con glow y semitransparente)
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius * 0.9, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Relleno de fondo oscuro semitransparente para contrastar
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-            ctx.fill();
-
-            // Dibujar la cruz central (+)
-            const crossSize = this.radius * 0.45;
-            ctx.beginPath();
-            ctx.moveTo(-crossSize, 0);
-            ctx.lineTo(crossSize, 0);
-            ctx.moveTo(0, -crossSize);
-            ctx.lineTo(0, crossSize);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.translate(this.x, this.y); // Centrado en la proyección vertical exacta en el suelo
+            ctx.scale(1, 0.5);
+            
+            const opacity = Math.min(0.7, (this.z - 25.0) / 40.0);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.95})`;
             ctx.lineWidth = 2.5;
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 1.25, 0, Math.PI * 2);
             ctx.stroke();
-
-            // Círculo interno decorativo
+            
             ctx.beginPath();
-            ctx.arc(0, 0, this.radius * 0.25, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 150, 0, 0.5)'; // Tono naranja sutil
-            ctx.lineWidth = 1.5;
+            ctx.moveTo(-this.radius * 1.8, 0); ctx.lineTo(-this.radius * 0.4, 0);
+            ctx.moveTo(this.radius * 0.4, 0); ctx.lineTo(this.radius * 1.8, 0);
+            ctx.moveTo(0, -this.radius * 1.8); ctx.lineTo(0, -this.radius * 0.4);
+            ctx.moveTo(0, this.radius * 0.4); ctx.lineTo(0, this.radius * 1.8);
             ctx.stroke();
-
-            // Punto central brillante
+            
             ctx.beginPath();
-            ctx.arc(0, 0, 5, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffaa00';
-            ctx.fill();
-
-            ctx.restore();
-        } else {
-            // Dibujar Sombra Dinámica Local Mejorada (con degradado radial difuminado en los bordes)
-            ctx.save();
-            ctx.scale(1, 0.5); // Sombra ovalada
+            ctx.arc(0, 0, this.radius * 0.45, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 110, 0, ${opacity * 0.9})`;
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
             
-            const shadowRadius = this.radius * Math.max(0.35, 1.0 - (this.z / 32.0) * 0.65) * 0.9;
-            const opacity = Math.max(0.1, 0.55 * (1.0 - (this.z / 32.0) * 0.75));
-
-            const grad = ctx.createRadialGradient(4, 8, 0, 4, 8, shadowRadius);
-            grad.addColorStop(0, `rgba(0, 0, 0, ${opacity})`);
-            grad.addColorStop(0.7, `rgba(0, 0, 0, ${opacity * 0.45})`);
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            
-            ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.arc(4, 8, shadowRadius, 0, Math.PI * 2);
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 110, 0, ${opacity})`;
             ctx.fill();
-            
             ctx.restore();
         }
-        
-        // Trasladar en Y hacia arriba para simular la altura Z
-        ctx.translate(0, -this.z);
 
-        // --- APLICAR ESTIRAR Y APLASTAR (SQUASH & STRETCH) ---
-        // 1. Estiramiento dinámico por velocidad física
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        if (speed > 1.5) {
-            const stretchAmount = Math.min(0.18, speed * 0.008);
-            const stretchAngle = Math.atan2(this.vy, this.vx);
-            ctx.rotate(stretchAngle);
-            ctx.scale(1.0 + stretchAmount, 1.0 - stretchAmount);
-            ctx.rotate(-stretchAngle);
-        }
+        // --- 3. DIBUJAR EL CUERPO DEL BALÓN (CON ALTURA Z) ---
+        ctx.save();
+        ctx.translate(this.x, this.y - this.z); // Traslación a la posición 3D (altura Z integrada)
         
-        // 2. Aplastamiento y oscilación elástica por impactos (suelo/pared/coche)
+        // Aplastamiento y vibración elástica por impactos (suelo/pared/coche)
         ctx.scale(this.squashX, this.squashY);
 
-        // Zoom suave del balón según su altura en Z (hasta un 18% más grande a máx altura)
         const zoomScale = 1.0 + Math.min(1.0, this.z / 32.0) * 0.18;
         const renderRadius = this.visualRadius * zoomScale;
         
-        // --- DIBUJAR LA TEXTURA EN ROTACIÓN CONTINUA ---
+        // Dibujar textura/gráfico del balón rotado
         ctx.save();
-        ctx.rotate(this.rotationAngle); // Giro continuo de la textura
-        
-        if (this.img && this.img.complete) {
+        ctx.rotate(this.rotationAngle); // Giro de la textura
+
+        // Si es el balón 1 o no hay imagen cargada, dibujamos el balón vectorial súper detallado y nítido
+        if (this.img && this.img.complete && !this.img.src.includes('ball_1.png')) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
         } else {
-            ctx.beginPath();
-            ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(0, 0, renderRadius * 0.9, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
-            ctx.fill();
-            ctx.fillStyle = '#222';
-            ctx.beginPath(); ctx.arc(0, -renderRadius / 2, renderRadius / 3, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(-renderRadius / 2, renderRadius / 3, renderRadius / 3.5, 0, Math.PI * 2); ctx.fill();
+            this.drawVectorSoccerBall(ctx, renderRadius);
         }
-        ctx.restore();
+        ctx.restore(); // Se deshace la rotación de textura!
 
-        // --- OVERLAY DE SOMBREADO ESFÉRICO FIJO (NO ROTA CON EL BALÓN) ---
-        // Sombreado radial fijo de alta definición que le da el relieve volumétrico 3D a la esfera
+        // --- 4. OVERLAY DE SOMBREADO ESFÉRICO DINÁMICO FIJO ---
+        // Sombreado radial fijo de alta definición que le da el relieve volumétrico 3D a la esfera.
+        // Queda estático (luz de arriba-izquierda, sombra abajo-derecha) independientemente de la rotación de la pelota.
         const shadingGrad = ctx.createRadialGradient(
-            -renderRadius * 0.18, -renderRadius * 0.18, renderRadius * 0.05,
+            -renderRadius * 0.22, -renderRadius * 0.22, renderRadius * 0.05,
             0, 0, renderRadius
         );
-        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');   // Brillo del foco de luz
-        shadingGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)');  // Transición
-        shadingGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
-        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.6)');          // Oclusión en los bordes
+        shadingGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');   // Brillo del foco de luz en 3D
+        shadingGrad.addColorStop(0.25, 'rgba(255, 255, 255, 0.05)');  // Transición suave
+        shadingGrad.addColorStop(0.65, 'rgba(0, 0, 0, 0.15)');       // Sombra de volumen
+        shadingGrad.addColorStop(0.95, 'rgba(0, 0, 0, 0.65)');       // Oclusión ambiental
+        shadingGrad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');          // Borde oscuro esférico
 
         ctx.fillStyle = shadingGrad;
         ctx.beginPath();
         ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.restore(); 
+        ctx.restore(); // Restaurar el cuerpo del balón
     }
 
     drawFireball(ctx, animationFrameCounter) {
