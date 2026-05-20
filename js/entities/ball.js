@@ -55,94 +55,6 @@ export class Ball {
         this.squashVy = 0;
     }
 
-    drawVectorSoccerBall(ctx, r) {
-        // 1. Base blanca del balón
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-
-        // 2. Costuras y parches negros
-        ctx.strokeStyle = '#111111';
-        ctx.lineWidth = Math.max(1, r * 0.04);
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-
-        // Dibujar pentágono central
-        const pAngle = -Math.PI / 2;
-        const pr = r * 0.32;
-        ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-            const angle = pAngle + (i * Math.PI * 2 / 5);
-            const px = Math.cos(angle) * pr;
-            const py = Math.sin(angle) * pr;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fillStyle = '#1e1e24';
-        ctx.fill();
-        ctx.stroke();
-
-        // Dibujar costuras radiales y parches periféricos
-        for (let i = 0; i < 5; i++) {
-            const angle = pAngle + (i * Math.PI * 2 / 5);
-            const startX = Math.cos(angle) * pr;
-            const startY = Math.sin(angle) * pr;
-            
-            // Costura exterior
-            const extAngle = angle;
-            const extX = Math.cos(extAngle) * r * 0.68;
-            const extY = Math.sin(extAngle) * r * 0.68;
-
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(extX, extY);
-            ctx.stroke();
-
-            // Parches periféricos (trapecios que simulan pentágonos en perspectiva de borde)
-            ctx.save();
-            ctx.translate(extX, extY);
-            ctx.rotate(angle);
-
-            ctx.beginPath();
-            const pw = r * 0.20;
-            const ph = r * 0.16;
-            ctx.moveTo(-pw, 0);
-            ctx.lineTo(-pw * 0.5, ph);
-            ctx.lineTo(pw * 0.5, ph);
-            ctx.lineTo(pw, 0);
-            ctx.lineTo(0, -ph * 0.6);
-            ctx.closePath();
-            ctx.fillStyle = '#1e1e24';
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.restore();
-        }
-
-        // Costuras de interconexión para formar los hexágonos periféricos
-        ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-            const angle1 = pAngle + (i * Math.PI * 2 / 5);
-            const ext1X = Math.cos(angle1) * r * 0.68;
-            const ext1Y = Math.sin(angle1) * r * 0.68;
-
-            const midAngle = angle1 + Math.PI / 5;
-            const edgeX = Math.cos(midAngle) * r * 0.86;
-            const edgeY = Math.sin(midAngle) * r * 0.86;
-
-            const angle2 = pAngle + (((i + 1) % 5) * Math.PI * 2 / 5);
-            const ext2X = Math.cos(angle2) * r * 0.68;
-            const ext2Y = Math.sin(angle2) * r * 0.68;
-
-            ctx.moveTo(ext1X, ext1Y);
-            ctx.lineTo(edgeX, edgeY);
-            ctx.lineTo(ext2X, ext2Y);
-        }
-        ctx.stroke();
-    }
-
     spawnFireParticles(explosionParticles) {
         for (let i = 0; i < 3; i++) { 
             const colorOffset = Math.random() * 50 - 25;
@@ -226,11 +138,13 @@ export class Ball {
         ctx.save();
         ctx.rotate(this.rotationAngle); // Giro de la textura
 
-        // Si es el balón 1 o no hay imagen cargada, dibujamos el balón vectorial súper detallado y nítido
-        if (this.img && this.img.complete && !this.img.src.includes('ball_1.png')) {
+        if (this.img && this.img.complete) {
             ctx.drawImage(this.img, -renderRadius, -renderRadius, renderRadius * 2, renderRadius * 2);
         } else {
-            this.drawVectorSoccerBall(ctx, renderRadius);
+            ctx.beginPath();
+            ctx.arc(0, 0, renderRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
         }
         ctx.restore(); // Se deshace la rotación de textura!
 

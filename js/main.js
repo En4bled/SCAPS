@@ -231,6 +231,7 @@ function loadUserConfig() {
     setMusicVolume(USER_CONFIG.musicVolume / 100);
     setSFXVolume(USER_CONFIG.sfxVolume / 100);
     applyBannerPosition();
+    if (ball) ball.imgUrl = USER_CONFIG.playerBall;
 
     // Actualizar Tag de Versión
     const versionTag = document.getElementById('game-version-tag');
@@ -3354,6 +3355,7 @@ function renderBallSelection() {
             item.innerHTML = `<img src="${url}">`;
             item.onclick = () => {
                 USER_CONFIG.playerBall = url;
+                if (ball) ball.imgUrl = url;
                 saveUserConfig();
                 renderBallSelection();
                 playSound('menu_click');
