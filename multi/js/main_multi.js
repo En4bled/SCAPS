@@ -554,6 +554,9 @@ const MAPS_PER_PAGE = 1;
 const BALLS_PER_PAGE = 12; // 6 columnas x 2 filas
 let currentZoom = 1.0, targetZoom = 0.85;
 let currentVOffset = 0;
+let p1Ready = false;
+let p2Ready = false;
+let backgroundWorker = null;
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
@@ -2293,16 +2296,16 @@ function renderFrame() {
             // Mezcla suave hacia el jugador en el último 40% del zoom
             let mix = (progress - 0.6) / 0.4;
             let smoothMix = mix * mix * (3 - 2 * mix); // Ease in-out
-            targetX = (CONST.CONFIG.WORLD_W / 2) * (1 - smoothMix) + player1.x * smoothMix;
-            targetY = (CONST.CONFIG.WORLD_H / 2) * (1 - smoothMix) + player1.y * smoothMix;
+            targetX = (CONST.CONFIG.WORLD_W / 2) * (1 - smoothMix) + localPlayer.x * smoothMix;
+            targetY = (CONST.CONFIG.WORLD_H / 2) * (1 - smoothMix) + localPlayer.y * smoothMix;
         }
         targetRot = 0;
     } else if (gameState === 'panning' || gameState === 'menu') {
-        targetX = player1.x + (gameState === 'menu' ? mouseX * 200 : 0);
-        targetY = player1.y + (gameState === 'menu' ? mouseY * 200 : 0);
+        targetX = localPlayer.x + (gameState === 'menu' ? mouseX * 200 : 0);
+        targetY = localPlayer.y + (gameState === 'menu' ? mouseY * 200 : 0);
         targetRot = (gameState === 'menu' ? mouseX * 0.05 : 0);
     } else if (cameraMode === 'rotating') {
-        targetRot = -player1.angle; vOffset = canvas.height * 0.3;
+        targetRot = -localPlayer.angle; vOffset = canvas.height * 0.3;
     }
 
     let camLerp = (gameState === 'zooming' || gameState === 'panning') ? 0.04 : 0.08;
@@ -2477,11 +2480,14 @@ function updateAll(dt) {
                     ball.isFireball = ballRemoteState.isFireball;
                 }
 
-                // Mover todas las entidades para renderización correcta (el balón se interpola directamente arriba)
-                player1.move();
+                // 4. Resolver colisiones locales para P2 (evita atravesar balón y desincronizar host)
+                checkCarBallCollision(player2, ball, touchHistory, gameTime, timeScale);
+                checkCarCarCollision(player2, player1, explosionParticles);
+
+                // 5. Mover SOLO a P2 localmente (P1 ya se mueve por interpolación de red)
                 player2.move();
 
-                // 4. Enviar inputs/posición de P2 al Host
+                // 6. Enviar inputs/posición de P2 al Host
                 sendStateToHost();
             }
 
@@ -2751,8 +2757,9 @@ function updateUI(dt) {
         }
     }
     if (gameState === 'panning') {
-        const dx = currentCamX - player1.x;
-        const dy = currentCamY - player1.y;
+        const localPlayer = (isMultiplayer && multiplayerRole === 'client') ? player2 : player1;
+        const dx = currentCamX - localPlayer.x;
+        const dy = currentCamY - localPlayer.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         // Umbral reducido para un encuadre perfecto antes de empezar
         if (dist < 10) {
@@ -2790,6 +2797,10 @@ function updateUI(dt) {
 }
 
 function resetAfterGoal() {
+    if (isMultiplayer) {
+        resetAfterGoalMulti();
+        return;
+    }
     applySpawns();
     allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = isTrainingMode ? 100 : 33; });
     ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
@@ -4920,11 +4931,8 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         break;
 
                     case 'player_joined':
-                        statusEl.innerText = "¡RIVAL CONECTADO! INICIANDO...";
+                        statusEl.innerText = "¡RIVAL CONECTADO! PREPARANDO...";
                         statusEl.style.color = "#22ffbb";
-                        
-                        // Finalizar el entrenamiento
-                        isTrainingMode = false;
                         
                         // Mostrar mensaje de aviso
                         addFeedMessage("¡RIVAL CONECTADO! PREPARANDO PARTIDO...");
@@ -4934,13 +4942,37 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                             countdownEl.innerText = "¡RIVAL CONECTADO!";
                         }
                         
-                        // El host inicia el partido tras un aviso de 2 segundos y lo comunica al cliente
+                        // El host inicia el partido mostrando confirmación de listo tras 2 segundos
                         setTimeout(() => {
-                            resetAfterGoalMulti();
-                            if (ws && ws.readyState === 1) {
-                                ws.send(JSON.stringify({ type: 'reset' }));
-                            }
+                            if (countdownEl) countdownEl.style.display = 'none';
+                            showReadyConfirmOverlay(true);
                         }, 2000);
+                        break;
+
+                    case 'ready_init':
+                        if (multiplayerRole === 'client') {
+                            showReadyConfirmOverlay(false);
+                        }
+                        break;
+
+                    case 'ready_sync':
+                        if (data.player === 'host') {
+                            p1Ready = data.ready;
+                        } else if (data.player === 'client') {
+                            p2Ready = data.ready;
+                        }
+                        updateReadyUI();
+                        
+                        // Si ambos están listos, el host inicia el partido
+                        if (p1Ready && p2Ready) {
+                            if (multiplayerRole === 'host') {
+                                startMatchMulti();
+                            }
+                        }
+                        break;
+
+                    case 'start_match':
+                        startMatchClient();
                         break;
 
                     case 'opponent_disconnected':
@@ -5108,25 +5140,15 @@ async function startGameMulti(isWaiting = false) {
         if (countdownEl) countdownEl.style.display = 'none';
     } else {
         if (multiplayerRole === 'client') {
-            // El cliente entra a esperar el reset del host
-            gameState = 'playing';
-            if (countdownEl) {
-                countdownEl.style.display = 'block';
-                countdownEl.innerText = "¡CONECTADO! ESPERANDO HOST...";
-            }
+            // El cliente entra en juego libre y muestra confirmación de listo
+            showReadyConfirmOverlay(false);
         }
     }
 
-    // Mostrar/ocultar el indicador flotante de código de sala
+    // Ocultar número de sala flotante de la partida principal (se muestra en pausa)
     const roomIndicator = getEl('online-room-indicator');
-    const roomIndicatorCode = getEl('online-room-indicator-code');
-    if (roomIndicator && roomIndicatorCode) {
-        if (isMultiplayer && roomCode) {
-            roomIndicator.style.display = 'block';
-            roomIndicatorCode.innerText = roomCode;
-        } else {
-            roomIndicator.style.display = 'none';
-        }
+    if (roomIndicator) {
+        roomIndicator.style.display = 'none';
     }
 
     isPaused = false;
@@ -5182,8 +5204,8 @@ function checkCollisionsMulti(timeScale = 1.0) {
 
     checkGoalPhysics(ball);
     
+    // Mover SOLO al jugador local P1 (P2 se mueve por red)
     player1.move();
-    player2.move();
 
     if (gameState === 'playing' && multiplayerRole === 'host') {
         const scorer = ball.checkGoal();
@@ -5230,3 +5252,189 @@ function handleGoalClient(scorer) {
     addHitStop(6);
     playSound('goal_explosion', 0.8);
 }
+
+// --- LÓGICA DE CONFIRMACIÓN DE LISTO EN ENTRENAMIENTO ---
+function showReadyConfirmOverlay(sendNotify = false) {
+    p1Ready = false;
+    p2Ready = false;
+    
+    // El juego continúa en modo de entrenamiento/libre para que puedan conducir
+    isTrainingMode = true;
+    gameState = 'playing';
+
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden');
+    }
+    
+    const btnReady = document.getElementById('btn-ready-confirm');
+    if (btnReady) {
+        btnReady.disabled = false;
+        btnReady.innerText = "CONFIRMAR LISTO";
+        btnReady.style.borderColor = "#2fb";
+        btnReady.style.color = "#2fb";
+    }
+    
+    updateReadyUI();
+    
+    if (sendNotify && ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'ready_init' }));
+    }
+}
+
+function updateReadyUI() {
+    const statusHost = document.getElementById('ready-status-host');
+    const statusClient = document.getElementById('ready-status-client');
+    
+    if (statusHost) {
+        if (p1Ready) {
+            statusHost.innerText = "🟢 LISTO";
+            statusHost.style.color = "#2fb";
+        } else {
+            statusHost.innerText = "🔴 NO LISTO";
+            statusHost.style.color = "#ff3366";
+        }
+    }
+    
+    if (statusClient) {
+        if (p2Ready) {
+            statusClient.innerText = "🟢 LISTO";
+            statusClient.style.color = "#2fb";
+        } else {
+            statusClient.innerText = "🔴 NO LISTO";
+            statusClient.style.color = "#ff3366";
+        }
+    }
+}
+
+function startMatchMulti() {
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // Finalizar el entrenamiento
+    isTrainingMode = false;
+
+    // Iniciar el zoom cinematográfico (cámara 0.1 a 0.85)
+    currentZoom = 0.1;
+    targetZoom = 0.85;
+    currentCamX = CONST.CONFIG.WORLD_W / 2;
+    currentCamY = CONST.CONFIG.WORLD_H / 2;
+    currentRotation = 0;
+    
+    gameState = 'zooming';
+    
+    // Notificar al cliente
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'start_match' }));
+    }
+}
+
+function startMatchClient() {
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // Finalizar el entrenamiento
+    isTrainingMode = false;
+
+    // Iniciar el zoom cinematográfico
+    currentZoom = 0.1;
+    targetZoom = 0.85;
+    currentCamX = CONST.CONFIG.WORLD_W / 2;
+    currentCamY = CONST.CONFIG.WORLD_H / 2;
+    currentRotation = 0;
+    
+    gameState = 'zooming';
+}
+
+// Configurar evento de botón de confirmación de listo
+document.addEventListener('DOMContentLoaded', () => {
+    const btnReady = document.getElementById('btn-ready-confirm');
+    if (btnReady) {
+        btnReady.onclick = () => {
+            playSound('menu_click');
+            if (multiplayerRole === 'host') {
+                p1Ready = true;
+            } else {
+                p2Ready = true;
+            }
+            
+            btnReady.disabled = true;
+            btnReady.innerText = "ESPERANDO RIVAL...";
+            btnReady.style.borderColor = "#888";
+            btnReady.style.color = "#888";
+            
+            updateReadyUI();
+            
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                    type: 'ready_sync',
+                    player: multiplayerRole,
+                    ready: true
+                }));
+            }
+            
+            if (p1Ready && p2Ready) {
+                if (multiplayerRole === 'host') {
+                    startMatchMulti();
+                }
+            }
+        };
+    }
+});
+
+// Capturar tecla ENTER para listo
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Enter') {
+        const overlay = document.getElementById('ready-confirm-overlay');
+        if (overlay && overlay.style.display === 'flex') {
+            const btnReady = document.getElementById('btn-ready-confirm');
+            if (btnReady && !btnReady.disabled) {
+                btnReady.click();
+                e.preventDefault();
+            }
+        }
+    }
+});
+
+// --- LÓGICA DE WEB WORKER EN SEGUNDO PLANO ---
+const workerCode = `
+    let timerId = null;
+    self.onmessage = function(e) {
+        if (e.data === 'start') {
+            if (!timerId) {
+                timerId = setInterval(() => {
+                    self.postMessage('tick');
+                }, 16);
+            }
+        } else if (e.data === 'stop') {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+        }
+    };
+`;
+const blob = new Blob([workerCode], { type: 'application/javascript' });
+const workerUrl = URL.createObjectURL(blob);
+backgroundWorker = new Worker(workerUrl);
+
+backgroundWorker.onmessage = function(e) {
+    if (e.data === 'tick') {
+        if (document.hidden && isMultiplayer) {
+            // Delta time de 60fps (0.016s)
+            updateAll(0.016);
+        }
+    }
+};
+
+document.addEventListener('visibilitychange', () => {
+    if (!isMultiplayer) return;
+    if (document.hidden) {
+        backgroundWorker.postMessage('start');
+    } else {
+        backgroundWorker.postMessage('stop');
+        // Resincronizar tiempo de juego al recuperar el foco
+        lastTime = performance.now();
+    }
+});

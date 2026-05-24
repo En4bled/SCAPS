@@ -115,7 +115,10 @@ wss.on('connection', (ws) => {
                 case 'goal':
                 case 'reset':
                 case 'chat':
-                case 'settings_sync': {
+                case 'settings_sync':
+                case 'ready_init':
+                case 'ready_sync':
+                case 'start_match': {
                     if (!currentRoomCode || !rooms.has(currentRoomCode)) return;
                     const room = rooms.get(currentRoomCode);
 

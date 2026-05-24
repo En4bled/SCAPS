@@ -118,6 +118,19 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         return;
     }
 
+    // --- RESTRICCIÓN POR PANTALLA DE LISTO (ONLINE READY CONFIRMATION) ---
+    const readyOverlay = document.getElementById('ready-confirm-overlay');
+    if (readyOverlay && readyOverlay.style.display === 'flex' && !readyOverlay.classList.contains('hidden')) {
+        const lbPressed = gp.buttons[4].pressed;
+        const rbPressed = gp.buttons[5].pressed;
+        if ((lbPressed && !lastButtonsState[4]) || (rbPressed && !lastButtonsState[5])) {
+            const btnReady = document.getElementById('btn-ready-confirm');
+            if (btnReady && !btnReady.disabled) {
+                btnReady.click();
+            }
+        }
+    }
+
     // --- RESTRICCIÓN POR ESCENA: GAME OVER (FIN DE PARTIDA) ---
     if (gameState === 'gameOver') {
         const aPressed = gp.buttons[0].pressed;
