@@ -70,7 +70,7 @@
 
             <div id="menu-initial" class="menu-buttons">
                 <button id="btn-play" class="menu-btn primary">Jugar Local</button>
-                <button id="btn-online" class="menu-btn primary" style="border-color: #22ffbb; color: #22ffbb; box-shadow: 0 0 10px rgba(34,255,187,0.3);">Jugar Online</button>
+                <button id="btn-online" class="menu-btn primary" onclick="console.log('HTML CLICK: Jugar Online'); document.getElementById('menu-online-lobby').style.setProperty('display', 'flex', 'important'); document.getElementById('menu-initial').style.setProperty('display', 'none', 'important');" style="border-color: #22ffbb; color: #22ffbb; box-shadow: 0 0 10px rgba(34,255,187,0.3);">Jugar Online</button>
                 <button id="btn-custom" class="menu-btn">Personalizar</button>
                 <button id="btn-settings" class="menu-btn">Ajustes</button>
                 <button id="btn-exit" class="menu-btn">SALIR</button>
@@ -114,7 +114,7 @@
                 </div>
                 
                 <!-- Botón Volver -->
-                <button id="btn-online-back" class="menu-btn" style="margin-top: 20px; width: 200px; border-color: #ff3366; color: #ff3366; height: 2.8em; font-size: 0.9em;">VOLVER AL MENÚ</button>
+                <button id="btn-online-back" class="menu-btn" onclick="document.getElementById('menu-online-lobby').style.setProperty('display', 'none', 'important'); document.getElementById('menu-initial').style.setProperty('display', 'flex', 'important');" style="margin-top: 20px; width: 200px; border-color: #ff3366; color: #ff3366; height: 2.8em; font-size: 0.9em;">VOLVER AL MENÚ</button>
             </div>
     
             <div id="player-banner">
@@ -1547,7 +1547,7 @@
         <option value="#aaaaaa">Gris Claro</option>
     </datalist>
 
-    <script type="module" src="js/main_multi.js?v=1.8.3"></script>
+    <script type="module" src="js/main_multi.js?v=1.8.4"></script>
     <script type="module">
         import { getAssetPath } from '../js/core/constants.js';
         window.getAssetPath = getAssetPath;
