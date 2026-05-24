@@ -73,7 +73,7 @@ export class Car {
         }
         if (!this.imgDown) {
             this.imgDown = new Image();
-            this.imgDown.src = getAssetPath('recursos/cars/Car1-down.png');
+            this.imgDown.src = getAssetPath('recursos/cars/car1-down.png');
         }
     }
 
