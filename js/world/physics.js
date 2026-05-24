@@ -1,7 +1,11 @@
 import * as CONST from '../core/constants.js';
 import { playSound } from '../fx/audio.js';
 import { ExplosionParticle } from '../fx/particles.js';
-import { addFeedMessage, addScreenShake, addHitStop } from '../main.js';
+
+// Usar funciones globales expuestas en window para evitar importación cíclica/cruce de main.js
+const addFeedMessage = (...args) => { if (window.addFeedMessage) window.addFeedMessage(...args); };
+const addScreenShake = (...args) => { if (window.addScreenShake) window.addScreenShake(...args); };
+const addHitStop = (...args) => { if (window.addHitStop) window.addHitStop(...args); };
 
 /**
  * MOTOR DE FÍSICAS SCAPS - CORE PRODUCTION V15 (Impulse Based)

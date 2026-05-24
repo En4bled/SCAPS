@@ -18,6 +18,11 @@ import { EXPLOSION_DEFS } from '../../js/fx/explosion_definitions.js';
 import { ReplaySystem } from '../../js/core/replay.js';
 import { drawDynamicShadows, drawAmbientLighting, updateLights, drawWallShadows } from '../../js/ui/lighting.js';
 
+// Exponer funciones necesarias para el motor de físicas
+window.addFeedMessage = addFeedMessage;
+window.addScreenShake = addScreenShake;
+window.addHitStop = addHitStop;
+
 // ==========================================
 // VARIABLES Y CONFIGURACIÓN MULTIJUGADOR ONLINE
 // ==========================================

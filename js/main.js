@@ -18,6 +18,11 @@ import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
 import { ReplaySystem } from './core/replay.js';
 import { drawDynamicShadows, drawAmbientLighting, updateLights, drawWallShadows } from './ui/lighting.js';
 
+// Exponer funciones necesarias para el motor de físicas
+window.addFeedMessage = addFeedMessage;
+window.addScreenShake = addScreenShake;
+window.addHitStop = addHitStop;
+
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
     playerName: 'PILOTO_01',
