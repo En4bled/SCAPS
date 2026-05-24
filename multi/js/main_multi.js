@@ -2477,10 +2477,9 @@ function updateAll(dt) {
                     ball.isFireball = ballRemoteState.isFireball;
                 }
 
-                // Mover todas las entidades para renderización correcta
+                // Mover todas las entidades para renderización correcta (el balón se interpola directamente arriba)
                 player1.move();
                 player2.move();
-                ball.move();
 
                 // 4. Enviar inputs/posición de P2 al Host
                 sendStateToHost();
