@@ -844,6 +844,25 @@
             #fullscreen-toggle:hover {
                 opacity: 1 !important;
             }
+            .keyboard-key {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #2b2b36, #15151e);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-bottom: 3px solid rgba(255, 255, 255, 0.4);
+                border-radius: 4px;
+                color: #fff;
+                font-family: 'Share Tech Mono', monospace;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 1px 6px;
+                min-width: 18px;
+                height: 18px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+                box-sizing: border-box;
+            }
         </style>
 
         <!-- Botón Pantalla Completa (Debajo del mando) -->
@@ -1319,10 +1338,11 @@
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <!-- Acelerar -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-rt"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Gatillo Derecho (RT)</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-rt" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">W</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Acelerar</span>
                             </div>
                             <span
                                 style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">ACELERAR</span>
@@ -1330,10 +1350,11 @@
 
                         <!-- Frenar -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-lt"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Gatillo Izquierdo (LT)</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-lt" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">S</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Frenar / Reversa</span>
                             </div>
                             <span style="color: #f33; font-weight: bold; font-size: 12px; letter-spacing: 1px;">FRENAR /
                                 REVERSA</span>
@@ -1341,14 +1362,14 @@
 
                         <!-- Dirección -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-lstick"
-                                    style="width: 24px; height: 24px; margin-right: 6px;"></span>
-                                <span
-                                    style="color: #aaa; font-size: 13px; font-family: sans-serif; margin-right: 6px; font-weight: bold;">/</span>
-                                <span class="gamepad-badge gp-dpad"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Stick Izquierdo / Cruceta</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="gamepad-badge gp-lstick" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="color: #aaa; font-size: 13px; font-family: sans-serif; font-weight: bold;">/</span>
+                                <span class="gamepad-badge gp-dpad" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">A</span>
+                                <span class="keyboard-key">D</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Girar</span>
                             </div>
                             <span style="color: #5ad; font-weight: bold; font-size: 12px; letter-spacing: 1px;">GIRAR
                                 DIRECCIÓN</span>
@@ -1364,24 +1385,37 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Turbo -->
+                        <!-- Salto -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-a"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Botón A / CROSS</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-a" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key" style="min-width: 48px;">SPACE</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Salto / Voltereta</span>
                             </div>
                             <span
-                                style="color: #ff0; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,255,0,0.3);">TURBO
-                                (BOOST)</span>
+                                style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(34,255,187,0.3);">SALTO (JUMP)</span>
+                        </div>
+
+                        <!-- Turbo -->
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-b" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key" style="min-width: 48px;">L-SHIFT</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Turbo (Boost)</span>
+                            </div>
+                            <span
+                                style="color: #ff0; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(255,255,0,0.3);">TURBO (BOOST)</span>
                         </div>
 
                         <!-- Freno Mano -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-x"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Botón X / SQUARE</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-x" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">E</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Derrape (Drift)</span>
                             </div>
                             <span
                                 style="color: #a5f; font-weight: bold; font-size: 12px; letter-spacing: 1px; text-shadow: 0 0 5px rgba(165,85,255,0.3);">DERRAPE
@@ -1390,10 +1424,11 @@
 
                         <!-- Cámara -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-y"
-                                    style="width: 24px; height: 24px; margin-right: 10px;"></span>
-                                <span style="font-size: 13px; color: #eee;">Botón Y / TRIANGLE</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-y" style="width: 24px; height: 24px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">V</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Cambiar Cámara</span>
                             </div>
                             <span style="color: #2fb; font-weight: bold; font-size: 12px; letter-spacing: 1px;">CAMBIAR
                                 CÁMARA</span>
@@ -1401,10 +1436,11 @@
 
                         <!-- Marcadores -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-select"
-                                    style="width: 20px; height: 20px; margin-right: 14px;"></span>
-                                <span style="font-size: 13px; color: #eee;">SELECT / SHARE</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-select" style="width: 20px; height: 20px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key">TAB</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Marcadores</span>
                             </div>
                             <span style="color: #f90; font-weight: bold; font-size: 12px; letter-spacing: 1px;">MOSTRAR
                                 MARCADORES</span>
@@ -1412,10 +1448,11 @@
 
                         <!-- Pausa -->
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
-                                <span class="gamepad-badge gp-start"
-                                    style="width: 20px; height: 20px; margin-right: 14px;"></span>
-                                <span style="font-size: 13px; color: #eee;">START / OPTIONS</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="gamepad-badge gp-start" style="width: 20px; height: 20px; margin: 0;"></span>
+                                <span style="font-size: 13px; color: #aaa;">/</span>
+                                <span class="keyboard-key" style="min-width: 24px;">ESC</span>
+                                <span style="font-size: 13px; color: #eee; margin-left: 5px;">Pausar / Salir</span>
                             </div>
                             <span style="color: #aaa; font-weight: bold; font-size: 12px; letter-spacing: 1px;">PAUSAR /
                                 CONTINUAR</span>

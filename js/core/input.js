@@ -715,7 +715,7 @@ export function pollGamepad(keysPressed, gameState, introPhase) {
         mapping[7] = 'KeyW';       // RT -> Acelerar (KeyW)
         mapping[6] = 'KeyS';       // LT -> Frenar/Reversa (KeyS)
         mapping[0] = 'Space';      // A -> Salto (Space)
-        mapping[4] = 'ShiftLeft';  // LB -> Boost (ShiftLeft)
+        mapping[1] = 'ShiftLeft';  // B -> Boost (ShiftLeft)
         mapping[2] = 'KeyE';       // X -> Derrape (KeyE)
         mapping[3] = 'KeyV';       // Y -> Toggle Cámara
         mapping[9] = 'Escape';     // START -> Pausa

@@ -11,7 +11,7 @@ import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from './world/physics.js';
 import { updateCarAI } from './ai/bot.js';
-import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
+import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, setDriftSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
 import { initPhysicsEditor, toggleEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
@@ -2150,7 +2150,8 @@ function gameLoop(timestamp) {
     }
 
     if (!isPaused) {
-        if (gameState !== 'menu' && gameState !== 'gameOver') {
+        const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
+        if (inMatch) {
             updateAll(dt);
         }
     }
@@ -2388,7 +2389,10 @@ function updateAll(dt) {
 
     animationFrameCounter++;
     updateAudio();
-    if (player1) setBoostSound(player1.isBoosting);
+    if (player1) {
+        setBoostSound(player1.isBoosting);
+        setDriftSound(player1.isDrifting && player1.z === 0 && Math.abs(player1.speed) > 0.5);
+    }
     updateUI(dt);
     if (gameState === 'settings') drawSettingsVisualizer();
 }
@@ -4100,12 +4104,19 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
     }
 }
 
+let menuFadeActive = true;
 async function finalizeStartGame() {
     // IMPORTANTE: Resumir audio context por gesto de usuario
-    const { audioCtx } = await import('./fx/audio.js');
+    const { audioCtx, stopMusicFadeOut, startMatchMusic } = await import('./fx/audio.js');
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
+    
+    // Detener suavemente la música del menú
+    menuFadeActive = true;
+    stopMusicFadeOut(1000, () => {
+        menuFadeActive = false;
+    });
 
     const trans = document.getElementById('match-transition');
     const fill = document.getElementById('loading-bar-fill');
@@ -4201,6 +4212,16 @@ async function finalizeStartGame() {
                 isTrainingMode = (selectedMode === 'practica');
                 allCars = [player1, player1_teammate, player2, player2_teammate];
                 initAudio(player1, allCars);
+                
+                // Iniciar la música de partido aleatoria asegurando que el fadeout concluyó
+                if (menuFadeActive) {
+                    setTimeout(() => {
+                        if (gameState !== 'menu') startMatchMusic();
+                    }, 200);
+                } else {
+                    startMatchMusic();
+                }
+                
                 applySpawns();
             }, 500);
         }, 300);

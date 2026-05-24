@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.1] - 2026-05-24 - *Teclado en Pausa, Audio Update y Fix de Ajustes*
+### Added
+- **Teclado en Guía de Pausa**: Integración visual de teclas físicas de teclado retro (`.keyboard-key`) en el panel de controles de pausa, alineadas con sus equivalencias en gamepad.
+
+### Changed
+- **Mapeo de Boost**: Reubicado el botón de Boost del mando al botón B (antes en LB), sincronizándolo también en la guía de pausa.
+- **Transición y Selección Musical**:
+  - Exclusión dinámica de la canción del menú principal al iniciar el partido para evitar repeticiones.
+  - Sincronización asíncrona de `startMatchMusic` con el callback de finalización de `stopMusicFadeOut`, logrando una transición de audio suave.
+- **Audio Sintético Potenciado**:
+  - Salto (`jump`): Rediseñado con oscilador de tipo `triangle` y filtro paso-bajo dinámico para un tono retro con cuerpo.
+  - Voltereta (`flip`): Rediseñado con oscilador `sawtooth` y filtro paso-bajo resonante (`Q = 6.0`) que emula un latigazo del aire o turbo instantáneo.
+  - Derrape (`drift`): Incrementada la ganancia de la señal de derrape (`0.16`) y modulación FM (`0.035`) para un chirrido de neumáticos claro in-game.
+
+### Fixed
+- **Bucle de Juego en Menús**: Corregida la condición en `gameLoop` para detener el procesamiento de físicas (`updateAll`) y de actualización de audio (`updateAudio`) durante estados de menú (como Ajustes o Personalización), eliminando sonidos de motor colgados de la partida anterior al abrir Ajustes.
+
 ## [1.7.0] - 2026-05-18 - *Gamepad Navigation, 3D Card Flip & Physics Polish*
 ### Added
 - **Soporte de Card Flip 3D para Modos**:

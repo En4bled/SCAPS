@@ -1,5 +1,5 @@
 {
-    "bgUrl": "recursos/stadiums/volcano_bg.png",
+    "bgUrl": "recursos\/stadiums\/volcano_bg.png",
     "bgScale": 1.638,
     "bgOX": 0,
     "bgOY": 0,
@@ -174,7 +174,7 @@
         {
             "x": -201,
             "y": 1983,
-            "intensity": 0.30680540141725804,
+            "intensity": 0.8,
             "radius": 1500,
             "color": "#fb923c",
             "baseIntensity": 0.8,

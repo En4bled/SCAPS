@@ -373,7 +373,7 @@ export class Car {
                 }
                 this.isJumping = true;
                 this.canDoubleJump = true;
-                playSound('jump');
+                if (this.controls && this.controls.isPlayer) playSound('jump');
             } else if (this.z > 0 && this.canDoubleJump && !this.isFlipping && this.flipCooldownTimer <= 0) { // Voltereta (Flip)
                 this.isFlipping = true;
                 this.flipTimer = CONST.CONFIG.CAR_FLIP_DURATION;
@@ -416,7 +416,7 @@ export class Car {
                 // Impulso vertical snappy inicial (cancela caída, da sustentación rápida)
                 this.vz = 1.0;
                 
-                playSound('flip');
+                if (this.controls && this.controls.isPlayer) playSound('flip');
             }
         }
 

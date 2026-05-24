@@ -361,23 +361,44 @@ export function playSound(type, intensity = 1.0) {
     }
 
     if (type === 'jump') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(420, now + 0.12);
-        gainNode.gain.setValueAtTime(0.18 * sfxVolume, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(130, now);
+        osc.frequency.exponentialRampToValueAtTime(360, now + 0.15);
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, now);
+        filter.frequency.exponentialRampToValueAtTime(2200, now + 0.15);
+        
+        osc.disconnect(gainNode);
+        osc.connect(filter);
+        filter.connect(gainNode);
+        
+        gainNode.gain.setValueAtTime(0.36 * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
         osc.start(now);
-        osc.stop(now + 0.12);
+        osc.stop(now + 0.15);
         return;
     }
     if (type === 'flip') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(60, now + 0.22);
-        gainNode.gain.setValueAtTime(0.24 * sfxVolume, now);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(55, now + 0.25);
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(6.0, now);
+        filter.frequency.setValueAtTime(950, now);
+        filter.frequency.exponentialRampToValueAtTime(120, now + 0.25);
+        
+        osc.disconnect(gainNode);
+        osc.connect(filter);
+        filter.connect(gainNode);
+        
+        gainNode.gain.setValueAtTime(0.44 * sfxVolume, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
         osc.start(now);
-        osc.stop(now + 0.22);
+        osc.stop(now + 0.25);
         return;
     }
     if (type === 'boost_pickup') {
@@ -468,6 +489,154 @@ export function setBoostSound(active) {
         }, 150);
     }
 }
+
+// Sonido Continuo de Derrape (Drift)
+let driftNoise = null;
+let driftGain = null;
+
+export function setDriftSound(active) {
+    if (!isInitialized || audioCtx.state !== 'running') return;
+    
+    if (active && !driftNoise) {
+        const bufferSize = audioCtx.sampleRate * 2;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+        
+        driftNoise = audioCtx.createBufferSource();
+        driftNoise.buffer = buffer;
+        driftNoise.loop = true;
+        
+        // Filtro de paso banda para chirrido
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 850;
+        filter.Q.value = 4.0;
+        
+        driftGain = audioCtx.createGain();
+        driftGain.gain.value = 0.16 * sfxVolume;
+        
+        driftNoise.connect(filter);
+        filter.connect(driftGain);
+        driftGain.connect(masterGain);
+        driftNoise.start();
+        
+        // Oscilador para chillido agudo característico de la goma
+        const driftOsc = audioCtx.createOscillator();
+        driftOsc.type = 'triangle';
+        driftOsc.frequency.value = 1400;
+        
+        const oscGain = audioCtx.createGain();
+        oscGain.gain.value = 0.035 * sfxVolume;
+        
+        // Modulación rápida FM para darle textura rugosa
+        const modulator = audioCtx.createOscillator();
+        modulator.frequency.value = 30;
+        const modulatorGain = audioCtx.createGain();
+        modulatorGain.gain.value = 100;
+        
+        modulator.connect(modulatorGain);
+        modulatorGain.connect(driftOsc.frequency);
+        
+        driftOsc.connect(oscGain);
+        oscGain.connect(masterGain);
+        
+        modulator.start();
+        driftOsc.start();
+        
+        driftNoise._osc = driftOsc;
+        driftNoise._modulator = modulator;
+        driftNoise._oscGain = oscGain;
+    } else if (!active && driftNoise) {
+        const currentDriftNoise = driftNoise;
+        const currentDriftGain = driftGain;
+        
+        driftNoise = null;
+        driftGain = null;
+        
+        if (currentDriftGain) {
+            currentDriftGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        }
+        if (currentDriftNoise && currentDriftNoise._oscGain) {
+            currentDriftNoise._oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        }
+        
+        setTimeout(() => {
+            try {
+                if (currentDriftNoise) {
+                    currentDriftNoise.stop();
+                    currentDriftNoise.disconnect();
+                    if (currentDriftNoise._osc) {
+                        currentDriftNoise._osc.stop();
+                        currentDriftNoise._osc.disconnect();
+                    }
+                    if (currentDriftNoise._modulator) {
+                        currentDriftNoise._modulator.stop();
+                        currentDriftNoise._modulator.disconnect();
+                    }
+                }
+            } catch (e) {}
+        }, 150);
+    }
+}
+
+// Fade out suave de la música del menú
+export function stopMusicFadeOut(durationMs = 1000, callback = null) {
+    if (!musicAudio || musicAudio.paused) {
+        if (callback) callback();
+        return;
+    }
+    
+    const startVol = musicAudio.volume;
+    const steps = 20;
+    const stepTime = durationMs / steps;
+    let currentStep = 0;
+    
+    const interval = setInterval(() => {
+        currentStep++;
+        const progress = currentStep / steps;
+        musicAudio.volume = startVol * (1 - progress);
+        
+        if (currentStep >= steps) {
+            clearInterval(interval);
+            musicAudio.pause();
+            musicAudio.volume = musicVolume; // Restaurar volumen original para la próxima pista
+            if (callback) callback();
+        }
+    }, stepTime);
+}
+
+// Reproducir una canción de partido aleatoria (que no sea Gravity Shift - ID 6)
+export function startMatchMusic() {
+    if (!playlistOrder || playlistOrder.length <= 1) {
+        shufflePlaylist();
+    }
+    
+    // Obtener la canción que está sonando en el menú principal
+    const menuSongIdx = currentSongIdx;
+    
+    // Elegimos otra canción aleatoria entre las disponibles (1 a TOTAL_SONGS) excluyendo menuSongIdx
+    const availableSongs = [];
+    for (let i = 1; i <= TOTAL_SONGS; i++) {
+        if (i !== menuSongIdx) {
+            availableSongs.push(i);
+        }
+    }
+    
+    const randomSongIdx = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+    
+    // Encontrar dónde está esa canción en playlistOrder y mover el puntero
+    const idxInPlaylist = playlistOrder.indexOf(randomSongIdx);
+    if (idxInPlaylist !== -1) {
+        playlistPointer = idxInPlaylist;
+    } else {
+        playlistPointer = Math.floor(Math.random() * playlistOrder.length);
+        playlistOrder[playlistPointer] = randomSongIdx;
+    }
+    
+    playPlaylist();
+}
+
 export function getMusicVolume() { return musicVolume; }
 export function isMuted() { return isMusicMuted; }
 
