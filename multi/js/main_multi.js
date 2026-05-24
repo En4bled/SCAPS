@@ -2441,7 +2441,16 @@ function updateAll(dt) {
                     player2.isExploded = p2RemoteState.isExploded;
                     player2.isBoosting = p2RemoteState.isBoosting;
                     player2.isDrifting = p2RemoteState.isDrifting;
+
+                    if (p2RemoteState.name !== undefined) player2.name = p2RemoteState.name;
+                    if (p2RemoteState.imgUrl !== undefined) player2.imgUrl = p2RemoteState.imgUrl;
+                    if (p2RemoteState.hue !== undefined) player2.hue = p2RemoteState.hue;
+                    if (p2RemoteState.saturate !== undefined) player2.saturate = p2RemoteState.saturate;
+                    if (p2RemoteState.boostType !== undefined) player2.boostType = p2RemoteState.boostType;
                 }
+
+                // Actualizar efectos visuales del cliente remoto (derrapes, partículas)
+                updateRemoteCarVisuals(player2, skidMarks, particles, timeScale);
 
                 // 3. Simular balón localmente (El Host es la autoridad del balón)
                 ball.update(gameState, particles, timeScale);
@@ -2471,10 +2480,22 @@ function updateAll(dt) {
                     player1.isExploded = p1RemoteState.isExploded;
                     player1.isBoosting = p1RemoteState.isBoosting;
                     player1.isDrifting = p1RemoteState.isDrifting;
+
+                    if (p1RemoteState.name !== undefined) player1.name = p1RemoteState.name;
+                    if (p1RemoteState.imgUrl !== undefined) player1.imgUrl = p1RemoteState.imgUrl;
+                    if (p1RemoteState.hue !== undefined) player1.hue = p1RemoteState.hue;
+                    if (p1RemoteState.saturate !== undefined) player1.saturate = p1RemoteState.saturate;
+                    if (p1RemoteState.boostType !== undefined) player1.boostType = p1RemoteState.boostType;
                 }
 
-                // 3. Balón remoto
-                if (ballRemoteState) {
+                // Actualizar efectos visuales del host remoto (derrapes, partículas)
+                updateRemoteCarVisuals(player1, skidMarks, particles, timeScale);
+
+                // 3. Simular balón localmente (y predecir/ignorar servidor durante cooldown de contacto local)
+                ball.update(gameState, particles, timeScale);
+                applyGlobalFriction(ball, [player1, player2], timeScale);
+
+                if (ballRemoteState && player2.ballContactCooldown <= 5) {
                     ball.x += (ballRemoteState.x - ball.x) * 0.98;
                     ball.y += (ballRemoteState.y - ball.y) * 0.98;
                     ball.z += (ballRemoteState.z - ball.z) * 0.98;
@@ -5088,7 +5109,12 @@ function sendStateToClient() {
                 boost: player1.boost,
                 isExploded: player1.isExploded,
                 isBoosting: player1.isBoosting,
-                isDrifting: player1.isDrifting
+                isDrifting: player1.isDrifting,
+                name: player1.name,
+                imgUrl: player1.imgUrl,
+                hue: player1.hue,
+                saturate: player1.saturate,
+                boostType: player1.boostType
             },
             gameTime: gameTime,
             score: score
@@ -5113,7 +5139,12 @@ function sendStateToHost() {
                 boost: player2.boost,
                 isExploded: player2.isExploded,
                 isBoosting: player2.isBoosting,
-                isDrifting: player2.isDrifting
+                isDrifting: player2.isDrifting,
+                name: player2.name,
+                imgUrl: player2.imgUrl,
+                hue: player2.hue,
+                saturate: player2.saturate,
+                boostType: player2.boostType
             }
         }));
     }
@@ -5137,8 +5168,26 @@ async function startGameMulti(isWaiting = false) {
     player2 = new Car(0, 0, '#f90', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'KeyE', jump: 'Space', isPlayer: (multiplayerRole === 'client') }, "RIVAL (NARANJA)", 'recursos/cars/car3.png');
     player2.isPlayer = (multiplayerRole === 'client');
 
+    // Aplicar personalización local al coche y al balón
+    if (multiplayerRole === 'host') {
+        player1.name = USER_CONFIG.playerName || "HOST (AZUL)";
+        player1.imgUrl = USER_CONFIG.playerCar;
+        player1.hue = USER_CONFIG.playerCarHue || 0;
+        player1.saturate = USER_CONFIG.playerCarSaturate || 100;
+        player1.boostType = USER_CONFIG.playerBoost || 'classic';
+    } else {
+        player2.name = USER_CONFIG.playerName || "RIVAL (NARANJA)";
+        player2.imgUrl = USER_CONFIG.playerCar;
+        player2.hue = USER_CONFIG.playerCarHue || 0;
+        player2.saturate = USER_CONFIG.playerCarSaturate || 100;
+        player2.boostType = USER_CONFIG.playerBoost || 'classic';
+    }
+
     allCars = [player1, player2];
     ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/balls/ball_1.png');
+    if (ball) {
+        ball.imgUrl = USER_CONFIG.playerBall;
+    }
 
     initAudio((multiplayerRole === 'host' ? player1 : player2), allCars);
 
@@ -5514,3 +5563,43 @@ document.addEventListener('visibilitychange', () => {
         lastTime = performance.now();
     }
 });
+
+function updateRemoteCarVisuals(car, skidMarks, particles, timeScale) {
+    if (!car || car.isExploded) return;
+
+    const currentSpeed = Math.sqrt(car.vx * car.vx + car.vy * car.vy);
+    car.isSupersonic = (currentSpeed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.97);
+
+    if (car.skidMarkTimer === undefined) car.skidMarkTimer = 0;
+    if (car.skidMarkTimer > 0) car.skidMarkTimer -= timeScale;
+
+    if (car.prevAngle === undefined) car.prevAngle = car.angle;
+    const isTurning = Math.abs(car.angle - car.prevAngle) > 0.01;
+    car.prevAngle = car.angle;
+
+    if (car.z === 0) {
+        if (car.isSupersonic) {
+            if (car.skidMarkTimer <= 0) {
+                car.spawnSkidMark(skidMarks, true);
+                car.skidMarkTimer = 3;
+            }
+        } else if (car.isDrifting || (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4)) {
+            if (car.skidMarkTimer <= 0) {
+                car.spawnSkidMark(skidMarks, false);
+                car.skidMarkTimer = 4;
+            }
+        }
+        if ((car.isDrifting || isTurning) && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
+            car.spawnDriftSmoke(particles);
+        }
+        if (car.isBoosting) {
+            car.spawnParticles(5, car.boostType || 'classic', particles);
+        } else if (currentSpeed > 0.5) {
+            car.spawnParticles(2, 'smoke', particles);
+        }
+    } else {
+        if (car.isBoosting) {
+            car.spawnParticles(3, car.boostType || 'classic', particles);
+        }
+    }
+}
