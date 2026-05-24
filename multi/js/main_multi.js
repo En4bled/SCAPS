@@ -11,7 +11,7 @@ import { drawHUD, drawCarNames } from '../../js/ui/hud.js';
 import { showScoreboard, hideScoreboard } from '../../js/ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from '../../js/world/physics.js';
 import { updateCarAI } from '../../js/ai/bot.js';
-import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, setDriftSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from '../../js/fx/audio.js';
+import { audioCtx, initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, setDriftSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from '../../js/fx/audio.js';
 import { initPhysicsEditor, toggleEditor } from '../../js/ui/physics_editor.js';
 import { BOOST_DEFS } from '../../js/fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from '../../js/fx/explosion_definitions.js';
@@ -34,6 +34,8 @@ let p1RemoteState = null;
 let p2RemoteState = null;
 let ballRemoteState = null;
 let gameLoopStarted = false;
+let silentAudioNode = null;
+let bgLastTime = 0;
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
@@ -2105,6 +2107,7 @@ async function init() {
             
             // Si es multijugador, desconectar WebSocket y limpiar variables
             if (isMultiplayer) {
+                stopBackgroundAudioLoop();
                 isMultiplayer = false;
                 if (ws) {
                     ws.close();
@@ -2427,10 +2430,10 @@ function updateAll(dt) {
 
                 // 2. Actualizar P2 (Cliente remoto) desde el estado del WebSocket
                 if (p2RemoteState) {
-                    player2.x += (p2RemoteState.x - player2.x) * 0.85;
-                    player2.y += (p2RemoteState.y - player2.y) * 0.85;
-                    player2.z += (p2RemoteState.z - player2.z) * 0.85;
-                    player2.angle += (p2RemoteState.angle - player2.angle) * 0.85;
+                    player2.x += (p2RemoteState.x - player2.x) * 0.98;
+                    player2.y += (p2RemoteState.y - player2.y) * 0.98;
+                    player2.z += (p2RemoteState.z - player2.z) * 0.98;
+                    player2.angle += (p2RemoteState.angle - player2.angle) * 0.98;
                     player2.vx = p2RemoteState.vx;
                     player2.vy = p2RemoteState.vy;
                     player2.vz = p2RemoteState.vz;
@@ -2457,10 +2460,10 @@ function updateAll(dt) {
 
                 // 2. Actualizar P1 (Host remoto) desde el estado del WebSocket
                 if (p1RemoteState) {
-                    player1.x += (p1RemoteState.x - player1.x) * 0.85;
-                    player1.y += (p1RemoteState.y - player1.y) * 0.85;
-                    player1.z += (p1RemoteState.z - player1.z) * 0.85;
-                    player1.angle += (p1RemoteState.angle - player1.angle) * 0.85;
+                    player1.x += (p1RemoteState.x - player1.x) * 0.98;
+                    player1.y += (p1RemoteState.y - player1.y) * 0.98;
+                    player1.z += (p1RemoteState.z - player1.z) * 0.98;
+                    player1.angle += (p1RemoteState.angle - player1.angle) * 0.98;
                     player1.vx = p1RemoteState.vx;
                     player1.vy = p1RemoteState.vy;
                     player1.vz = p1RemoteState.vz;
@@ -2472,9 +2475,9 @@ function updateAll(dt) {
 
                 // 3. Balón remoto
                 if (ballRemoteState) {
-                    ball.x += (ballRemoteState.x - ball.x) * 0.85;
-                    ball.y += (ballRemoteState.y - ball.y) * 0.85;
-                    ball.z += (ballRemoteState.z - ball.z) * 0.85;
+                    ball.x += (ballRemoteState.x - ball.x) * 0.98;
+                    ball.y += (ballRemoteState.y - ball.y) * 0.98;
+                    ball.z += (ballRemoteState.z - ball.z) * 0.98;
                     ball.vx = ballRemoteState.vx;
                     ball.vy = ballRemoteState.vy;
                     ball.vz = ballRemoteState.vz;
@@ -4990,6 +4993,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         if (roomIndicator) roomIndicator.style.display = 'none';
 
                         if (isMultiplayer) {
+                            stopBackgroundAudioLoop();
                             isMultiplayer = false;
                             gameState = 'menu';
                             if (mainMenuEl) mainMenuEl.style.display = 'flex';
@@ -5137,6 +5141,10 @@ async function startGameMulti(isWaiting = false) {
     ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/balls/ball_1.png');
 
     initAudio((multiplayerRole === 'host' ? player1 : player2), allCars);
+
+    currentZoom = 0.85;
+    targetZoom = 0.85;
+    window.currentFOV = 0.85;
 
     resetAfterGoalMulti();
 
@@ -5433,11 +5441,62 @@ const blob = new Blob([workerCode], { type: 'application/javascript' });
 const workerUrl = URL.createObjectURL(blob);
 backgroundWorker = new Worker(workerUrl);
 
+function startBackgroundAudioLoop() {
+    if (!isMultiplayer) return;
+    try {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        if (!silentAudioNode && audioCtx) {
+            bgLastTime = performance.now();
+            silentAudioNode = audioCtx.createScriptProcessor(512, 1, 1);
+            silentAudioNode.onaudioprocess = function(e) {
+                const outputBuffer = e.outputBuffer;
+                const channelData = outputBuffer.getChannelData(0);
+                if (channelData) {
+                    for (let i = 0; i < channelData.length; i++) {
+                        channelData[i] = 0;
+                    }
+                }
+                
+                if (document.hidden && isMultiplayer) {
+                    const now = performance.now();
+                    const dt = Math.min((now - bgLastTime) / 1000, 0.05);
+                    bgLastTime = now;
+                    
+                    const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
+                    if (inMatch) {
+                        updateAll(dt);
+                    }
+                }
+            };
+            silentAudioNode.connect(audioCtx.destination);
+            console.log("SCAPS: Loop de audio silencioso en segundo plano iniciado.");
+        }
+    } catch (err) {
+        console.warn("SCAPS: No se pudo iniciar el loop de audio silencioso:", err);
+    }
+}
+
+function stopBackgroundAudioLoop() {
+    try {
+        if (silentAudioNode) {
+            silentAudioNode.disconnect();
+            silentAudioNode = null;
+            console.log("SCAPS: Loop de audio silencioso en segundo plano detenido.");
+        }
+    } catch (err) {
+        console.warn("SCAPS: No se pudo detener el loop de audio silencioso:", err);
+    }
+}
+
 backgroundWorker.onmessage = function(e) {
     if (e.data === 'tick') {
         if (document.hidden && isMultiplayer) {
-            // Delta time de 60fps (0.016s)
-            updateAll(0.016);
+            // Solo usar el worker si el loop de audio silencioso no está funcionando/activo
+            if (!silentAudioNode) {
+                updateAll(0.016);
+            }
         }
     }
 };
@@ -5445,8 +5504,11 @@ backgroundWorker.onmessage = function(e) {
 document.addEventListener('visibilitychange', () => {
     if (!isMultiplayer) return;
     if (document.hidden) {
+        bgLastTime = performance.now();
+        startBackgroundAudioLoop();
         backgroundWorker.postMessage('start');
     } else {
+        stopBackgroundAudioLoop();
         backgroundWorker.postMessage('stop');
         // Resincronizar tiempo de juego al recuperar el foco
         lastTime = performance.now();
