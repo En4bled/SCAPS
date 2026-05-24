@@ -145,6 +145,9 @@ export function getAssetPath(relativePath) {
     // Calcular la ruta base dinámica a partir del pathname actual
     const pathSegments = window.location.pathname.split('/');
     pathSegments.pop(); // Elimina index.html u otro archivo de la URL
+    if (pathSegments[pathSegments.length - 1] === 'multi') {
+        pathSegments.pop();
+    }
     const basePath = pathSegments.join('/') + '/';
 
     return window.location.origin + basePath + cleanPath;

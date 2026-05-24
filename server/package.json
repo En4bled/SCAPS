@@ -1,0 +1,13 @@
+{
+  "name": "scaps-multiplayer-server",
+  "version": "1.0.0",
+  "description": "Servidor de relay de WebSockets para el prototipo multijugador de SCAPS",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
