@@ -2265,19 +2265,20 @@ function gameLoop(timestamp) {
         return;
     }
 
-    if (!isPaused) {
+    const shouldUpdate = !isPaused || isMultiplayer;
+    if (shouldUpdate) {
         const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
         if (inMatch) {
             updateAll(dt);
         }
     }
 
-    renderFrame();
+    renderFrame(dt);
     if (gameState === 'settings') drawSettingsVisualizer();
     requestAnimationFrame(gameLoop);
 }
 
-function renderFrame() {
+function renderFrame(dt) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Si estamos en la intro o en el menú, no dibujamos nada en el canvas.
@@ -2414,7 +2415,7 @@ function updateAll(dt) {
     if (gameState === 'playing' || gameState === 'countdown' || gameState === 'goalScored') {
         const physicsOverlay = document.getElementById('physics-editor-overlay');
         const isPhysicsOpen = physicsOverlay && !physicsOverlay.classList.contains('hidden') && physicsOverlay.style.display !== 'none';
-        const blockControls = isPhysicsOpen && !window.physicsIsFolded;
+        const blockControls = (isPhysicsOpen && !window.physicsIsFolded) || (isMultiplayer && isPaused);
         const activeKeys = blockControls ? {} : keysPressed;
 
         if (isMultiplayer) {
@@ -2426,10 +2427,10 @@ function updateAll(dt) {
 
                 // 2. Actualizar P2 (Cliente remoto) desde el estado del WebSocket
                 if (p2RemoteState) {
-                    player2.x += (p2RemoteState.x - player2.x) * 0.45;
-                    player2.y += (p2RemoteState.y - player2.y) * 0.45;
-                    player2.z += (p2RemoteState.z - player2.z) * 0.45;
-                    player2.angle += (p2RemoteState.angle - player2.angle) * 0.45;
+                    player2.x += (p2RemoteState.x - player2.x) * 0.85;
+                    player2.y += (p2RemoteState.y - player2.y) * 0.85;
+                    player2.z += (p2RemoteState.z - player2.z) * 0.85;
+                    player2.angle += (p2RemoteState.angle - player2.angle) * 0.85;
                     player2.vx = p2RemoteState.vx;
                     player2.vy = p2RemoteState.vy;
                     player2.vz = p2RemoteState.vz;
@@ -2456,10 +2457,10 @@ function updateAll(dt) {
 
                 // 2. Actualizar P1 (Host remoto) desde el estado del WebSocket
                 if (p1RemoteState) {
-                    player1.x += (p1RemoteState.x - player1.x) * 0.45;
-                    player1.y += (p1RemoteState.y - player1.y) * 0.45;
-                    player1.z += (p1RemoteState.z - player1.z) * 0.45;
-                    player1.angle += (p1RemoteState.angle - player1.angle) * 0.45;
+                    player1.x += (p1RemoteState.x - player1.x) * 0.85;
+                    player1.y += (p1RemoteState.y - player1.y) * 0.85;
+                    player1.z += (p1RemoteState.z - player1.z) * 0.85;
+                    player1.angle += (p1RemoteState.angle - player1.angle) * 0.85;
                     player1.vx = p1RemoteState.vx;
                     player1.vy = p1RemoteState.vy;
                     player1.vz = p1RemoteState.vz;
@@ -2471,9 +2472,9 @@ function updateAll(dt) {
 
                 // 3. Balón remoto
                 if (ballRemoteState) {
-                    ball.x += (ballRemoteState.x - ball.x) * 0.45;
-                    ball.y += (ballRemoteState.y - ball.y) * 0.45;
-                    ball.z += (ballRemoteState.z - ball.z) * 0.45;
+                    ball.x += (ballRemoteState.x - ball.x) * 0.85;
+                    ball.y += (ballRemoteState.y - ball.y) * 0.85;
+                    ball.z += (ballRemoteState.z - ball.z) * 0.85;
                     ball.vx = ballRemoteState.vx;
                     ball.vy = ballRemoteState.vy;
                     ball.vz = ballRemoteState.vz;
@@ -4479,7 +4480,7 @@ function applyMapConfig(c) {
 
 
 // EVENTOS DE AUDIO Y REPRODUCTOR MP3
-document.addEventListener('DOMContentLoaded', () => {
+function setupAudioAndMP3Events() {
     const sliderVol = document.getElementById('slider-settings-vol');
     const btnMute = document.getElementById('btn-settings-mute');
     const btnPrev = document.getElementById('btn-prev-song');
@@ -4534,7 +4535,12 @@ document.addEventListener('DOMContentLoaded', () => {
             playSound('menu_click');
         });
     }
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAudioAndMP3Events);
+} else {
+    setupAudioAndMP3Events();
+}
 
 // Inicializar el gestor de boost cuando sea necesario
 // (Esto se llamará dentro de init() o al abrir el panel)
@@ -5267,6 +5273,9 @@ function showReadyConfirmOverlay(sendNotify = false) {
         overlay.style.display = 'flex';
         overlay.classList.remove('hidden');
     }
+    if (countdownEl) {
+        countdownEl.style.display = 'none';
+    }
     
     const btnReady = document.getElementById('btn-ready-confirm');
     if (btnReady) {
@@ -5348,7 +5357,7 @@ function startMatchClient() {
 }
 
 // Configurar evento de botón de confirmación de listo
-document.addEventListener('DOMContentLoaded', () => {
+function setupReadyConfirmButton() {
     const btnReady = document.getElementById('btn-ready-confirm');
     if (btnReady) {
         btnReady.onclick = () => {
@@ -5381,7 +5390,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupReadyConfirmButton);
+} else {
+    setupReadyConfirmButton();
+}
 
 // Capturar tecla ENTER para listo
 window.addEventListener('keydown', (e) => {
