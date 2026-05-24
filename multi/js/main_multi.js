@@ -1137,7 +1137,7 @@ async function init() {
     console.log("SCAPS: Inicializando motor...");
     // Cargar mapa PRINCIPAL por defecto al inicio
     try {
-        const defaultMapResp = await fetch('maps/URBAN.json?t=' + Date.now());
+        const defaultMapResp = await fetch(getAssetPath('maps/URBAN.json') + '?t=' + Date.now());
         if (defaultMapResp.ok) {
             const defaultMapData = await defaultMapResp.json();
             applyMapConfig(defaultMapData);
@@ -4321,7 +4321,7 @@ async function finalizeStartGame() {
 
     try {
         // 1. Cargar el JSON del mapa seleccionado
-        const resp = await fetch(`maps/${selectedMap}.json?t=${Date.now()}`);
+        const resp = await fetch(getAssetPath(`maps/${selectedMap}.json`) + `?t=${Date.now()}`);
         if (resp.ok) {
             const mapData = await resp.json();
             applyMapConfig(mapData);
@@ -4993,17 +4993,14 @@ async function startGameMulti() {
     isMultiplayer = true;
     isTrainingMode = false;
     
-    // Ocultar pantalla de menú principal y lobby
     if (mainMenuEl) mainMenuEl.style.display = 'none';
     const menuOnlineLobby = getEl('menu-online-lobby');
     if (menuOnlineLobby) menuOnlineLobby.style.display = 'none';
     if (setupOverlay) setupOverlay.style.display = 'none';
 
-    // Desactivar editores si estuviesen abiertos
     const editorEl = getEl('physics-editor-overlay');
     if (editorEl) editorEl.classList.add('hidden');
 
-    // Inicializar los dos jugadores principales (sin bots)
     player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'KeyE', jump: 'Space', isPlayer: (multiplayerRole === 'host') }, "HOST (AZUL)", 'recursos/cars/car1.png');
     player1.isPlayer = (multiplayerRole === 'host');
 
@@ -5017,7 +5014,6 @@ async function startGameMulti() {
 
     resetAfterGoalMulti();
 
-    // Asegurarse de que el loop principal se ejecute
     isPaused = false;
     if (!gameLoopStarted) {
         lastTime = performance.now();

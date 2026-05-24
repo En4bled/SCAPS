@@ -1125,7 +1125,7 @@ async function init() {
     console.log("SCAPS: Inicializando motor...");
     // Cargar mapa PRINCIPAL por defecto al inicio
     try {
-        const defaultMapResp = await fetch('maps/URBAN.json?t=' + Date.now());
+        const defaultMapResp = await fetch(getAssetPath('maps/URBAN.json') + '?t=' + Date.now());
         if (defaultMapResp.ok) {
             const defaultMapData = await defaultMapResp.json();
             applyMapConfig(defaultMapData);
@@ -4150,7 +4150,7 @@ async function finalizeStartGame() {
 
     try {
         // 1. Cargar el JSON del mapa seleccionado
-        const resp = await fetch(`maps/${selectedMap}.json?t=${Date.now()}`);
+        const resp = await fetch(getAssetPath(`maps/${selectedMap}.json`) + `?t=${Date.now()}`);
         if (resp.ok) {
             const mapData = await resp.json();
             applyMapConfig(mapData);

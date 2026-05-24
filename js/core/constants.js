@@ -134,12 +134,13 @@ export function getAssetPath(relativePath) {
         return relativePath;
     }
 
-    // Normalizar la ruta a minúsculas
-    let cleanPath = relativePath.toLowerCase();
-
-    // Eliminar barra inicial si la tiene
+    // Normalizar la ruta a minúsculas, excepto para mapas que son case-sensitive en mayúsculas
+    let cleanPath = relativePath;
     if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.substring(1);
+    }
+    if (!cleanPath.toLowerCase().startsWith('maps/')) {
+        cleanPath = cleanPath.toLowerCase();
     }
 
     // Calcular la ruta base dinámica a partir del pathname actual
