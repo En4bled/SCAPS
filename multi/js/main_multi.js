@@ -1203,13 +1203,25 @@ async function init() {
         const btnOnlineBack = getEl('btn-online-back');
         const onlineRoomControls = getEl('online-room-controls');
 
+        console.log("SCAPS LOBBY: Inicializando vinculación multijugador...", { btnOnline, menuOnlineLobby });
         if (btnOnline) {
             btnOnline.onmouseover = () => playSound('menu_hover');
             btnOnline.onclick = () => {
+                console.log("SCAPS LOBBY: Click en Jugar Online!");
                 playSound('menu_click');
-                menuOnlineLobby.style.display = 'flex';
-                menuInitial.style.display = 'none';
+                if (menuOnlineLobby) {
+                    menuOnlineLobby.style.setProperty('display', 'flex', 'important');
+                    console.log("SCAPS LOBBY: menuOnlineLobby mostrado");
+                } else {
+                    console.error("SCAPS LOBBY: menuOnlineLobby es nulo!");
+                }
+                if (menuInitial) {
+                    menuInitial.style.setProperty('display', 'none', 'important');
+                    console.log("SCAPS LOBBY: menuInitial ocultado");
+                }
             };
+        } else {
+            console.error("SCAPS LOBBY: btnOnline no encontrado en el DOM!");
         }
 
         if (btnOnlineBack) {
