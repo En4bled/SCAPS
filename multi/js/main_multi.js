@@ -4885,9 +4885,13 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             if (window.pingInterval) clearInterval(window.pingInterval);
         };
 
-        ws.onmessage = (event) => {
+        ws.onmessage = async (event) => {
             try {
-                const data = JSON.parse(event.data);
+                let rawData = event.data;
+                if (event.data instanceof Blob) {
+                    rawData = await event.data.text();
+                }
+                const data = JSON.parse(rawData);
 
                 switch (data.type) {
                     case 'created':

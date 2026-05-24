@@ -23,7 +23,8 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         try {
-            const data = JSON.parse(message);
+            const messageString = typeof message === 'string' ? message : message.toString('utf8');
+            const data = JSON.parse(messageString);
 
             switch (data.type) {
                 case 'create': {
@@ -101,11 +102,11 @@ wss.on('connection', (ws) => {
                     // Reenviar el estado al otro jugador de la sala
                     if (currentRole === 'host') {
                         if (room.client && room.client.readyState === 1) { // 1 = OPEN
-                            room.client.send(message);
+                            room.client.send(messageString);
                         }
                     } else if (currentRole === 'client') {
                         if (room.host && room.host.readyState === 1) {
-                            room.host.send(message);
+                            room.host.send(messageString);
                         }
                     }
                     break;
@@ -121,7 +122,7 @@ wss.on('connection', (ws) => {
                     // Reenviar mensaje al rival
                     const target = (currentRole === 'host') ? room.client : room.host;
                     if (target && target.readyState === 1) {
-                        target.send(message);
+                        target.send(messageString);
                     }
                     break;
                 }
