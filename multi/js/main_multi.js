@@ -1224,6 +1224,14 @@ async function init() {
                     menuInitial.style.setProperty('display', 'none', 'important');
                     console.log("SCAPS LOBBY: menuInitial ocultado");
                 }
+                
+                // Conexión automática al servidor por defecto al abrir el lobby (evitamos reconectar si ya está activo)
+                if (inputServerUrl && onlineStatus && onlineRoomControls) {
+                    if (!ws || (ws.readyState !== WebSocket.OPEN && ws.readyState !== WebSocket.CONNECTING)) {
+                        console.log("SCAPS LOBBY: Conectando automáticamente al servidor...", inputServerUrl.value);
+                        connectToServer(inputServerUrl.value, onlineStatus, onlineRoomControls);
+                    }
+                }
             };
         } else {
             console.error("SCAPS LOBBY: btnOnline no encontrado en el DOM!");
