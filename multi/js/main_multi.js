@@ -2099,6 +2099,24 @@ async function init() {
             isPaused = false;
             const pm = getEl('pause-menu');
             if (pm) pm.style.display = 'none';
+            
+            // Si es multijugador, desconectar WebSocket y limpiar variables
+            if (isMultiplayer) {
+                isMultiplayer = false;
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+                const roomIndicator = document.getElementById('online-room-indicator');
+                if (roomIndicator) roomIndicator.style.display = 'none';
+                
+                // Habilitar los botones del lobby
+                const btnCreate = document.getElementById('btn-online-create');
+                const btnJoin = document.getElementById('btn-online-join');
+                if (btnCreate) btnCreate.disabled = false;
+                if (btnJoin) btnJoin.disabled = false;
+            }
+
             gameState = 'menu';
             showMenuScreen('initial');
             if (mainMenuEl) {
@@ -2978,6 +2996,18 @@ function togglePause() {
             }
             syncPauseMenuAudioUI();
             updatePauseGamepadStatus();
+
+            // Mostrar el código de sala en el menú de pausa si estamos en multijugador
+            const roomContainer = document.getElementById('pause-online-room-code-container');
+            const roomVal = document.getElementById('pause-online-room-code-value');
+            if (roomContainer && roomVal) {
+                if (isMultiplayer && roomCode) {
+                    roomContainer.style.display = 'block';
+                    roomVal.innerText = roomCode;
+                } else {
+                    roomContainer.style.display = 'none';
+                }
+            }
         }
     }
 }
@@ -4867,6 +4897,11 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         statusEl.style.color = "#5ad";
                         document.getElementById('btn-online-create').disabled = true;
                         document.getElementById('btn-online-join').disabled = true;
+                        
+                        // El creador entra en entrenamiento (modo libre) mientras espera al rival
+                        setTimeout(() => {
+                            startGameMulti(true);
+                        }, 1000);
                         break;
 
                     case 'joined':
@@ -4874,20 +4909,45 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         multiplayerRole = 'client';
                         statusEl.innerText = `UNIDO A SALA ${roomCode}. INICIANDO...`;
                         statusEl.style.color = "#22ffbb";
+                        
+                        // El cliente entra a la partida directamente
+                        setTimeout(() => {
+                            startGameMulti(false);
+                        }, 1000);
                         break;
 
                     case 'player_joined':
                         statusEl.innerText = "¡RIVAL CONECTADO! INICIANDO...";
                         statusEl.style.color = "#22ffbb";
+                        
+                        // Finalizar el entrenamiento
+                        isTrainingMode = false;
+                        
+                        // Mostrar mensaje de aviso
+                        addFeedMessage("¡RIVAL CONECTADO! PREPARANDO PARTIDO...");
+                        
+                        if (countdownEl) {
+                            countdownEl.style.display = 'block';
+                            countdownEl.innerText = "¡RIVAL CONECTADO!";
+                        }
+                        
+                        // El host inicia el partido tras un aviso de 2 segundos y lo comunica al cliente
                         setTimeout(() => {
-                            startGameMulti();
-                        }, 1000);
+                            resetAfterGoalMulti();
+                            if (ws && ws.readyState === 1) {
+                                ws.send(JSON.stringify({ type: 'reset' }));
+                            }
+                        }, 2000);
                         break;
 
                     case 'opponent_disconnected':
                         alert(data.message);
                         statusEl.innerText = "El rival se desconectó.";
                         statusEl.style.color = "#ff3366";
+                        
+                        const roomIndicator = document.getElementById('online-room-indicator');
+                        if (roomIndicator) roomIndicator.style.display = 'none';
+
                         if (isMultiplayer) {
                             isMultiplayer = false;
                             gameState = 'menu';
@@ -5014,9 +5074,9 @@ function sendStateToHost() {
     }
 }
 
-async function startGameMulti() {
+async function startGameMulti(isWaiting = false) {
     isMultiplayer = true;
-    isTrainingMode = false;
+    isTrainingMode = isWaiting;
     
     if (mainMenuEl) mainMenuEl.style.display = 'none';
     const menuOnlineLobby = getEl('menu-online-lobby');
@@ -5038,6 +5098,33 @@ async function startGameMulti() {
     initAudio((multiplayerRole === 'host' ? player1 : player2), allCars);
 
     resetAfterGoalMulti();
+
+    if (isWaiting) {
+        // El host esperando rival inicia directamente jugando sin cuenta atrás
+        gameState = 'playing';
+        if (countdownEl) countdownEl.style.display = 'none';
+    } else {
+        if (multiplayerRole === 'client') {
+            // El cliente entra a esperar el reset del host
+            gameState = 'playing';
+            if (countdownEl) {
+                countdownEl.style.display = 'block';
+                countdownEl.innerText = "¡CONECTADO! ESPERANDO HOST...";
+            }
+        }
+    }
+
+    // Mostrar/ocultar el indicador flotante de código de sala
+    const roomIndicator = getEl('online-room-indicator');
+    const roomIndicatorCode = getEl('online-room-indicator-code');
+    if (roomIndicator && roomIndicatorCode) {
+        if (isMultiplayer && roomCode) {
+            roomIndicator.style.display = 'block';
+            roomIndicatorCode.innerText = roomCode;
+        } else {
+            roomIndicator.style.display = 'none';
+        }
+    }
 
     isPaused = false;
     if (!gameLoopStarted) {
