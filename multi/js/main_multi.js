@@ -2459,7 +2459,12 @@ function updateAll(dt) {
                     player2.x += (p2RemoteState.x - player2.x) * 0.98;
                     player2.y += (p2RemoteState.y - player2.y) * 0.98;
                     player2.z += (p2RemoteState.z - player2.z) * 0.98;
-                    player2.angle += (p2RemoteState.angle - player2.angle) * 0.98;
+                    
+                    let angleDiff = p2RemoteState.angle - player2.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    player2.angle += angleDiff * 0.98;
+
                     player2.vx = p2RemoteState.vx;
                     player2.vy = p2RemoteState.vy;
                     player2.vz = p2RemoteState.vz;
@@ -2498,7 +2503,12 @@ function updateAll(dt) {
                     player1.x += (p1RemoteState.x - player1.x) * 0.98;
                     player1.y += (p1RemoteState.y - player1.y) * 0.98;
                     player1.z += (p1RemoteState.z - player1.z) * 0.98;
-                    player1.angle += (p1RemoteState.angle - player1.angle) * 0.98;
+                    
+                    let angleDiff = p1RemoteState.angle - player1.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    player1.angle += angleDiff * 0.98;
+
                     player1.vx = p1RemoteState.vx;
                     player1.vy = p1RemoteState.vy;
                     player1.vz = p1RemoteState.vz;
@@ -2514,7 +2524,7 @@ function updateAll(dt) {
                     if (p1RemoteState.boostType !== undefined) player1.boostType = p1RemoteState.boostType;
                 }
 
-                // Reconciliar estado de P2 con el veredicto del Host (para explosiones/colisiones autoritativas)
+                // Reconciliar estado de P2 con el veredicto del Host (para explosiones y respawn)
                 if (p2RemoteStateAuthoritative) {
                     if (p2RemoteStateAuthoritative.isExploded && !player2.isExploded) {
                         player2.isExploded = true;
@@ -2526,20 +2536,14 @@ function updateAll(dt) {
                     if (!p2RemoteStateAuthoritative.isExploded && player2.isExploded) {
                         player2.isExploded = false;
                         player2.respawnTimer = 0;
-                    }
-
-                    const velDiff = Math.sqrt(
-                        Math.pow(p2RemoteStateAuthoritative.vx - player2.vx, 2) +
-                        Math.pow(p2RemoteStateAuthoritative.vy - player2.vy, 2) +
-                        Math.pow(p2RemoteStateAuthoritative.vz - player2.vz, 2)
-                    );
-                    if (velDiff > 0.5) {
+                        // Sincronizar posición de respawn calculada por el Host
                         player2.x = p2RemoteStateAuthoritative.x;
                         player2.y = p2RemoteStateAuthoritative.y;
-                        player2.z = p2RemoteStateAuthoritative.z;
-                        player2.vx = p2RemoteStateAuthoritative.vx;
-                        player2.vy = p2RemoteStateAuthoritative.vy;
-                        player2.vz = p2RemoteStateAuthoritative.vz;
+                        player2.z = p2RemoteStateAuthoritative.z || 0;
+                        player2.vx = 0;
+                        player2.vy = 0;
+                        player2.vz = 0;
+                        player2.speed = 0;
                     }
                 }
 
