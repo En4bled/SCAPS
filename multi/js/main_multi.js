@@ -4385,7 +4385,7 @@ function showInGameNotification(text, color = "#5ad", icon = "🔒") {
 let menuFadeActive = true;
 async function finalizeStartGame() {
     // IMPORTANTE: Resumir audio context por gesto de usuario
-    const { audioCtx, stopMusicFadeOut, startMatchMusic } = await import('./fx/audio.js');
+    const { audioCtx, stopMusicFadeOut, startMatchMusic } = await import('../../js/fx/audio.js');
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
