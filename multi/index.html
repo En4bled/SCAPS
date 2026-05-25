@@ -89,33 +89,36 @@
                 <div style="font-size: 0.9em; color: #aaa; margin-bottom: 15px;">PROTOTIPO DE PRUEBA</div>
                 
                 <div style="background: rgba(10,15,30,0.85); border: 2px solid #5ad; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; text-align: center; box-shadow: 0 0 30px rgba(90,173,237,0.3); box-sizing: border-box;">
-                    <!-- Servidor -->
-                    <div style="margin-bottom: 20px; text-align: left;">
+                    <!-- Servidor (Oculto por defecto) -->
+                    <div id="online-server-config" style="display: none; border-bottom: 1px solid rgba(90,173,237,0.2); margin-bottom: 20px; padding-bottom: 20px; text-align: left;">
                         <label style="font-size: 12px; color: #5ad; display: block; margin-bottom: 8px; font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;">SERVIDOR WEBSOCKET:</label>
                         <input type="text" id="online-server-url" value="wss://scaps-server.onrender.com" style="width: 100%; padding: 12px; background: #070b12; border: 1px solid #5ad; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 16px; border-radius: 6px; box-sizing: border-box; text-shadow: 0 0 5px rgba(90,173,237,0.5);">
                         <span style="font-size: 10px; color: #666; display: block; margin-top: 5px;">Usa wss:// para servidores seguros en producción o ws://localhost:3000 para local.</span>
+                        <button id="btn-online-connect" class="menu-btn primary" style="width: 100%; margin-top: 15px; height: 3em;">CONECTAR AL SERVIDOR</button>
                     </div>
                     
-                    <!-- Botón Conectar -->
-                    <button id="btn-online-connect" class="menu-btn primary" style="width: 100%; margin-bottom: 20px; height: 3em;">CONECTAR AL SERVIDOR</button>
-                    
-                    <!-- Controles de Sala (Ocultos hasta conectar) -->
-                    <div id="online-room-controls" style="display: none; border-top: 1px solid rgba(90,173,237,0.2); padding-top: 20px;">
+                    <!-- Controles de Sala (Visibles por defecto) -->
+                    <div id="online-room-controls" style="display: block;">
                         <!-- Crear Sala -->
-                        <button id="btn-online-create" class="menu-btn" style="width: 100%; border-color: #22ffbb; color: #22ffbb; margin-bottom: 15px; height: 3em;">CREAR NUEVA SALA</button>
+                        <button id="btn-online-create" class="menu-btn" style="width: 100%; border-color: #22ffbb; color: #22ffbb; margin-bottom: 15px; height: 3em;" disabled>CREAR NUEVA SALA</button>
                         
                         <div style="color: #5ad; margin: 10px 0; font-size: 12px; font-weight: bold; font-family: 'Share Tech Mono', monospace;">- O ENTRAR A SALA EXISTENTE -</div>
                         
                         <!-- Unirse a Sala -->
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <input type="text" id="online-room-code" placeholder="CÓDIGO (4 DÍGITOS)" maxlength="4" style="flex: 1.2; padding: 12px; background: #070b12; border: 1px solid #5ad; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px; text-align: center; border-radius: 6px; box-sizing: border-box; letter-spacing: 2px;">
-                            <button id="btn-online-join" class="menu-btn" style="flex: 0.8; padding: 0; font-size: 14px; height: 3.3em; margin: 0;">UNIRSE</button>
+                            <input type="text" id="online-room-code" placeholder="CÓDIGO (4 DÍGITOS)" maxlength="4" style="flex: 1.2; padding: 12px; background: #070b12; border: 1px solid #5ad; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 18px; text-align: center; border-radius: 6px; box-sizing: border-box; letter-spacing: 2px;" disabled>
+                            <button id="btn-online-join" class="menu-btn" style="flex: 0.8; padding: 0; font-size: 14px; height: 3.3em; margin: 0;" disabled>UNIRSE</button>
                         </div>
                     </div>
                     
                     <!-- Estado de la Conexión / Info de Sala -->
-                    <div id="online-status" style="margin-top: 15px; font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #ff3366; min-height: 24px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px dashed rgba(255,51,102,0.2);">
-                        Estado: Desconectado
+                    <div id="online-status" style="margin-top: 15px; font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #5ad; min-height: 24px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px dashed rgba(90,173,237,0.2);">
+                        Estado: Conectando al servidor...
+                    </div>
+                    
+                    <!-- Ajustes de Servidor -->
+                    <div style="margin-top: 15px; text-align: right;">
+                        <a href="#" id="link-toggle-server" style="color: #5ad; font-size: 11px; text-decoration: none; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.5px;">[AJUSTES DE SERVIDOR]</a>
                     </div>
                 </div>
                 

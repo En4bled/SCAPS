@@ -1274,6 +1274,23 @@ async function init() {
                 sendJoinRoom(inputRoomCode.value, onlineStatus);
             };
         }
+
+        const linkToggleServer = getEl('link-toggle-server');
+        const onlineServerConfig = getEl('online-server-config');
+        if (linkToggleServer && onlineServerConfig) {
+            linkToggleServer.onmouseover = () => playSound('menu_hover');
+            linkToggleServer.onclick = (e) => {
+                e.preventDefault();
+                playSound('menu_click');
+                if (onlineServerConfig.style.display === 'none') {
+                    onlineServerConfig.style.setProperty('display', 'block', 'important');
+                    linkToggleServer.innerText = '[OCULTAR AJUSTES]';
+                } else {
+                    onlineServerConfig.style.setProperty('display', 'none', 'important');
+                    linkToggleServer.innerText = '[AJUSTES DE SERVIDOR]';
+                }
+            };
+        }
         
 
         // Iniciar Editor de Físicas
@@ -4903,6 +4920,14 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             statusEl.innerText = "CONECTADO. CREA O ÚNETE A UNA SALA.";
             statusEl.style.color = "#22ffbb";
             controlsEl.style.display = "block";
+
+            // Habilitar controles de sala
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = false;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = false;
+            if (inputRoomCode) inputRoomCode.disabled = false;
             
             if (window.pingInterval) clearInterval(window.pingInterval);
             window.pingInterval = setInterval(() => {
@@ -4916,12 +4941,28 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             statusEl.innerText = "ERROR DE CONEXIÓN. REVISA EL SERVIDOR.";
             statusEl.style.color = "#ff3366";
             console.error("WS error:", err);
+
+            // Deshabilitar controles de sala
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = true;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = true;
+            if (inputRoomCode) inputRoomCode.disabled = true;
         };
 
         ws.onclose = () => {
             statusEl.innerText = "DESCONECTADO.";
             statusEl.style.color = "#ff3366";
-            controlsEl.style.display = "none";
+            
+            // Deshabilitar controles de sala en lugar de ocultar la sección completa
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = true;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = true;
+            if (inputRoomCode) inputRoomCode.disabled = true;
+
             if (window.pingInterval) clearInterval(window.pingInterval);
         };
 
