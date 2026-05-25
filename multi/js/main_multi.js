@@ -32,6 +32,7 @@ let roomCode = null;
 let isMultiplayer = false;
 let p1RemoteState = null;
 let p2RemoteState = null;
+let p2RemoteStateAuthoritative = null;
 let ballRemoteState = null;
 let gameLoopStarted = false;
 let silentAudioNode = null;
@@ -567,6 +568,7 @@ let isPaused = false;
 let countdownTimer = 3;
 let gameTime = 60;
 let lastTime = 0;
+let physicsAccumulator = 0;
 let fps = 60;
 window.SCAPS_LOD_LEVEL = 1.0;
 let keysPressed = {};
@@ -2289,7 +2291,14 @@ function gameLoop(timestamp) {
     if (shouldUpdate) {
         const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
         if (inMatch) {
-            updateAll(dt);
+            physicsAccumulator += dt;
+            const fixedTimeStep = 1 / 60;
+            let updatesCount = 0;
+            while (physicsAccumulator >= fixedTimeStep && updatesCount < 8) {
+                updateAll(fixedTimeStep);
+                physicsAccumulator -= fixedTimeStep;
+                updatesCount++;
+            }
         }
     }
 
@@ -2503,6 +2512,35 @@ function updateAll(dt) {
                     if (p1RemoteState.hue !== undefined) player1.hue = p1RemoteState.hue;
                     if (p1RemoteState.saturate !== undefined) player1.saturate = p1RemoteState.saturate;
                     if (p1RemoteState.boostType !== undefined) player1.boostType = p1RemoteState.boostType;
+                }
+
+                // Reconciliar estado de P2 con el veredicto del Host (para explosiones/colisiones autoritativas)
+                if (p2RemoteStateAuthoritative) {
+                    if (p2RemoteStateAuthoritative.isExploded && !player2.isExploded) {
+                        player2.isExploded = true;
+                        player2.respawnTimer = p2RemoteStateAuthoritative.respawnTimer;
+                        for (let i = 0; i < 35; i++) {
+                            explosionParticles.push(new ExplosionParticle(player2.x, player2.y, Math.floor(Math.random() * 80)));
+                        }
+                    }
+                    if (!p2RemoteStateAuthoritative.isExploded && player2.isExploded) {
+                        player2.isExploded = false;
+                        player2.respawnTimer = 0;
+                    }
+
+                    const velDiff = Math.sqrt(
+                        Math.pow(p2RemoteStateAuthoritative.vx - player2.vx, 2) +
+                        Math.pow(p2RemoteStateAuthoritative.vy - player2.vy, 2) +
+                        Math.pow(p2RemoteStateAuthoritative.vz - player2.vz, 2)
+                    );
+                    if (velDiff > 0.5) {
+                        player2.x = p2RemoteStateAuthoritative.x;
+                        player2.y = p2RemoteStateAuthoritative.y;
+                        player2.z = p2RemoteStateAuthoritative.z;
+                        player2.vx = p2RemoteStateAuthoritative.vx;
+                        player2.vy = p2RemoteStateAuthoritative.vy;
+                        player2.vz = p2RemoteStateAuthoritative.vz;
+                    }
                 }
 
                 // Actualizar efectos visuales del host remoto (derrapes, partículas)
@@ -5067,8 +5105,19 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                     case 'state':
                         if (multiplayerRole === 'host') {
                             p2RemoteState = data.p2;
+                            if (data.ballHit && ball) {
+                                ball.x = data.ballHit.x;
+                                ball.y = data.ballHit.y;
+                                ball.z = data.ballHit.z;
+                                ball.vx = data.ballHit.vx;
+                                ball.vy = data.ballHit.vy;
+                                ball.vz = data.ballHit.vz;
+                                ball.isFireball = data.ballHit.isFireball;
+                                if (player2) player2.ballContactCooldown = 15;
+                            }
                         } else {
                             p1RemoteState = data.p1;
+                            p2RemoteStateAuthoritative = data.p2;
                             ballRemoteState = data.ball;
                             if (data.gameTime !== undefined) gameTime = data.gameTime;
                             if (data.score) {
@@ -5157,6 +5206,16 @@ function sendStateToClient() {
                 saturate: player1.saturate,
                 boostType: player1.boostType
             },
+            p2: {
+                x: player2.x,
+                y: player2.y,
+                z: player2.z,
+                vx: player2.vx,
+                vy: player2.vy,
+                vz: player2.vz,
+                isExploded: player2.isExploded,
+                respawnTimer: player2.respawnTimer
+            },
             gameTime: gameTime,
             score: score
         }));
@@ -5165,7 +5224,7 @@ function sendStateToClient() {
 
 function sendStateToHost() {
     if (ws && ws.readyState === 1 && roomCode) {
-        ws.send(JSON.stringify({
+        const payload = {
             type: 'state',
             role: 'client',
             p2: {
@@ -5187,7 +5246,21 @@ function sendStateToHost() {
                 saturate: player2.saturate,
                 boostType: player2.boostType
             }
-        }));
+        };
+
+        if (player2.ballContactCooldown > 10) {
+            payload.ballHit = {
+                x: ball.x,
+                y: ball.y,
+                z: ball.z,
+                vx: ball.vx,
+                vy: ball.vy,
+                vz: ball.vz,
+                isFireball: ball.isFireball
+            };
+        }
+
+        ws.send(JSON.stringify(payload));
     }
 }
 
@@ -5556,7 +5629,14 @@ function startBackgroundAudioLoop() {
                     
                     const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
                     if (inMatch) {
-                        updateAll(dt);
+                        physicsAccumulator += dt;
+                        const fixedTimeStep = 1 / 60;
+                        let updatesCount = 0;
+                        while (physicsAccumulator >= fixedTimeStep && updatesCount < 8) {
+                            updateAll(fixedTimeStep);
+                            physicsAccumulator -= fixedTimeStep;
+                            updatesCount++;
+                        }
                     }
                 }
             };
