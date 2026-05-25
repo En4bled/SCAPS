@@ -2291,14 +2291,7 @@ function gameLoop(timestamp) {
     if (shouldUpdate) {
         const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
         if (inMatch) {
-            physicsAccumulator += dt;
-            const fixedTimeStep = 1 / 60;
-            let updatesCount = 0;
-            while (physicsAccumulator >= fixedTimeStep && updatesCount < 8) {
-                updateAll(fixedTimeStep);
-                physicsAccumulator -= fixedTimeStep;
-                updatesCount++;
-            }
+            updateAll(dt);
         }
     }
 
@@ -2569,7 +2562,7 @@ function updateAll(dt) {
                 checkCarCarCollision(player2, player1, explosionParticles);
 
                 // 5. Mover SOLO a P2 localmente (P1 ya se mueve por interpolación de red)
-                player2.move();
+                player2.move(timeScale);
 
                 // 6. Enviar inputs/posición de P2 al Host
                 sendStateToHost();
@@ -2719,7 +2712,7 @@ function checkCollisions(timeScale = 1.0) {
     }
 
     checkGoalPhysics(ball);
-    allCars.forEach(car => car.move());
+    allCars.forEach(car => car.move(timeScale));
 
     // Solo detectar nuevos goles si estamos en modo juego
     if (gameState === 'playing') {
@@ -5386,7 +5379,7 @@ function checkCollisionsMulti(timeScale = 1.0) {
     checkGoalPhysics(ball);
     
     // Mover SOLO al jugador local P1 (P2 se mueve por red)
-    player1.move();
+    player1.move(timeScale);
 
     if (gameState === 'playing' && multiplayerRole === 'host') {
         const scorer = ball.checkGoal();
@@ -5633,14 +5626,7 @@ function startBackgroundAudioLoop() {
                     
                     const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
                     if (inMatch) {
-                        physicsAccumulator += dt;
-                        const fixedTimeStep = 1 / 60;
-                        let updatesCount = 0;
-                        while (physicsAccumulator >= fixedTimeStep && updatesCount < 8) {
-                            updateAll(fixedTimeStep);
-                            physicsAccumulator -= fixedTimeStep;
-                            updatesCount++;
-                        }
+                        updateAll(dt);
                     }
                 }
             };
