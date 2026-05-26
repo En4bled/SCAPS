@@ -793,3 +793,24 @@ body.input-method-mouse #menu-settings .gamepad-badge,
 body.input-method-mouse #pause-menu .gamepad-badge {
     display: inline-block !important;
 }
+
+/* --- ESTADOS DESHABILITADOS GENERALES PARA BOTONES Y ENTRADAS DE MENÚ --- */
+.menu-btn:disabled, .menu-btn[disabled] {
+    border-color: #444 !important;
+    color: #666 !important;
+    background: rgba(20, 20, 20, 0.6) !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+    pointer-events: none !important; /* Desactivar hover y escalado */
+    transform: none !important;
+}
+
+.custom-input:disabled, .custom-input[disabled] {
+    border-color: #333 !important;
+    color: #555 !important;
+    background: rgba(10, 10, 10, 0.4) !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
