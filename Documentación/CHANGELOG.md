@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.7.2] - 2026-05-26 - *Multijugador Online: UI, Audio y Respawn Polished*
+## [2.0.7] - 2026-05-26 - *Multijugador Online: UI, Audio y Respawn Polished*
 ### Added
 - **Indicador de Conexión en Lobby**: Se ha añadido un punto verde con un parpadeo/pulso suave (`.connection-dot` con animación `@keyframes pulse-green`) a la derecha del botón superior de estado `CONECTADO` para indicar visualmente el estado activo.
 
