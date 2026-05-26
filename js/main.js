@@ -2328,11 +2328,7 @@ function updateAll(dt) {
         // Manejo de Respawn de coches explotados
         allCars.forEach((car, i) => {
             if (car.isExploded && car.respawnTimer <= 0) {
-                // El jugador reaparece en su punto exacto inicial, los bots aleatoriamente en su lado
-                let spIndex = i;
-                if (!car.isPlayer) {
-                    spIndex = (car.color === '#5ad') ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
-                }
+                const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
                 const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
                 car.x = sp.x;
                 car.y = sp.y;

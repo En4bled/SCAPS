@@ -2642,7 +2642,7 @@ function updateAll(dt) {
             if (multiplayerRole === 'host') {
                 [player1, player2].forEach((car, i) => {
                     if (car.isExploded && car.respawnTimer <= 0) {
-                        let spIndex = (i === 0) ? 0 : 2;
+                        const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
                         const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
                         car.x = sp.x;
                         car.y = sp.y;
@@ -2678,10 +2678,7 @@ function updateAll(dt) {
 
             allCars.forEach((car, i) => {
                 if (car.isExploded && car.respawnTimer <= 0) {
-                    let spIndex = i;
-                    if (!car.isPlayer) {
-                        spIndex = (car.color === '#5ad') ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
-                    }
+                    const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
                     const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
                     car.x = sp.x;
                     car.y = sp.y;
@@ -5011,6 +5008,7 @@ function getSpatialNavigationTarget(direction, focusables) {
 function connectToServer(serverUrl, statusEl, controlsEl) {
     statusEl.innerText = "CONECTANDO...";
     statusEl.style.color = "#5ad";
+    statusEl.style.display = "block";
     updateConnectionStatusUI('connecting');
 
     try {
@@ -5021,8 +5019,8 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
         ws = new WebSocket(serverUrl);
 
         ws.onopen = () => {
-            statusEl.innerText = "CONECTADO. CREA O ÚNETE A UNA SALA.";
-            statusEl.style.color = "#22ffbb";
+            statusEl.innerText = "";
+            statusEl.style.display = "none";
             controlsEl.style.display = "block";
 
             // Habilitar controles de sala
@@ -5046,6 +5044,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
         ws.onerror = (err) => {
             statusEl.innerText = "ERROR DE CONEXIÓN. REVISA EL SERVIDOR.";
             statusEl.style.color = "#ff3366";
+            statusEl.style.display = "block";
             console.error("WS error:", err);
 
             // Deshabilitar controles de sala
@@ -5062,6 +5061,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
         ws.onclose = () => {
             statusEl.innerText = "DESCONECTADO.";
             statusEl.style.color = "#ff3366";
+            statusEl.style.display = "block";
             
             // Deshabilitar controles de sala en lugar de ocultar la sección completa
             const btnOnlineCreate = document.getElementById('btn-online-create');
@@ -5090,6 +5090,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         multiplayerRole = 'host';
                         statusEl.innerText = `SALA: ${roomCode} | ESPERANDO RIVAL...`;
                         statusEl.style.color = "#5ad";
+                        statusEl.style.display = "block";
                         document.getElementById('btn-online-create').disabled = true;
                         document.getElementById('btn-online-join').disabled = true;
                         
@@ -5104,6 +5105,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         multiplayerRole = 'client';
                         statusEl.innerText = `UNIDO A SALA ${roomCode}. INICIANDO...`;
                         statusEl.style.color = "#22ffbb";
+                        statusEl.style.display = "block";
                         
                         // El cliente entra a la partida directamente
                         setTimeout(() => {
@@ -5114,6 +5116,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                     case 'player_joined':
                         statusEl.innerText = "¡RIVAL CONECTADO! PREPARANDO...";
                         statusEl.style.color = "#22ffbb";
+                        statusEl.style.display = "block";
                         
                         // Cambiar cartel de entrenamiento a "CALENTAMIENTO"
                         trainingModeText = "CALENTAMIENTO";
@@ -5185,6 +5188,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         alert(data.message);
                         statusEl.innerText = "El rival se desconectó.";
                         statusEl.style.color = "#ff3366";
+                        statusEl.style.display = "block";
                         
                         const roomIndicator = document.getElementById('online-room-indicator');
                         if (roomIndicator) roomIndicator.style.display = 'none';
@@ -5244,6 +5248,7 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
     } catch (e) {
         statusEl.innerText = "ERROR AL INICIAR WEBSOCKET.";
         statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
     }
 }
 
@@ -5253,6 +5258,7 @@ function sendCreateRoom(statusEl) {
     } else {
         statusEl.innerText = "NO CONECTADO AL SERVIDOR.";
         statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
     }
 }
 
@@ -5260,6 +5266,7 @@ function sendJoinRoom(code, statusEl) {
     if (!code || code.length !== 4) {
         statusEl.innerText = "CÓDIGO DEBE SER DE 4 DÍGITOS.";
         statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
         return;
     }
     if (ws && ws.readyState === 1) {
@@ -5267,6 +5274,7 @@ function sendJoinRoom(code, statusEl) {
     } else {
         statusEl.innerText = "NO CONECTADO AL SERVIDOR.";
         statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
     }
 }
 
@@ -5409,7 +5417,7 @@ async function startGameMulti(isWaiting = false) {
     targetZoom = 0.85;
     window.currentFOV = 0.85;
 
-    resetAfterGoalMulti();
+    resetAfterGoalMulti(true);
 
     if (isWaiting) {
         // El host esperando rival inicia directamente jugando sin cuenta atrás
@@ -5436,7 +5444,7 @@ async function startGameMulti(isWaiting = false) {
     }
 }
 
-function resetAfterGoalMulti() {
+function resetAfterGoalMulti(isWarmup = false) {
     const sp1 = CONST.CONFIG.SPAWN_POINTS[0];
     const sp2 = CONST.CONFIG.SPAWN_POINTS[2];
 
@@ -5452,10 +5460,15 @@ function resetAfterGoalMulti() {
 
     skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
 
-    countdownTimer = 3;
-    gameState = 'countdown';
-    if (countdownEl) countdownEl.style.display = 'block';
-    playSound('countdown');
+    if (isWarmup) {
+        gameState = 'playing';
+        if (countdownEl) countdownEl.style.display = 'none';
+    } else {
+        countdownTimer = 3;
+        gameState = 'countdown';
+        if (countdownEl) countdownEl.style.display = 'block';
+        playSound('countdown');
+    }
 
     targetZoom = 0.85;
     if (gameOverOverlay) gameOverOverlay.style.display = 'none';
@@ -5849,17 +5862,17 @@ function updateConnectionStatusUI(state) {
     if (!btn) return;
     
     if (state === 'disconnected') {
-        btn.innerText = "SIN CONEXIÓN";
+        btn.innerHTML = "SIN CONEXIÓN";
         btn.style.borderColor = "#ff3366";
         btn.style.color = "#ff3366";
         btn.style.boxShadow = "0 0 15px rgba(255, 51, 102, 0.4)";
     } else if (state === 'connecting') {
-        btn.innerText = "CONECTANDO...";
+        btn.innerHTML = "CONECTANDO...";
         btn.style.borderColor = "#f90";
         btn.style.color = "#f90";
         btn.style.boxShadow = "0 0 15px rgba(255, 153, 0, 0.4)";
     } else if (state === 'connected') {
-        btn.innerText = "CONECTADO";
+        btn.innerHTML = `CONECTADO <span class="connection-dot"></span>`;
         btn.style.borderColor = "#22ffbb";
         btn.style.color = "#22ffbb";
         btn.style.boxShadow = "0 0 15px rgba(34, 255, 187, 0.4)";

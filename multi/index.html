@@ -18,6 +18,23 @@
     <!-- Estilos (VERSIÓN FORZADA PARA CACHÉ) -->
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/modules/physics_editor.css">
+    <style>
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 255, 187, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 255, 187, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 255, 187, 0); }
+        }
+        .connection-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #22ffbb;
+            border-radius: 50%;
+            margin-left: 8px;
+            vertical-align: middle;
+            animation: pulse-green 2s infinite;
+        }
+    </style>
 </head>
 
 <body class="input-method-mouse">
@@ -90,7 +107,6 @@
                     <!-- Title Area -->
                     <div style="text-align: center; width: 100%;">
                         <h1 class="personalization-banner" style="font-size: 3.2em !important; margin: 0 0 0.1em 0 !important; color: #22ffbb !important; -webkit-text-stroke: 2px #0a5c43 !important; text-shadow: 2px 2px 0px #0a5c43, -2px -2px 0px #0a5c43, 2px -2px 0px #0a5c43, -2px 2px 0px #0a5c43, 0px 4px 0px #033224, 0px 6px 0px rgba(0,0,0,0.7) !important;">MULTIJUGADOR ONLINE</h1>
-                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1.1em; color: rgba(34, 255, 187, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.8em; text-shadow: 0 0 8px rgba(34, 255, 187, 0.4);">[ PROTOTIPO DE PRUEBA ]</div>
                     </div>
                     
                     <!-- Vista Principal del Lobby -->

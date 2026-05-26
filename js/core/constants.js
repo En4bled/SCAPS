@@ -139,17 +139,24 @@ export function getAssetPath(relativePath) {
     if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.substring(1);
     }
-    if (!cleanPath.toLowerCase().startsWith('maps/')) {
+    
+    // Si la ruta ya empieza con '../', removemos temporalmente ese prefijo para chequear si empieza con 'maps/'
+    const isAlreadyRelativeParent = cleanPath.startsWith('../');
+    const pathToCheck = isAlreadyRelativeParent ? cleanPath.substring(3) : cleanPath;
+    
+    if (!pathToCheck.toLowerCase().startsWith('maps/')) {
         cleanPath = cleanPath.toLowerCase();
     }
 
-    // Calcular la ruta base dinámica a partir del pathname actual
+    // Detectar si estamos en el subdirectorio 'multi'
     const pathSegments = window.location.pathname.split('/');
     pathSegments.pop(); // Elimina index.html u otro archivo de la URL
-    if (pathSegments[pathSegments.length - 1] === 'multi') {
-        pathSegments.pop();
-    }
-    const basePath = pathSegments.join('/') + '/';
+    const isMulti = pathSegments.length > 0 && pathSegments[pathSegments.length - 1] === 'multi';
 
-    return window.location.origin + basePath + cleanPath;
+    // Si estamos en 'multi' y la ruta no empieza ya con '../', le agregamos '../'
+    if (isMulti && !cleanPath.startsWith('../')) {
+        cleanPath = '../' + cleanPath;
+    }
+
+    return cleanPath;
 }
