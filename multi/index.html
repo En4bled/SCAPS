@@ -85,16 +85,16 @@
             
             <!-- Lobby de Conexión Multijugador Online -->
             <div id="menu-online-lobby" class="personalization-wrapper" style="display: none; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 6000; font-family: 'Rajdhani', sans-serif; font-size: min(0.85vw, 1.6vh) !important;">
-                <div class="pixel-border" style="display: flex; flex-direction: column; width: 48em; height: 35em; background: rgba(5, 5, 15, 0.45) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important; border: 0.3em solid #5ad !important; padding: 2.5em 3.5em !important; box-sizing: border-box; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2); justify-content: space-between; align-items: center; position: relative;">
+                <div class="pixel-border" style="display: flex; flex-direction: column; width: 60em; height: 38em; background: rgba(5, 5, 15, 0.45) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important; border: 0.3em solid #5ad !important; padding: 2em 3em !important; box-sizing: border-box; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2); justify-content: space-between; align-items: center; position: relative;">
                     
                     <!-- Title Area -->
                     <div style="text-align: center; width: 100%;">
                         <h1 class="personalization-banner" style="font-size: 3.2em !important; margin: -0.4em 0 0.1em 0 !important; color: #22ffbb !important; -webkit-text-stroke: 2px #0a5c43 !important; text-shadow: 2px 2px 0px #0a5c43, -2px -2px 0px #0a5c43, 2px -2px 0px #0a5c43, -2px 2px 0px #0a5c43, 0px 4px 0px #033224, 0px 6px 0px rgba(0,0,0,0.7) !important;">MULTIJUGADOR ONLINE</h1>
-                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1.1em; color: rgba(34, 255, 187, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1.2em; text-shadow: 0 0 8px rgba(34, 255, 187, 0.4);">[ PROTOTIPO DE PRUEBA ]</div>
+                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1.1em; color: rgba(34, 255, 187, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1em; text-shadow: 0 0 8px rgba(34, 255, 187, 0.4);">[ PROTOTIPO DE PRUEBA ]</div>
                     </div>
                     
                     <!-- Vista Principal del Lobby -->
-                    <div id="lobby-view-main" style="width: 100%; display: flex; flex-direction: column; gap: 0.8em; align-items: center; flex-grow: 1; min-height: 0; justify-content: center;">
+                    <div id="lobby-view-main" style="width: 100%; display: flex; flex-direction: column; gap: 1em; align-items: center; flex-grow: 1; min-height: 0; justify-content: center;">
                         
                         <!-- Botón de Estado de Conexión y Botón de Ajustes -->
                         <div style="display: flex; gap: 10px; width: 100%; max-width: 34em;">
@@ -111,40 +111,40 @@
                                 <div style="color: #5ad; margin: 4px 0 8px; font-size: 11px; font-weight: bold; font-family: 'Share Tech Mono', monospace; letter-spacing: 1px; text-align: center;">- ENTRAR A SALA EXISTENTE -</div>
                                 
                                 <!-- Unirse a Sala (Estilo Caja Fuerte) -->
-                                <div id="safe-box-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4); border: 2px solid #5ad; padding: 12px; position: relative; box-shadow: inset 0 0 15px rgba(90, 173, 237, 0.2); transition: opacity 0.3s; pointer-events: none; opacity: 0.45;">
+                                <div id="safe-box-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.4); border: 2px solid #5ad; padding: 12px; position: relative; box-shadow: inset 0 0 15px rgba(90, 173, 237, 0.2); transition: opacity 0.3s; pointer-events: none; opacity: 0.45; width: 100%; box-sizing: border-box;">
                                     
                                     <div style="font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #5ad; letter-spacing: 1.5px; text-transform: uppercase;">COMBINACIÓN DE LA CAJA FUERTE</div>
                                     
                                     <!-- 4 Dígitos -->
-                                    <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin: 4px 0;">
+                                    <div style="display: flex; gap: 0.6em; align-items: center; justify-content: center; margin: 0.2em 0; width: 100%;">
                                         <!-- Dígito 1 -->
-                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                            <button class="safe-dial-up" data-index="0" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▲</button>
-                                            <input type="text" class="safe-digit-input" data-index="0" maxlength="1" value="0" style="width: 40px; height: 48px; background: #070b12; border: 2px solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none;" disabled>
-                                            <button class="safe-dial-down" data-index="0" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▼</button>
+                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 0.2em;">
+                                            <button class="safe-dial-up" data-index="0" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▲</button>
+                                            <input type="text" class="safe-digit-input" data-index="0" maxlength="1" value="0" style="width: 2.2em; height: 2.8em; background: #070b12; border: 0.12em solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 1.6em; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none; box-sizing: border-box;" disabled>
+                                            <button class="safe-dial-down" data-index="0" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▼</button>
                                         </div>
                                         <!-- Dígito 2 -->
-                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                            <button class="safe-dial-up" data-index="1" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▲</button>
-                                            <input type="text" class="safe-digit-input" data-index="1" maxlength="1" value="0" style="width: 40px; height: 48px; background: #070b12; border: 2px solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none;" disabled>
-                                            <button class="safe-dial-down" data-index="1" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▼</button>
+                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 0.2em;">
+                                            <button class="safe-dial-up" data-index="1" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▲</button>
+                                            <input type="text" class="safe-digit-input" data-index="1" maxlength="1" value="0" style="width: 2.2em; height: 2.8em; background: #070b12; border: 0.12em solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 1.6em; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none; box-sizing: border-box;" disabled>
+                                            <button class="safe-dial-down" data-index="1" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▼</button>
                                         </div>
                                         <!-- Dígito 3 -->
-                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                            <button class="safe-dial-up" data-index="2" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▲</button>
-                                            <input type="text" class="safe-digit-input" data-index="2" maxlength="1" value="0" style="width: 40px; height: 48px; background: #070b12; border: 2px solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none;" disabled>
-                                            <button class="safe-dial-down" data-index="2" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▼</button>
+                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 0.2em;">
+                                            <button class="safe-dial-up" data-index="2" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▲</button>
+                                            <input type="text" class="safe-digit-input" data-index="2" maxlength="1" value="0" style="width: 2.2em; height: 2.8em; background: #070b12; border: 0.12em solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 1.6em; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none; box-sizing: border-box;" disabled>
+                                            <button class="safe-dial-down" data-index="2" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▼</button>
                                         </div>
                                         <!-- Dígito 4 -->
-                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                            <button class="safe-dial-up" data-index="3" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▲</button>
-                                            <input type="text" class="safe-digit-input" data-index="3" maxlength="1" value="0" style="width: 40px; height: 48px; background: #070b12; border: 2px solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 24px; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none;" disabled>
-                                            <button class="safe-dial-down" data-index="3" style="background: none; border: none; color: #5ad; font-size: 16px; cursor: pointer; padding: 0 5px; font-family: 'Share Tech Mono', monospace;">▼</button>
+                                        <div class="safe-digit-col" style="display: flex; flex-direction: column; align-items: center; gap: 0.2em;">
+                                            <button class="safe-dial-up" data-index="3" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▲</button>
+                                            <input type="text" class="safe-digit-input" data-index="3" maxlength="1" value="0" style="width: 2.2em; height: 2.8em; background: #070b12; border: 0.12em solid #5ad; color: #22ffbb; font-family: 'Share Tech Mono', monospace; font-size: 1.6em; font-weight: bold; text-align: center; box-shadow: 0 0 10px rgba(34,255,187,0.2); outline: none; box-sizing: border-box;" disabled>
+                                            <button class="safe-dial-down" data-index="3" style="background: none; border: none; color: #5ad; font-size: 1.1em; cursor: pointer; padding: 0; margin: 0; font-family: 'Share Tech Mono', monospace; line-height: 1;">▼</button>
                                         </div>
                                     </div>
                                     
                                     <!-- Unirse Button -->
-                                    <button id="btn-online-join" class="menu-btn" style="width: 100%; max-width: 14em; font-size: 13px; height: 2.8em; margin: 4px 0 0 0;" disabled>ABRIR Y UNIRSE</button>
+                                    <button id="btn-online-join" class="menu-btn" style="width: 100%; max-width: 16em; font-size: 13px; height: 2.8em; margin: 4px 0 0 0;" disabled>ABRIR Y UNIRSE</button>
                                     
                                     <!-- Input oculto para que la red del juego siga funcionando idénticamente -->
                                     <input type="hidden" id="online-room-code" value="0000" disabled>
@@ -1680,7 +1680,7 @@
         <option value="#aaaaaa">Gris Claro</option>
     </datalist>
 
-    <script type="module" src="js/main_multi.js?v=2.0.2"></script>
+    <script type="module" src="js/main_multi.js?v=2.0.3"></script>
     <script type="module">
         import { getAssetPath } from '../js/core/constants.js';
         window.getAssetPath = getAssetPath;
