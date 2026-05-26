@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2026-05-26 - *Multijugador Online: UI, Audio y Respawn Polished*
+### Added
+- **Indicador de Conexión en Lobby**: Se ha añadido un punto verde con un parpadeo/pulso suave (`.connection-dot` con animación `@keyframes pulse-green`) a la derecha del botón superior de estado `CONECTADO` para indicar visualmente el estado activo.
+
+### Changed
+- **UI de Lobby Multijugador**: Eliminado el banner redundante `[ PROTOTIPO DE PRUEBA ]` de la cabecera y configurado el texto de estado `CONECTADO` para ocultarse al estar dentro de la sala, mostrándose únicamente durante errores o estados de conexión.
+- **Optimización de Audio en Calentamiento**: Silenciado el sonido de la cuenta atrás cuando un jugador entra inicialmente en modo de calentamiento (warmup/libre) al iniciar la escena. El sonido y la visualización de la cuenta atrás ahora ocurren estrictamente al iniciar el partido oficial o tras la anotación de un gol.
+
+### Fixed
+- **Rutas de Recursos en Multijugador**: Ajustadas las rutas de recursos mediante una normalización inteligente en `getAssetPath` para asegurar que las imágenes de cartas de estadios, avatares, vehículos y balones se carguen correctamente tanto en local como en la carpeta del multijugador online.
+- **Reaparición (Respawn) Zonal por Demolición**: Corregida la lógica de respawn tras la explosión de un coche (jugador o bot). Ahora reaparecen en los puntos de salida de su propio lado del campo según el color del equipo (puntos 0/1 para equipo azul y 2/3 para equipo naranja). Modificación integrada en el ciclo local (`main.js`) y en la sincronización de host (`main_multi.js`).
+
 ## [1.7.1] - 2026-05-24 - *Teclado en Pausa, Audio Update y Fix de Ajustes*
 ### Added
 - **Teclado en Guía de Pausa**: Integración visual de teclas físicas de teclado retro (`.keyboard-key`) en el panel de controles de pausa, alineadas con sus equivalencias en gamepad.
