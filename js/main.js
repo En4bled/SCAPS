@@ -3224,14 +3224,14 @@ function renderAvatars() {
 
         if (isLocked) {
             item.classList.add('locked-item');
-            item.innerHTML = `<img src="${url}" style="filter: brightness(0.2) grayscale(1); width: 85%; height: 85%; object-fit: contain;"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.innerHTML = `<img src="${getAssetPath(url)}" style="filter: brightness(0.2) grayscale(1); width: 85%; height: 85%; object-fit: contain;"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
             item.onclick = () => {
                 showInGameNotification(`ESTE AVATAR SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
                 playSound('menu_error');
             };
         } else {
             item.style.background = USER_CONFIG.playerAvatarBg;
-            item.innerHTML = `<img src="${url}" style="width: 85%; height: 85%; object-fit: contain;">`;
+            item.innerHTML = `<img src="${getAssetPath(url)}" style="width: 85%; height: 85%; object-fit: contain;">`;
             item.onclick = () => {
                 USER_CONFIG.playerAvatar = url;
                 saveUserConfig();
@@ -3277,13 +3277,13 @@ function renderCarSelection() {
         item.tabIndex = 0;
         if (isLocked) {
             item.classList.add('locked-item');
-            item.innerHTML = `<img src="${img}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.innerHTML = `<img src="${getAssetPath(img)}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
             item.onclick = () => {
                 showInGameNotification(`ESTE VEHÍCULO SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
                 playSound('menu_error');
             };
         } else {
-            item.innerHTML = `<img src="${img}">`;
+            item.innerHTML = `<img src="${getAssetPath(img)}">`;
             item.onclick = () => {
                 USER_CONFIG.playerCar = img;
                 selectedCarP1 = img;
@@ -3355,13 +3355,13 @@ function renderBallSelection() {
 
         if (isLocked) {
             item.classList.add('locked-item');
-            item.innerHTML = `<img src="${url}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
+            item.innerHTML = `<img src="${getAssetPath(url)}" style="filter: brightness(0.2) grayscale(1);"><div class="lock-icon">🔒 Lvl ${requiredLevel}</div>`;
             item.onclick = () => {
                 showInGameNotification(`ESTE BALÓN SE DESBLOQUEA AL NIVEL ${requiredLevel}`, "#f33", "🚫");
                 playSound('menu_error');
             };
         } else {
-            item.innerHTML = `<img src="${url}">`;
+            item.innerHTML = `<img src="${getAssetPath(url)}">`;
             item.onclick = () => {
                 USER_CONFIG.playerBall = url;
                 if (ball) ball.imgUrl = url;
@@ -3977,7 +3977,7 @@ async function loadSetupMaps(forcedDirection = '') {
                     
                     <!-- 2. Ilustración principal del Estadio (Enmarcada) -->
                     <div class="tcg-artwork-container">
-                        <img src="recursos/maps/map${idx + 1}.png" class="tcg-map-img">
+                        <img src="${getAssetPath(`recursos/maps/map${idx + 1}.png`)}" class="tcg-map-img">
                         <div class="tcg-artwork-overlay"></div>
                     </div>
                     
