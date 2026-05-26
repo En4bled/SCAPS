@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-05-26 - *Bases de Boost y Chapas Persistentes*
+### Added
+- **Pads de Base Estáticos para Boosts y Chapas**: Implementada una base visual persistente en el suelo para todos los puntos de turbo.
+  - Para los Boosts grandes, se utiliza el sprite personalizado [boost_pad.png](file:///c:/xampp/htdocs/SCAPS/recursos/maps/boost_pad.png).
+  - Para las chapas pequeñas, se utiliza el sprite personalizado [chapa_pad.png](file:///c:/xampp/htdocs/SCAPS/recursos/maps/chapa_pad.png).
+  - Estas bases permanecen visibles de forma continua incluso si el turbo ha sido recogido, permitiendo ubicar fácilmente los puntos de spawn en el campo de juego.
+- **Visualizador Cooldown de Turbo**: Se incorporó un arco circular naranja indicador sobre el plato cuando el boost/chapa está inactivo, que se completa gradualmente en sentido de las agujas del reloj indicando el tiempo restante para su reaparición.
+
 ## [2.0.9] - 2026-05-26 - *Alineación de Feed en HUD*
 ### Changed
 - **Reposicionamiento del Feed de Partida**: Se ajustaron las coordenadas de dibujo de la caja de notificaciones (feed de goles/demoliciones) en [js/main.js](file:///c:/xampp/htdocs/SCAPS/js/main.js) y [multi/js/main_multi.js](file:///c:/xampp/htdocs/SCAPS/multi/js/main_multi.js) (`startX = canvas.width - 50` y `startY = 100`). Esto desplaza los mensajes hacia el interior de la pantalla, previniendo que queden fuera del HUD principal o recortados por el borde redondeado de 20px del lienzo.

@@ -1,4 +1,5 @@
 import { playSound } from '../fx/audio.js';
+import { getAssetPath } from '../core/constants.js';
 
 class BoostParticle {
     constructor(x, y, isMini) {
@@ -59,10 +60,30 @@ export class BoostPad {
         // --- Sistema de Partículas Interno ---
         this.particles = [];
         this.maxParticles = isMini ? 20 : 45; // Optimizado para rendimiento global
+
+        // --- Cargar Sprite de Base ---
+        this.padImg = new Image();
+        const imgPath = isMini ? 'recursos/maps/chapa_pad.png' : 'recursos/maps/boost_pad.png';
+        this.padImg.src = getAssetPath(imgPath);
     }
 
     draw(ctx) {
         ctx.save();
+        
+        // 1. Dibujar el sprite de la base (siempre visible, tanto activa como inactiva)
+        if (this.padImg && this.padImg.complete) {
+            const sizeMultiplier = this.isMini ? 2.5 : 3.0;
+            const size = this.radius * sizeMultiplier;
+            ctx.drawImage(this.padImg, this.x - size / 2, this.y - size / 2, size, size);
+        } else {
+            // Fallback si la imagen aún no ha cargado
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius * 0.8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(30, 30, 30, 0.9)';
+            ctx.fill();
+        }
+
+        // 2. Dibujar efectos sobre la base
         if (this.active) {
             // blendMode: "add"
             ctx.globalCompositeOperation = 'lighter';
@@ -70,7 +91,7 @@ export class BoostPad {
             // Dibujar el núcleo central (Difuminado / Glow)
             const glowRad = this.radius * (this.isMini ? 1.0 : 1.2);
             const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRad);
-            grad.addColorStop(0, 'rgba(255, 204, 0, 0.4)'); // GOLD
+            grad.addColorStop(0, 'rgba(255, 204, 0, 0.45)'); // GOLD
             grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = grad;
             ctx.beginPath();
@@ -78,8 +99,8 @@ export class BoostPad {
             ctx.fill();
             
             // Núcleo Sólido Central
-            const solidRad = this.radius * 0.6; // Aumentado (0.4 -> 0.6)
-            ctx.fillStyle = 'rgba(255, 215, 0, 0.9)'; // Amarillo dorado sólido
+            const solidRad = this.radius * 0.5;
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.95)'; // Amarillo dorado sólido
             ctx.beginPath();
             ctx.arc(this.x, this.y, solidRad, 0, Math.PI * 2);
             ctx.fill();
@@ -89,13 +110,16 @@ export class BoostPad {
                 this.particles[i].draw(ctx);
             }
         } else {
-            // Base inactiva apagada
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius * 0.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(50, 50, 50, 0.4)';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(100, 100, 100, 0.2)';
-            ctx.stroke();
+            // Dibujar un arco de progreso de cooldown circular y sutil sobre el pad inactivo
+            const cooldownPercent = (this.respawnTime - this.respawnTimer) / this.respawnTime;
+            if (cooldownPercent > 0 && cooldownPercent < 1) {
+                ctx.strokeStyle = 'rgba(255, 150, 0, 0.55)'; // Naranja brillante pero translúcido
+                ctx.lineWidth = this.isMini ? 2 : 3.5;
+                ctx.beginPath();
+                // Dibujamos el arco desde arriba (-PI/2) hasta completar el círculo
+                ctx.arc(this.x, this.y, this.radius * 0.75, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * cooldownPercent));
+                ctx.stroke();
+            }
         }
         ctx.restore();
     }
