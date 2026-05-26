@@ -2562,7 +2562,7 @@ function updateAll(dt) {
                 checkCarCarCollision(player2, player1, explosionParticles);
 
                 // 5. Mover SOLO a P2 localmente (P1 ya se mueve por interpolación de red)
-                player2.move(timeScale);
+                player2.move();
 
                 // 6. Enviar inputs/posición de P2 al Host
                 sendStateToHost();
@@ -2712,7 +2712,7 @@ function checkCollisions(timeScale = 1.0) {
     }
 
     checkGoalPhysics(ball);
-    allCars.forEach(car => car.move(timeScale));
+    allCars.forEach(car => car.move());
 
     // Solo detectar nuevos goles si estamos en modo juego
     if (gameState === 'playing') {
@@ -5379,7 +5379,7 @@ function checkCollisionsMulti(timeScale = 1.0) {
     checkGoalPhysics(ball);
     
     // Mover SOLO al jugador local P1 (P2 se mueve por red)
-    player1.move(timeScale);
+    player1.move();
 
     if (gameState === 'playing' && multiplayerRole === 'host') {
         const scorer = ball.checkGoal();

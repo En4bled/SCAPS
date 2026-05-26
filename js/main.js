@@ -2421,7 +2421,7 @@ function checkCollisions(timeScale = 1.0) {
     }
 
     checkGoalPhysics(ball);
-    allCars.forEach(car => car.move(timeScale));
+    allCars.forEach(car => car.move());
 
     // Solo detectar nuevos goles si estamos en modo juego
     if (gameState === 'playing') {
