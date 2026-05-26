@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.9] - 2026-05-26 - *Alineación de Feed en HUD*
+### Changed
+- **Reposicionamiento del Feed de Partida**: Se ajustaron las coordenadas de dibujo de la caja de notificaciones (feed de goles/demoliciones) en [js/main.js](file:///c:/xampp/htdocs/SCAPS/js/main.js) y [multi/js/main_multi.js](file:///c:/xampp/htdocs/SCAPS/multi/js/main_multi.js) (`startX = canvas.width - 50` y `startY = 100`). Esto desplaza los mensajes hacia el interior de la pantalla, previniendo que queden fuera del HUD principal o recortados por el borde redondeado de 20px del lienzo.
+
 ## [2.0.8] - 2026-05-26 - *Consola Limpia y Entornos Estáticos*
 ### Fixed
 - **Prevención de Errores 404 en Carga de Mapas**: Se añadió una detección de entorno estático (`isStaticEnv`) en la función `loadSetupMaps` tanto para juego local ([js/main.js](file:///c:/xampp/htdocs/SCAPS/js/main.js)) como multijugador ([multi/js/main_multi.js](file:///c:/xampp/htdocs/SCAPS/multi/js/main_multi.js)). Al detectar ejecución bajo GitHub Pages o mediante protocolo `file://`, el motor omite automáticamente el `fetch` al script PHP `get_maps.php` y recurre de forma directa al fallback local, previniendo alertas 404 molestas en la consola del navegador.

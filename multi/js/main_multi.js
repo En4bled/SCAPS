@@ -2472,8 +2472,8 @@ export function addFeedMessage(type, actor, victim = null) {
 function drawFeed(ctx, canvas) {
     ctx.save();
     ctx.font = 'bold 18px "Share Tech Mono"';
-    const startX = canvas.width - 20;
-    const startY = 80;
+    const startX = canvas.width - 50;
+    const startY = 100;
     const gap = 30;
 
     feedMessages.forEach((msg, i) => {
