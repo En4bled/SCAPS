@@ -85,16 +85,16 @@
             
             <!-- Lobby de Conexión Multijugador Online -->
             <div id="menu-online-lobby" class="personalization-wrapper" style="display: none; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 6000; font-family: 'Rajdhani', sans-serif; font-size: min(0.85vw, 1.6vh) !important;">
-                <div class="pixel-border" style="display: flex; flex-direction: column; width: 60em; height: 38em; background: rgba(5, 5, 15, 0.45) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important; border: 0.3em solid #5ad !important; padding: 2em 3em !important; box-sizing: border-box; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2); justify-content: space-between; align-items: center; position: relative;">
+                <div class="pixel-border" style="display: flex; flex-direction: column; width: 52em; height: 46em; background: rgba(5, 5, 15, 0.45) !important; backdrop-filter: blur(6px) !important; -webkit-backdrop-filter: blur(6px) !important; border: 0.3em solid #5ad !important; padding: 2.2em 3em !important; box-sizing: border-box; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(90, 173, 237, 0.2); justify-content: flex-start; gap: 1.2em; align-items: center; position: relative;">
                     
                     <!-- Title Area -->
                     <div style="text-align: center; width: 100%;">
-                        <h1 class="personalization-banner" style="font-size: 3.2em !important; margin: -0.4em 0 0.1em 0 !important; color: #22ffbb !important; -webkit-text-stroke: 2px #0a5c43 !important; text-shadow: 2px 2px 0px #0a5c43, -2px -2px 0px #0a5c43, 2px -2px 0px #0a5c43, -2px 2px 0px #0a5c43, 0px 4px 0px #033224, 0px 6px 0px rgba(0,0,0,0.7) !important;">MULTIJUGADOR ONLINE</h1>
-                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1.1em; color: rgba(34, 255, 187, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 1em; text-shadow: 0 0 8px rgba(34, 255, 187, 0.4);">[ PROTOTIPO DE PRUEBA ]</div>
+                        <h1 class="personalization-banner" style="font-size: 3.2em !important; margin: 0 0 0.1em 0 !important; color: #22ffbb !important; -webkit-text-stroke: 2px #0a5c43 !important; text-shadow: 2px 2px 0px #0a5c43, -2px -2px 0px #0a5c43, 2px -2px 0px #0a5c43, -2px 2px 0px #0a5c43, 0px 4px 0px #033224, 0px 6px 0px rgba(0,0,0,0.7) !important;">MULTIJUGADOR ONLINE</h1>
+                        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1.1em; color: rgba(34, 255, 187, 0.75); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 0.8em; text-shadow: 0 0 8px rgba(34, 255, 187, 0.4);">[ PROTOTIPO DE PRUEBA ]</div>
                     </div>
                     
                     <!-- Vista Principal del Lobby -->
-                    <div id="lobby-view-main" style="width: 100%; display: flex; flex-direction: column; gap: 1em; align-items: center; flex-grow: 1; min-height: 0; justify-content: center;">
+                    <div id="lobby-view-main" style="width: 100%; display: flex; flex-direction: column; gap: 1.2em; align-items: center; justify-content: flex-start;">
                         
                         <!-- Botón de Estado de Conexión y Botón de Ajustes -->
                         <div style="display: flex; gap: 10px; width: 100%; max-width: 34em;">
@@ -102,7 +102,7 @@
                             <button id="btn-open-server-settings" class="menu-btn" style="flex: 0.4; border-color: #5ad; color: #5ad; height: 3em; margin: 0; font-size: 13px;">AJUSTES</button>
                         </div>
                         
-                        <div class="pixel-border" style="animation: none !important; border-color: rgba(90, 173, 237, 0.3) !important; background: rgba(5, 10, 20, 0.5) !important; box-shadow: 0 -8px 0 -4px #0a0a19, 0 8px 0 -4px #0a0a19, -8px 0 0 -4px #0a0a19, 8px 0 0 -4px #0a0a19 !important; width: 100%; max-width: 34em; padding: 1.2em 2em; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.2em; justify-content: center; margin-bottom: 0.5em;">
+                        <div class="pixel-border" style="animation: none !important; border-color: rgba(90, 173, 237, 0.3) !important; background: rgba(5, 10, 20, 0.5) !important; box-shadow: 0 -8px 0 -4px #0a0a19, 0 8px 0 -4px #0a0a19, -8px 0 0 -4px #0a0a19, 8px 0 0 -4px #0a0a19 !important; width: 100%; max-width: 34em; padding: 1.2em 2em; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.2em; justify-content: center; margin: 0;">
                             
                             <div id="online-room-controls" style="display: block; width: 100%;">
                                 <!-- Crear Sala -->
@@ -159,7 +159,7 @@
                     </div>
                     
                     <!-- Submenú de Selección de Modos (Crear Sala) -->
-                    <div id="lobby-view-modes" style="display: none; width: 100%; flex-direction: column; gap: 0.8em; align-items: center; flex-grow: 1; min-height: 0; justify-content: center;">
+                    <div id="lobby-view-modes" style="display: none; width: 100%; flex-direction: column; gap: 1.2em; align-items: center; justify-content: flex-start;">
                         <h2 style="font-family: 'Share Tech Mono', monospace; color: #22ffbb; font-size: 1.6em; letter-spacing: 2px; margin: 0 0 0.5em 0;">CREAR PARTIDA - SELECCIONA MODO</h2>
                         
                         <div class="pixel-border" style="animation: none !important; border-color: rgba(90, 173, 237, 0.3) !important; background: rgba(5, 10, 20, 0.5) !important; box-shadow: 0 -8px 0 -4px #0a0a19, 0 8px 0 -4px #0a0a19, -8px 0 0 -4px #0a0a19, 8px 0 0 -4px #0a0a19 !important; width: 100%; max-width: 34em; padding: 1.5em 2em; box-sizing: border-box; display: flex; flex-direction: column; gap: 1em; align-items: center;">
@@ -172,7 +172,7 @@
                     </div>
                     
                     <!-- Confirmación de Crear Partida 1vs1 -->
-                    <div id="lobby-view-confirm" style="display: none; width: 100%; flex-direction: column; gap: 0.8em; align-items: center; flex-grow: 1; min-height: 0; justify-content: center;">
+                    <div id="lobby-view-confirm" style="display: none; width: 100%; flex-direction: column; gap: 1.2em; align-items: center; justify-content: flex-start;">
                         <h2 style="font-family: 'Share Tech Mono', monospace; color: #f90; font-size: 1.8em; letter-spacing: 2px; margin: 0 0 0.5em 0;">CREAR PARTIDA 1vs1</h2>
                         
                         <div class="pixel-border" style="animation: none !important; border-color: #f90 !important; background: rgba(15, 10, 5, 0.6) !important; box-shadow: 0 -8px 0 -4px #0a0a19, 0 8px 0 -4px #0a0a19, -8px 0 0 -4px #0a0a19, 8px 0 0 -4px #0a0a19 !important; width: 100%; max-width: 34em; padding: 2em; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.5em; align-items: center; text-align: center;">
@@ -1680,7 +1680,7 @@
         <option value="#aaaaaa">Gris Claro</option>
     </datalist>
 
-    <script type="module" src="js/main_multi.js?v=2.0.3"></script>
+    <script type="module" src="js/main_multi.js?v=2.0.4"></script>
     <script type="module">
         import { getAssetPath } from '../js/core/constants.js';
         window.getAssetPath = getAssetPath;
