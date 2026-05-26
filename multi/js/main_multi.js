@@ -564,11 +564,11 @@ let backgroundWorker = null;
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
 let isTrainingMode = false;
+let trainingModeText = "ESPERANDO OPONENTE";
 let isPaused = false;
 let countdownTimer = 3;
-let gameTime = 60;
+let gameTime = 120;
 let lastTime = 0;
-let physicsAccumulator = 0;
 let fps = 60;
 window.SCAPS_LOD_LEVEL = 1.0;
 let keysPressed = {};
@@ -1497,7 +1497,7 @@ async function init() {
                 if (btnStartGame.disabled) return;
                 playSound('menu_click');
                 score = { blue: 0, orange: 0 };
-                gameTime = 60;
+                gameTime = 120;
                 replaySystem.reset();
                 finalizeStartGame();
             };
@@ -1519,7 +1519,7 @@ async function init() {
         if (btnRematch) btnRematch.onclick = () => {
             if (gameOverOverlay) gameOverOverlay.style.display = 'none';
             score = { blue: 0, orange: 0 };
-            gameTime = 60;
+            gameTime = 120;
             replaySystem.reset();
             finalizeStartGame();
             playSound('menu_click');
@@ -2017,7 +2017,7 @@ async function init() {
         const pRestart = getEl('btn-pause-restart'); 
         if (pRestart) pRestart.onclick = () => { 
             score = { blue: 0, orange: 0 }; 
-            gameTime = 60; 
+            gameTime = 120; 
             if (typeof updateScoreboard === 'function') updateScoreboard(scoreboardEl, allCars, score);
             togglePause(); 
             resetAfterGoal(); 
@@ -2375,7 +2375,7 @@ function renderFrame(dt) {
 
     // Solo dibujar nombres y HUD si estamos en partida
     drawCarNames(ctx, allCars, localPlayer, cameraMode, gameState);
-    drawHUD(ctx, canvas, gameTime, score, localPlayer, cameraMode, isTrainingMode, ball, {
+    drawHUD(ctx, canvas, gameTime, score, localPlayer, cameraMode, isTrainingMode ? trainingModeText : false, ball, {
         x: currentCamX,
         y: currentCamY,
         rot: currentRotation,
@@ -2547,10 +2547,10 @@ function updateAll(dt) {
                 ball.update(gameState, particles, timeScale);
                 applyGlobalFriction(ball, [player1, player2], timeScale);
 
-                if (ballRemoteState && player2.ballContactCooldown <= 5) {
-                    ball.x += (ballRemoteState.x - ball.x) * 0.98;
-                    ball.y += (ballRemoteState.y - ball.y) * 0.98;
-                    ball.z += (ballRemoteState.z - ball.z) * 0.98;
+                if (ballRemoteState && player2.ballContactCooldown <= 0) {
+                    ball.x += (ballRemoteState.x - ball.x) * 0.35;
+                    ball.y += (ballRemoteState.y - ball.y) * 0.35;
+                    ball.z += (ballRemoteState.z - ball.z) * 0.35;
                     ball.vx = ballRemoteState.vx;
                     ball.vy = ballRemoteState.vy;
                     ball.vz = ballRemoteState.vz;
@@ -5040,17 +5040,42 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
                         statusEl.innerText = "¡RIVAL CONECTADO! PREPARANDO...";
                         statusEl.style.color = "#22ffbb";
                         
+                        // Cambiar cartel de entrenamiento a "CALENTAMIENTO"
+                        trainingModeText = "CALENTAMIENTO";
+                        
                         // Mostrar mensaje de aviso
                         addFeedMessage("¡RIVAL CONECTADO! PREPARANDO PARTIDO...");
                         
                         if (countdownEl) {
                             countdownEl.style.display = 'block';
                             countdownEl.innerText = "¡RIVAL CONECTADO!";
+                            countdownEl.style.fontSize = '32px';
+                            countdownEl.style.background = 'rgba(10, 10, 25, 0.95)';
+                            countdownEl.style.border = '3px solid #22ffbb';
+                            countdownEl.style.padding = '15px 30px';
+                            countdownEl.style.borderRadius = '0px';
+                            countdownEl.style.color = '#22ffbb';
+                            countdownEl.style.boxShadow = '0 0 25px rgba(34, 255, 187, 0.4)';
+                            countdownEl.style.textShadow = 'none';
+                            countdownEl.style.fontFamily = "'Share Tech Mono', monospace";
+                            countdownEl.style.letterSpacing = '3px';
                         }
                         
                         // El host inicia el partido mostrando confirmación de listo tras 2 segundos
                         setTimeout(() => {
-                            if (countdownEl) countdownEl.style.display = 'none';
+                            if (countdownEl) {
+                                countdownEl.style.display = 'none';
+                                countdownEl.style.fontSize = '';
+                                countdownEl.style.background = '';
+                                countdownEl.style.border = '';
+                                countdownEl.style.padding = '';
+                                countdownEl.style.borderRadius = '';
+                                countdownEl.style.color = '';
+                                countdownEl.style.boxShadow = '';
+                                countdownEl.style.textShadow = '';
+                                countdownEl.style.fontFamily = '';
+                                countdownEl.style.letterSpacing = '';
+                            }
                             showReadyConfirmOverlay(true);
                         }, 2000);
                         break;
@@ -5245,7 +5270,7 @@ function sendStateToHost() {
             }
         };
 
-        if (player2.ballContactCooldown > 10) {
+        if (player2.ballContactCooldown > 0) {
             payload.ballHit = {
                 x: ball.x,
                 y: ball.y,
@@ -5264,6 +5289,9 @@ function sendStateToHost() {
 async function startGameMulti(isWaiting = false) {
     isMultiplayer = true;
     isTrainingMode = isWaiting;
+    if (isTrainingMode) {
+        trainingModeText = "ESPERANDO OPONENTE";
+    }
     
     if (mainMenuEl) mainMenuEl.style.display = 'none';
     const menuOnlineLobby = getEl('menu-online-lobby');
@@ -5559,10 +5587,36 @@ function setupReadyConfirmButton() {
         };
     }
 }
+
+// Plegar/desplegar cuadro de confirmación listo
+function setupReadyToggle() {
+    const btnToggle = document.getElementById('btn-ready-toggle');
+    const content = document.getElementById('ready-confirm-content');
+    if (btnToggle && content) {
+        btnToggle.onclick = (e) => {
+            e.stopPropagation();
+            playSound('menu_click');
+            if (content.style.display === 'none') {
+                content.style.display = 'flex';
+                btnToggle.innerText = "OCULTAR";
+                btnToggle.parentElement.parentElement.style.boxShadow = '0 0 25px rgba(90, 173, 237, 0.4)';
+            } else {
+                content.style.display = 'none';
+                btnToggle.innerText = "MOSTRAR";
+                btnToggle.parentElement.parentElement.style.boxShadow = '0 0 10px rgba(90, 173, 237, 0.2)';
+            }
+        };
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupReadyConfirmButton);
+    document.addEventListener('DOMContentLoaded', () => {
+        setupReadyConfirmButton();
+        setupReadyToggle();
+    });
 } else {
     setupReadyConfirmButton();
+    setupReadyToggle();
 }
 
 // Capturar tecla ENTER para listo

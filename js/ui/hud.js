@@ -6,7 +6,7 @@ export function drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTra
     
     const minutes = Math.floor(gameTime / 60);
     const seconds = Math.floor(gameTime % 60);
-    const timeStr = isTrainingMode ? "ENTRENAMIENTO" : `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    const timeStr = typeof isTrainingMode === 'string' ? isTrainingMode : (isTrainingMode ? "ENTRENAMIENTO" : `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
 
     const centerX = canvas.width / 2;
     const topY = 0;
