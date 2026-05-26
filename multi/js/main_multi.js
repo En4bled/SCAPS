@@ -1253,19 +1253,99 @@ async function init() {
             };
         }
 
+        const modalServerSettings = getEl('online-server-settings-modal');
+        const btnOpenServerSettings = getEl('btn-open-server-settings');
+        const btnCloseServerSettings = getEl('btn-close-server-settings');
+
+        if (btnOpenServerSettings && modalServerSettings) {
+            btnOpenServerSettings.onmouseover = () => playSound('menu_hover');
+            btnOpenServerSettings.onclick = () => {
+                playSound('menu_click');
+                modalServerSettings.style.display = 'flex';
+            };
+        }
+
+        if (btnCloseServerSettings && modalServerSettings) {
+            btnCloseServerSettings.onmouseover = () => playSound('menu_hover');
+            btnCloseServerSettings.onclick = () => {
+                playSound('menu_click');
+                modalServerSettings.style.display = 'none';
+            };
+        }
+
         if (btnOnlineConnect) {
             btnOnlineConnect.onmouseover = () => playSound('menu_hover');
             btnOnlineConnect.onclick = () => {
                 playSound('menu_click');
                 connectToServer(inputServerUrl.value, onlineStatus, onlineRoomControls);
+                if (modalServerSettings) modalServerSettings.style.display = 'none';
             };
         }
+
+        const viewMain = getEl('lobby-view-main');
+        const viewModes = getEl('lobby-view-modes');
+        const viewConfirm = getEl('lobby-view-confirm');
+        const btnBackToLobby = getEl('btn-back-to-lobby');
+        const btnMode1vs1 = getEl('btn-mode-1vs1');
+        const btnConfirmCreateYes = getEl('btn-confirm-create-yes');
+        const btnConfirmCreateNo = getEl('btn-confirm-create-no');
 
         if (btnOnlineCreate) {
             btnOnlineCreate.onmouseover = () => playSound('menu_hover');
             btnOnlineCreate.onclick = () => {
                 playSound('menu_click');
+                if (viewMain && viewModes) {
+                    viewMain.style.display = 'none';
+                    viewModes.style.display = 'flex';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'none';
+                }
+            };
+        }
+
+        if (btnBackToLobby) {
+            btnBackToLobby.onmouseover = () => playSound('menu_hover');
+            btnBackToLobby.onclick = () => {
+                playSound('menu_click');
+                if (viewMain && viewModes) {
+                    viewMain.style.display = 'flex';
+                    viewModes.style.display = 'none';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'block';
+                }
+            };
+        }
+
+        if (btnMode1vs1) {
+            btnMode1vs1.onmouseover = () => playSound('menu_hover');
+            btnMode1vs1.onclick = () => {
+                playSound('menu_click');
+                if (viewModes && viewConfirm) {
+                    viewModes.style.display = 'none';
+                    viewConfirm.style.display = 'flex';
+                }
+            };
+        }
+
+        if (btnConfirmCreateYes) {
+            btnConfirmCreateYes.onmouseover = () => playSound('menu_hover');
+            btnConfirmCreateYes.onclick = () => {
+                playSound('menu_click');
+                if (viewConfirm && viewMain) {
+                    viewConfirm.style.display = 'none';
+                    viewMain.style.display = 'flex';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'block';
+                }
                 sendCreateRoom(onlineStatus);
+            };
+        }
+
+        if (btnConfirmCreateNo) {
+            btnConfirmCreateNo.onmouseover = () => playSound('menu_hover');
+            btnConfirmCreateNo.onclick = () => {
+                playSound('menu_click');
+                if (viewConfirm && viewModes) {
+                    viewConfirm.style.display = 'none';
+                    viewModes.style.display = 'flex';
+                }
             };
         }
 
@@ -1277,22 +1357,10 @@ async function init() {
             };
         }
 
-        const linkToggleServer = getEl('link-toggle-server');
-        const onlineServerConfig = getEl('online-server-config');
-        if (linkToggleServer && onlineServerConfig) {
-            linkToggleServer.onmouseover = () => playSound('menu_hover');
-            linkToggleServer.onclick = (e) => {
-                e.preventDefault();
-                playSound('menu_click');
-                if (onlineServerConfig.style.display === 'none') {
-                    onlineServerConfig.style.setProperty('display', 'block', 'important');
-                    linkToggleServer.innerText = '[OCULTAR AJUSTES]';
-                } else {
-                    onlineServerConfig.style.setProperty('display', 'none', 'important');
-                    linkToggleServer.innerText = '[AJUSTES DE SERVIDOR]';
-                }
-            };
-        }
+        // Inicializar la interfaz de caja fuerte y deshabilitados de inicio
+        initSafeBoxUI();
+        updateSafeBoxDisabledState();
+        updateConnectionStatusUI('disconnected');
         
 
         // Iniciar Editor de Físicas
@@ -4943,6 +5011,7 @@ function getSpatialNavigationTarget(direction, focusables) {
 function connectToServer(serverUrl, statusEl, controlsEl) {
     statusEl.innerText = "CONECTANDO...";
     statusEl.style.color = "#5ad";
+    updateConnectionStatusUI('connecting');
 
     try {
         if (ws) {
@@ -4963,6 +5032,8 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             if (btnOnlineCreate) btnOnlineCreate.disabled = false;
             if (btnOnlineJoin) btnOnlineJoin.disabled = false;
             if (inputRoomCode) inputRoomCode.disabled = false;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('connected');
             
             if (window.pingInterval) clearInterval(window.pingInterval);
             window.pingInterval = setInterval(() => {
@@ -4984,6 +5055,8 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             if (btnOnlineCreate) btnOnlineCreate.disabled = true;
             if (btnOnlineJoin) btnOnlineJoin.disabled = true;
             if (inputRoomCode) inputRoomCode.disabled = true;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('disconnected');
         };
 
         ws.onclose = () => {
@@ -4997,6 +5070,8 @@ function connectToServer(serverUrl, statusEl, controlsEl) {
             if (btnOnlineCreate) btnOnlineCreate.disabled = true;
             if (btnOnlineJoin) btnOnlineJoin.disabled = true;
             if (inputRoomCode) inputRoomCode.disabled = true;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('disconnected');
 
             if (window.pingInterval) clearInterval(window.pingInterval);
         };
@@ -5767,4 +5842,116 @@ function updateRemoteCarVisuals(car, skidMarks, particles, timeScale) {
             car.spawnParticles(3, car.boostType || 'classic', particles);
         }
     }
+}
+
+function updateConnectionStatusUI(state) {
+    const btn = document.getElementById('btn-connection-status');
+    if (!btn) return;
+    
+    if (state === 'disconnected') {
+        btn.innerText = "SIN CONEXIÓN";
+        btn.style.borderColor = "#ff3366";
+        btn.style.color = "#ff3366";
+        btn.style.boxShadow = "0 0 15px rgba(255, 51, 102, 0.4)";
+    } else if (state === 'connecting') {
+        btn.innerText = "CONECTANDO...";
+        btn.style.borderColor = "#f90";
+        btn.style.color = "#f90";
+        btn.style.boxShadow = "0 0 15px rgba(255, 153, 0, 0.4)";
+    } else if (state === 'connected') {
+        btn.innerText = "CONECTADO";
+        btn.style.borderColor = "#22ffbb";
+        btn.style.color = "#22ffbb";
+        btn.style.boxShadow = "0 0 15px rgba(34, 255, 187, 0.4)";
+    }
+}
+
+function updateSafeBoxDisabledState() {
+    const hiddenCodeInput = document.getElementById('online-room-code');
+    const digitInputs = document.querySelectorAll('.safe-digit-input');
+    const dialUps = document.querySelectorAll('.safe-dial-up');
+    const dialDowns = document.querySelectorAll('.safe-dial-down');
+    
+    if (hiddenCodeInput) {
+        const isDisabled = hiddenCodeInput.disabled;
+        digitInputs.forEach(input => input.disabled = isDisabled);
+        // Style opacity of safe-box-wrapper to look faded if disabled
+        const safeWrapper = document.getElementById('safe-box-wrapper');
+        if (safeWrapper) {
+            safeWrapper.style.opacity = isDisabled ? '0.45' : '1';
+            safeWrapper.style.pointerEvents = isDisabled ? 'none' : 'auto';
+        }
+    }
+}
+
+function initSafeBoxUI() {
+    const digitInputs = document.querySelectorAll('.safe-digit-input');
+    const hiddenCodeInput = document.getElementById('online-room-code');
+    const dialUps = document.querySelectorAll('.safe-dial-up');
+    const dialDowns = document.querySelectorAll('.safe-dial-down');
+
+    function updateHiddenCode() {
+        let code = '';
+        digitInputs.forEach(input => {
+            code += input.value || '0';
+        });
+        if (hiddenCodeInput) {
+            hiddenCodeInput.value = code;
+        }
+    }
+
+    digitInputs.forEach((input, idx) => {
+        // Only allow numbers
+        input.oninput = (e) => {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (input.value.length > 0) {
+                input.value = input.value[0]; // Keep only first char
+                // Focus next
+                if (idx < 3) {
+                    digitInputs[idx + 1].focus();
+                    digitInputs[idx + 1].select();
+                }
+            }
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+
+        input.onkeydown = (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0) {
+                if (idx > 0) {
+                    digitInputs[idx - 1].focus();
+                    digitInputs[idx - 1].select();
+                }
+            }
+        };
+
+        // When focused, auto select
+        input.onfocus = () => {
+            input.select();
+        };
+    });
+
+    dialUps.forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-index'));
+            const input = digitInputs[idx];
+            let val = parseInt(input.value) || 0;
+            val = (val + 1) % 10;
+            input.value = val;
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+    });
+
+    dialDowns.forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-index'));
+            const input = digitInputs[idx];
+            let val = parseInt(input.value) || 0;
+            val = (val - 1 + 10) % 10;
+            input.value = val;
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+    });
 }

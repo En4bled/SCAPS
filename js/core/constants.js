@@ -4,7 +4,7 @@
  */
 
 export const CONFIG = {
-    VERSION: '2.0.1 - STABLE',
+    VERSION: '2.0.2 - STABLE',
     // Iluminación Dinámica
     AMBIENT_LIGHT: 0.4, // 0.0 (total oscuridad) a 1.0 (día total)
     LIGHT_SOURCES: [
