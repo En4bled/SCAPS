@@ -11,7 +11,7 @@ import { drawHUD, drawCarNames } from './ui/hud.js';
 import { showScoreboard, hideScoreboard } from './ui/scoreboard.js';
 import { checkCarBallCollision, checkCarCarCollision, checkGoalPhysics, applyTirePhysics, applyGlobalFriction } from './world/physics.js';
 import { updateCarAI } from './ai/bot.js';
-import { initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, setDriftSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
+import { audioCtx, initAudio, updateAudio, stopAllMotors, playSound, setBoostSound, setDriftSound, toggleMusic, setMusicVolume, setSFXVolume, nextSong, prevSong, getCurrentSongInfo, togglePlayPause, isMusicPaused, getAudioVisualData } from './fx/audio.js';
 import { initPhysicsEditor, toggleEditor } from './ui/physics_editor.js';
 import { BOOST_DEFS } from './fx/boost_definitions.js';
 import { EXPLOSION_DEFS } from './fx/explosion_definitions.js';
@@ -22,6 +22,21 @@ import { drawDynamicShadows, drawAmbientLighting, updateLights, drawWallShadows 
 window.addFeedMessage = addFeedMessage;
 window.addScreenShake = addScreenShake;
 window.addHitStop = addHitStop;
+
+// ==========================================
+// VARIABLES Y CONFIGURACIÓN MULTIJUGADOR ONLINE
+// ==========================================
+let ws = null;
+let multiplayerRole = null; // 'host' o 'client'
+let roomCode = null;
+let isMultiplayer = false;
+let p1RemoteState = null;
+let p2RemoteState = null;
+let p2RemoteStateAuthoritative = null;
+let ballRemoteState = null;
+let gameLoopStarted = false;
+let silentAudioNode = null;
+let bgLastTime = 0;
 
 // CONFIGURACIÓN DE USUARIO (USER.CONFIG)
 const USER_CONFIG = {
@@ -542,13 +557,17 @@ const MAPS_PER_PAGE = 1;
 const BALLS_PER_PAGE = 12; // 6 columnas x 2 filas
 let currentZoom = 1.0, targetZoom = 0.85;
 let currentVOffset = 0;
+let p1Ready = false;
+let p2Ready = false;
+let backgroundWorker = null;
 
 let score = { blue: 0, orange: 0 };
 let gameState = 'intro';
 let isTrainingMode = false;
+let trainingModeText = "ESPERANDO OPONENTE";
 let isPaused = false;
 let countdownTimer = 3;
-let gameTime = 60;
+let gameTime = 120;
 let lastTime = 0;
 let fps = 60;
 window.SCAPS_LOD_LEVEL = 1.0;
@@ -1179,7 +1198,170 @@ async function init() {
         finalScoreOrange = getEl('final-score-orange');
 
         // IMPORTANTE: Pasar callbacks correctos
+        
         setupInput(keysPressed, toggleCamera, toggleScoreboard);
+
+        // ==========================================
+        // VINCULACIÓN DE BOTONES MULTIJUGADOR ONLINE
+        // ==========================================
+        const btnOnline = getEl('btn-online');
+        const menuOnlineLobby = getEl('menu-online-lobby');
+        const inputServerUrl = getEl('online-server-url');
+        const btnOnlineConnect = getEl('btn-online-connect');
+        const btnOnlineCreate = getEl('btn-online-create');
+        const btnOnlineJoin = getEl('btn-online-join');
+        const inputRoomCode = getEl('online-room-code');
+        const onlineStatus = getEl('online-status');
+        const btnOnlineBack = getEl('btn-online-back');
+        const onlineRoomControls = getEl('online-room-controls');
+
+        console.log("SCAPS LOBBY: Inicializando vinculación multijugador...", { btnOnline, menuOnlineLobby });
+        if (btnOnline) {
+            btnOnline.onmouseover = () => playSound('menu_hover');
+            btnOnline.onclick = () => {
+                console.log("SCAPS LOBBY: Click en Jugar Online!");
+                playSound('menu_click');
+                if (menuOnlineLobby) {
+                    menuOnlineLobby.style.setProperty('display', 'flex', 'important');
+                    console.log("SCAPS LOBBY: menuOnlineLobby mostrado");
+                } else {
+                    console.error("SCAPS LOBBY: menuOnlineLobby es nulo!");
+                }
+                if (menuInitial) {
+                    menuInitial.style.setProperty('display', 'none', 'important');
+                    console.log("SCAPS LOBBY: menuInitial ocultado");
+                }
+                
+                // Conexión automática al servidor por defecto al abrir el lobby (evitamos reconectar si ya está activo)
+                if (inputServerUrl && onlineStatus && onlineRoomControls) {
+                    if (!ws || (ws.readyState !== WebSocket.OPEN && ws.readyState !== WebSocket.CONNECTING)) {
+                        console.log("SCAPS LOBBY: Conectando automáticamente al servidor...", inputServerUrl.value);
+                        connectToServer(inputServerUrl.value, onlineStatus, onlineRoomControls);
+                    }
+                }
+            };
+        } else {
+            console.error("SCAPS LOBBY: btnOnline no encontrado en el DOM!");
+        }
+
+        if (btnOnlineBack) {
+            btnOnlineBack.onmouseover = () => playSound('menu_hover');
+            btnOnlineBack.onclick = () => {
+                playSound('menu_click');
+                menuOnlineLobby.style.display = 'none';
+                menuInitial.style.display = 'flex';
+            };
+        }
+
+        const modalServerSettings = getEl('online-server-settings-modal');
+        const btnOpenServerSettings = getEl('btn-open-server-settings');
+        const btnCloseServerSettings = getEl('btn-close-server-settings');
+
+        if (btnOpenServerSettings && modalServerSettings) {
+            btnOpenServerSettings.onmouseover = () => playSound('menu_hover');
+            btnOpenServerSettings.onclick = () => {
+                playSound('menu_click');
+                modalServerSettings.style.display = 'flex';
+            };
+        }
+
+        if (btnCloseServerSettings && modalServerSettings) {
+            btnCloseServerSettings.onmouseover = () => playSound('menu_hover');
+            btnCloseServerSettings.onclick = () => {
+                playSound('menu_click');
+                modalServerSettings.style.display = 'none';
+            };
+        }
+
+        if (btnOnlineConnect) {
+            btnOnlineConnect.onmouseover = () => playSound('menu_hover');
+            btnOnlineConnect.onclick = () => {
+                playSound('menu_click');
+                connectToServer(inputServerUrl.value, onlineStatus, onlineRoomControls);
+                if (modalServerSettings) modalServerSettings.style.display = 'none';
+            };
+        }
+
+        const viewMain = getEl('lobby-view-main');
+        const viewModes = getEl('lobby-view-modes');
+        const viewConfirm = getEl('lobby-view-confirm');
+        const btnBackToLobby = getEl('btn-back-to-lobby');
+        const btnMode1vs1 = getEl('btn-mode-1vs1');
+        const btnConfirmCreateYes = getEl('btn-confirm-create-yes');
+        const btnConfirmCreateNo = getEl('btn-confirm-create-no');
+
+        if (btnOnlineCreate) {
+            btnOnlineCreate.onmouseover = () => playSound('menu_hover');
+            btnOnlineCreate.onclick = () => {
+                playSound('menu_click');
+                if (viewMain && viewModes) {
+                    viewMain.style.display = 'none';
+                    viewModes.style.display = 'flex';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'none';
+                }
+            };
+        }
+
+        if (btnBackToLobby) {
+            btnBackToLobby.onmouseover = () => playSound('menu_hover');
+            btnBackToLobby.onclick = () => {
+                playSound('menu_click');
+                if (viewMain && viewModes) {
+                    viewMain.style.display = 'flex';
+                    viewModes.style.display = 'none';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'block';
+                }
+            };
+        }
+
+        if (btnMode1vs1) {
+            btnMode1vs1.onmouseover = () => playSound('menu_hover');
+            btnMode1vs1.onclick = () => {
+                playSound('menu_click');
+                if (viewModes && viewConfirm) {
+                    viewModes.style.display = 'none';
+                    viewConfirm.style.display = 'flex';
+                }
+            };
+        }
+
+        if (btnConfirmCreateYes) {
+            btnConfirmCreateYes.onmouseover = () => playSound('menu_hover');
+            btnConfirmCreateYes.onclick = () => {
+                playSound('menu_click');
+                if (viewConfirm && viewMain) {
+                    viewConfirm.style.display = 'none';
+                    viewMain.style.display = 'flex';
+                    if (btnOnlineBack) btnOnlineBack.style.display = 'block';
+                }
+                sendCreateRoom(onlineStatus);
+            };
+        }
+
+        if (btnConfirmCreateNo) {
+            btnConfirmCreateNo.onmouseover = () => playSound('menu_hover');
+            btnConfirmCreateNo.onclick = () => {
+                playSound('menu_click');
+                if (viewConfirm && viewModes) {
+                    viewConfirm.style.display = 'none';
+                    viewModes.style.display = 'flex';
+                }
+            };
+        }
+
+        if (btnOnlineJoin) {
+            btnOnlineJoin.onmouseover = () => playSound('menu_hover');
+            btnOnlineJoin.onclick = () => {
+                playSound('menu_click');
+                sendJoinRoom(inputRoomCode.value, onlineStatus);
+            };
+        }
+
+        // Inicializar la interfaz de caja fuerte y deshabilitados de inicio
+        initSafeBoxUI();
+        updateSafeBoxDisabledState();
+        updateConnectionStatusUI('disconnected');
+        
 
         // Iniciar Editor de Físicas
         initPhysicsEditor((isOpening) => {
@@ -1383,7 +1565,7 @@ async function init() {
                 if (btnStartGame.disabled) return;
                 playSound('menu_click');
                 score = { blue: 0, orange: 0 };
-                gameTime = 60;
+                gameTime = 120;
                 replaySystem.reset();
                 finalizeStartGame();
             };
@@ -1405,7 +1587,7 @@ async function init() {
         if (btnRematch) btnRematch.onclick = () => {
             if (gameOverOverlay) gameOverOverlay.style.display = 'none';
             score = { blue: 0, orange: 0 };
-            gameTime = 60;
+            gameTime = 120;
             replaySystem.reset();
             finalizeStartGame();
             playSound('menu_click');
@@ -1903,7 +2085,7 @@ async function init() {
         const pRestart = getEl('btn-pause-restart'); 
         if (pRestart) pRestart.onclick = () => { 
             score = { blue: 0, orange: 0 }; 
-            gameTime = 60; 
+            gameTime = 120; 
             if (typeof updateScoreboard === 'function') updateScoreboard(scoreboardEl, allCars, score);
             togglePause(); 
             resetAfterGoal(); 
@@ -2009,6 +2191,25 @@ async function init() {
             isPaused = false;
             const pm = getEl('pause-menu');
             if (pm) pm.style.display = 'none';
+            
+            // Si es multijugador, desconectar WebSocket y limpiar variables
+            if (isMultiplayer) {
+                stopBackgroundAudioLoop();
+                isMultiplayer = false;
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+                const roomIndicator = document.getElementById('online-room-indicator');
+                if (roomIndicator) roomIndicator.style.display = 'none';
+                
+                // Habilitar los botones del lobby
+                const btnCreate = document.getElementById('btn-online-create');
+                const btnJoin = document.getElementById('btn-online-join');
+                if (btnCreate) btnCreate.disabled = false;
+                if (btnJoin) btnJoin.disabled = false;
+            }
+
             gameState = 'menu';
             showMenuScreen('initial');
             if (mainMenuEl) {
@@ -2154,26 +2355,28 @@ function gameLoop(timestamp) {
         return;
     }
 
-    if (!isPaused) {
+    const shouldUpdate = !isPaused || isMultiplayer;
+    if (shouldUpdate) {
         const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
         if (inMatch) {
             updateAll(dt);
         }
     }
 
-    renderFrame();
+    renderFrame(dt);
     if (gameState === 'settings') drawSettingsVisualizer();
     requestAnimationFrame(gameLoop);
 }
 
-function renderFrame() {
+function renderFrame(dt) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Si estamos en la intro o en el menú, no dibujamos nada en el canvas.
     // Esto asegura una transición limpia a través de negro.
     if (gameState === 'intro' || gameState === 'menu') return;
 
-    let targetX = player1.x, targetY = player1.y, targetRot = 0, vOffset = 0;
+    const localPlayer = (isMultiplayer && multiplayerRole === 'client') ? player2 : player1;
+    let targetX = localPlayer.x, targetY = localPlayer.y, targetRot = 0, vOffset = 0;
     if (gameState === 'zooming') {
         // Progreso del zoom de 0.1 a 0.85
         let progress = Math.min(1, Math.max(0, (currentZoom - 0.1) / (0.85 - 0.1)));
@@ -2184,16 +2387,16 @@ function renderFrame() {
             // Mezcla suave hacia el jugador en el último 40% del zoom
             let mix = (progress - 0.6) / 0.4;
             let smoothMix = mix * mix * (3 - 2 * mix); // Ease in-out
-            targetX = (CONST.CONFIG.WORLD_W / 2) * (1 - smoothMix) + player1.x * smoothMix;
-            targetY = (CONST.CONFIG.WORLD_H / 2) * (1 - smoothMix) + player1.y * smoothMix;
+            targetX = (CONST.CONFIG.WORLD_W / 2) * (1 - smoothMix) + localPlayer.x * smoothMix;
+            targetY = (CONST.CONFIG.WORLD_H / 2) * (1 - smoothMix) + localPlayer.y * smoothMix;
         }
         targetRot = 0;
     } else if (gameState === 'panning' || gameState === 'menu') {
-        targetX = player1.x + (gameState === 'menu' ? mouseX * 200 : 0);
-        targetY = player1.y + (gameState === 'menu' ? mouseY * 200 : 0);
+        targetX = localPlayer.x + (gameState === 'menu' ? mouseX * 200 : 0);
+        targetY = localPlayer.y + (gameState === 'menu' ? mouseY * 200 : 0);
         targetRot = (gameState === 'menu' ? mouseX * 0.05 : 0);
     } else if (cameraMode === 'rotating') {
-        targetRot = -player1.angle; vOffset = canvas.height * 0.3;
+        targetRot = -localPlayer.angle; vOffset = canvas.height * 0.3;
     }
 
     let camLerp = (gameState === 'zooming' || gameState === 'panning') ? 0.04 : 0.08;
@@ -2224,7 +2427,7 @@ function renderFrame() {
     // --- EFECTO JUICE: FOV DINÁMICO ---
     let extraFOV = 0;
     if (gameState === 'playing' || gameState === 'goalScored') {
-        const speedRatio = Math.abs(player1.speed) / CONST.CONFIG.CAR_MAX_SPEED;
+        const speedRatio = Math.abs(localPlayer.speed) / CONST.CONFIG.CAR_MAX_SPEED;
         extraFOV = speedRatio * 0.15; 
     }
     
@@ -2239,8 +2442,8 @@ function renderFrame() {
     drawAll();
 
     // Solo dibujar nombres y HUD si estamos en partida
-    drawCarNames(ctx, allCars, player1, cameraMode, gameState);
-    drawHUD(ctx, canvas, gameTime, score, player1, cameraMode, isTrainingMode, ball, {
+    drawCarNames(ctx, allCars, localPlayer, cameraMode, gameState);
+    drawHUD(ctx, canvas, gameTime, score, localPlayer, cameraMode, isTrainingMode ? trainingModeText : false, ball, {
         x: currentCamX,
         y: currentCamY,
         rot: currentRotation,
@@ -2297,76 +2500,232 @@ function drawFeed(ctx, canvas) {
 }
 
 function updateAll(dt) {
-    // Factor de escala basado en 60fps
     const timeScale = dt * 60;
 
     if (gameState === 'playing' || gameState === 'countdown' || gameState === 'goalScored') {
-        // 1. Actualizar Entidades (Multiplicar por timeScale para físicas consistentes)
         const physicsOverlay = document.getElementById('physics-editor-overlay');
         const isPhysicsOpen = physicsOverlay && !physicsOverlay.classList.contains('hidden') && physicsOverlay.style.display !== 'none';
-        const blockControls = isPhysicsOpen && !window.physicsIsFolded;
+        const blockControls = (isPhysicsOpen && !window.physicsIsFolded) || (isMultiplayer && isPaused);
         const activeKeys = blockControls ? {} : keysPressed;
 
-        player1.update(activeKeys, gameState, particles, skidMarks, timeScale);
-        applyTirePhysics(player1, timeScale);
+        if (isMultiplayer) {
+            if (multiplayerRole === 'host') {
+                // Host (P1 local):
+                // 1. Simular P1 localmente
+                player1.update(activeKeys, gameState, particles, skidMarks, timeScale);
+                applyTirePhysics(player1, timeScale);
 
-        allCars.forEach(car => {
-            if (car !== player1) {
-                const aiKeys = {};
-                if (!isTrainingMode) {
-                    updateCarAI(car, ball, allCars, boostPads, car.controls, aiKeys);
+                // 2. Actualizar P2 (Cliente remoto) desde el estado del WebSocket
+                if (p2RemoteState) {
+                    player2.x += (p2RemoteState.x - player2.x) * 0.98;
+                    player2.y += (p2RemoteState.y - player2.y) * 0.98;
+                    player2.z += (p2RemoteState.z - player2.z) * 0.98;
+                    
+                    let angleDiff = p2RemoteState.angle - player2.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    player2.angle += angleDiff * 0.98;
+
+                    player2.vx = p2RemoteState.vx;
+                    player2.vy = p2RemoteState.vy;
+                    player2.vz = p2RemoteState.vz;
+                    player2.boost = p2RemoteState.boost;
+                    player2.isExploded = p2RemoteState.isExploded;
+                    player2.isBoosting = p2RemoteState.isBoosting;
+                    player2.isDrifting = p2RemoteState.isDrifting;
+
+                    if (p2RemoteState.name !== undefined) player2.name = p2RemoteState.name;
+                    if (p2RemoteState.imgUrl !== undefined) player2.imgUrl = p2RemoteState.imgUrl;
+                    if (p2RemoteState.hue !== undefined) player2.hue = p2RemoteState.hue;
+                    if (p2RemoteState.saturate !== undefined) player2.saturate = p2RemoteState.saturate;
+                    if (p2RemoteState.boostType !== undefined) player2.boostType = p2RemoteState.boostType;
                 }
-                car.update(aiKeys, gameState, particles, skidMarks, timeScale);
-                applyTirePhysics(car, timeScale);
+
+                // Actualizar efectos visuales del cliente remoto (derrapes, partículas)
+                updateRemoteCarVisuals(player2, skidMarks, particles, timeScale);
+
+                // 3. Simular balón localmente (El Host es la autoridad del balón)
+                ball.update(gameState, particles, timeScale);
+                applyGlobalFriction(ball, [player1, player2], timeScale);
+
+                // 4. Chequear colisiones
+                checkCollisionsMulti(timeScale);
+
+                // 5. Enviar estado al cliente
+                sendStateToClient();
+            } else if (multiplayerRole === 'client') {
+                // Cliente (P2 local):
+                // 1. Simular P2 localmente
+                player2.update(activeKeys, gameState, particles, skidMarks, timeScale);
+                applyTirePhysics(player2, timeScale);
+
+                // 2. Actualizar P1 (Host remoto) desde el estado del WebSocket
+                if (p1RemoteState) {
+                    player1.x += (p1RemoteState.x - player1.x) * 0.98;
+                    player1.y += (p1RemoteState.y - player1.y) * 0.98;
+                    player1.z += (p1RemoteState.z - player1.z) * 0.98;
+                    
+                    let angleDiff = p1RemoteState.angle - player1.angle;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    player1.angle += angleDiff * 0.98;
+
+                    player1.vx = p1RemoteState.vx;
+                    player1.vy = p1RemoteState.vy;
+                    player1.vz = p1RemoteState.vz;
+                    player1.boost = p1RemoteState.boost;
+                    player1.isExploded = p1RemoteState.isExploded;
+                    player1.isBoosting = p1RemoteState.isBoosting;
+                    player1.isDrifting = p1RemoteState.isDrifting;
+
+                    if (p1RemoteState.name !== undefined) player1.name = p1RemoteState.name;
+                    if (p1RemoteState.imgUrl !== undefined) player1.imgUrl = p1RemoteState.imgUrl;
+                    if (p1RemoteState.hue !== undefined) player1.hue = p1RemoteState.hue;
+                    if (p1RemoteState.saturate !== undefined) player1.saturate = p1RemoteState.saturate;
+                    if (p1RemoteState.boostType !== undefined) player1.boostType = p1RemoteState.boostType;
+                }
+
+                // Reconciliar estado de P2 con el veredicto del Host (para explosiones y respawn)
+                if (p2RemoteStateAuthoritative) {
+                    if (p2RemoteStateAuthoritative.isExploded && !player2.isExploded) {
+                        player2.isExploded = true;
+                        player2.respawnTimer = p2RemoteStateAuthoritative.respawnTimer;
+                        for (let i = 0; i < 35; i++) {
+                            explosionParticles.push(new ExplosionParticle(player2.x, player2.y, Math.floor(Math.random() * 80)));
+                        }
+                    }
+                    if (!p2RemoteStateAuthoritative.isExploded && player2.isExploded) {
+                        player2.isExploded = false;
+                        player2.respawnTimer = 0;
+                        // Sincronizar posición de respawn calculada por el Host
+                        player2.x = p2RemoteStateAuthoritative.x;
+                        player2.y = p2RemoteStateAuthoritative.y;
+                        player2.z = p2RemoteStateAuthoritative.z || 0;
+                        player2.vx = 0;
+                        player2.vy = 0;
+                        player2.vz = 0;
+                        player2.speed = 0;
+                    }
+                }
+
+                // Actualizar efectos visuales del host remoto (derrapes, partículas)
+                updateRemoteCarVisuals(player1, skidMarks, particles, timeScale);
+
+                // 3. Simular balón localmente (y predecir/ignorar servidor durante cooldown de contacto local)
+                ball.update(gameState, particles, timeScale);
+                applyGlobalFriction(ball, [player1, player2], timeScale);
+
+                if (ballRemoteState && player2.ballContactCooldown <= 0) {
+                    ball.x += (ballRemoteState.x - ball.x) * 0.35;
+                    ball.y += (ballRemoteState.y - ball.y) * 0.35;
+                    ball.z += (ballRemoteState.z - ball.z) * 0.35;
+                    ball.vx = ballRemoteState.vx;
+                    ball.vy = ballRemoteState.vy;
+                    ball.vz = ballRemoteState.vz;
+                    ball.isFireball = ballRemoteState.isFireball;
+                }
+
+                // 4. Resolver colisiones locales para P2 (evita atravesar balón y desincronizar host)
+                checkCarBallCollision(player2, ball, touchHistory, gameTime, timeScale);
+                checkCarCarCollision(player2, player1, explosionParticles);
+
+                // 5. Mover SOLO a P2 localmente (P1 ya se mueve por interpolación de red)
+                player2.move();
+
+                // 6. Enviar inputs/posición de P2 al Host
+                sendStateToHost();
             }
-        });
 
-        ball.update(gameState, particles, timeScale);
-        applyGlobalFriction(ball, allCars, timeScale);
-        boostPads.forEach(pad => pad.update());
+            boostPads.forEach(pad => pad.update());
 
-        // Manejo de Respawn de coches explotados
-        allCars.forEach((car, i) => {
-            if (car.isExploded && car.respawnTimer <= 0) {
-                const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
-                const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
-                car.x = sp.x;
-                car.y = sp.y;
-                car.angle = sp.a || 0;
-                car.speed = 0;
-                car.vx = 0;
-                car.vy = 0;
-                car.boost = 33;
-                car.isExploded = false;
-                console.log(`Car ${car.name} respawned.`);
+            // Respawn de coches explotados (Solo Host calcula respawn y lo comunica)
+            if (multiplayerRole === 'host') {
+                [player1, player2].forEach((car, i) => {
+                    if (car.isExploded && car.respawnTimer <= 0) {
+                        const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
+                        const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
+                        car.x = sp.x;
+                        car.y = sp.y;
+                        car.angle = sp.a || 0;
+                        car.speed = 0;
+                        car.vx = 0;
+                        car.vy = 0;
+                        car.boost = 33;
+                        car.isExploded = false;
+                    }
+                });
             }
-        });
 
-        checkCollisions(timeScale);
+        } else {
+            // Juego Local tradicional (Sin cambios)
+            player1.update(activeKeys, gameState, particles, skidMarks, timeScale);
+            applyTirePhysics(player1, timeScale);
+
+            allCars.forEach(car => {
+                if (car !== player1) {
+                    const aiKeys = {};
+                    if (!isTrainingMode) {
+                        updateCarAI(car, ball, allCars, boostPads, car.controls, aiKeys);
+                    }
+                    car.update(aiKeys, gameState, particles, skidMarks, timeScale);
+                    applyTirePhysics(car, timeScale);
+                }
+            });
+
+            ball.update(gameState, particles, timeScale);
+            applyGlobalFriction(ball, allCars, timeScale);
+            boostPads.forEach(pad => pad.update());
+
+            allCars.forEach((car, i) => {
+                if (car.isExploded && car.respawnTimer <= 0) {
+                    const spIndex = car.color === '#5ad' ? (Math.random() < 0.5 ? 0 : 1) : (Math.random() < 0.5 ? 2 : 3);
+                    const sp = CONST.CONFIG.SPAWN_POINTS[spIndex] || { x: 500, y: 500, a: 0 };
+                    car.x = sp.x;
+                    car.y = sp.y;
+                    car.angle = sp.a || 0;
+                    car.speed = 0;
+                    car.vx = 0;
+                    car.vy = 0;
+                    car.boost = 33;
+                    car.isExploded = false;
+                }
+            });
+
+            checkCollisions(timeScale);
+        }
     }
 
-    // --- LÓGICA DE REPLAY ---
+    // Replay
     if (gameState === 'replay') {
         const stillPlaying = replaySystem.applyFrame(ball, allCars);
         if (!stillPlaying) {
-            gameState = 'panning'; // Estado temporal para bloquear este bloque
+            gameState = 'panning';
             triggerTransition();
-            setTimeout(resetAfterGoal, 400); 
+            if (isMultiplayer) {
+                if (multiplayerRole === 'host') {
+                    setTimeout(() => {
+                        resetAfterGoalMulti();
+                        if (ws && ws.readyState === 1) {
+                            ws.send(JSON.stringify({ type: 'reset' }));
+                        }
+                    }, 400);
+                }
+            } else {
+                setTimeout(resetAfterGoal, 400);
+            }
         }
     } else if (gameState === 'playing' || gameState === 'goalScored') {
-        // Seguimos grabando durante 'goalScored' para capturar el final
         replaySystem.record(ball, allCars);
     }
 
-    // Actualizar objetos de partículas y skidmarks con LOD Dinámico
+    // Partículas y Skidmarks
     const lodMultiplier = window.SCAPS_LOD_LEVEL || 1.0;
     [particles, explosionParticles, confettiParticles, skidMarks].forEach((arr, arrIdx) => {
-        const isPerformanceIntensive = arrIdx < 3; // partículas (boost, explosión y confeti)
+        const isPerformanceIntensive = arrIdx < 3;
         for (let i = arr.length - 1; i >= 0; i--) {
             const obj = arr[i];
             if (obj && typeof obj.update === 'function') {
                 obj.update();
-                // Si el nivel de detalle (LOD) es bajo, aceleramos el decaimiento de las partículas
                 if (isPerformanceIntensive && lodMultiplier < 0.95) {
                     obj.lifespan -= (1.0 - lodMultiplier) * 2;
                 }
@@ -2375,7 +2734,6 @@ function updateAll(dt) {
         }
     });
 
-    // Pruning reactivo: Forzar límites máximos en arrays de partículas según el LOD
     const maxParticles = Math.round(250 * lodMultiplier);
     if (particles.length > maxParticles) particles.splice(0, particles.length - maxParticles);
     
@@ -2390,9 +2748,11 @@ function updateAll(dt) {
 
     animationFrameCounter++;
     updateAudio();
-    if (player1) {
-        setBoostSound(player1.isBoosting);
-        setDriftSound(player1.isDrifting && player1.z === 0 && Math.abs(player1.speed) > 0.5);
+    
+    const localPlayer = (isMultiplayer && multiplayerRole === 'client') ? player2 : player1;
+    if (localPlayer) {
+        setBoostSound(localPlayer.isBoosting);
+        setDriftSound(localPlayer.isDrifting && localPlayer.z === 0 && Math.abs(localPlayer.speed) > 0.5);
     }
     updateUI(dt);
     if (gameState === 'settings') drawSettingsVisualizer();
@@ -2539,8 +2899,9 @@ function updateUI(dt) {
         }
     }
     if (gameState === 'panning') {
-        const dx = currentCamX - player1.x;
-        const dy = currentCamY - player1.y;
+        const localPlayer = (isMultiplayer && multiplayerRole === 'client') ? player2 : player1;
+        const dx = currentCamX - localPlayer.x;
+        const dy = currentCamY - localPlayer.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         // Umbral reducido para un encuadre perfecto antes de empezar
         if (dist < 10) {
@@ -2578,6 +2939,10 @@ function updateUI(dt) {
 }
 
 function resetAfterGoal() {
+    if (isMultiplayer) {
+        resetAfterGoalMulti();
+        return;
+    }
     applySpawns();
     allCars.forEach(car => { car.speed = 0; car.vx = 0; car.vy = 0; car.boost = isTrainingMode ? 100 : 33; });
     ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
@@ -2783,6 +3148,18 @@ function togglePause() {
             }
             syncPauseMenuAudioUI();
             updatePauseGamepadStatus();
+
+            // Mostrar el código de sala en el menú de pausa si estamos en multijugador
+            const roomContainer = document.getElementById('pause-online-room-code-container');
+            const roomVal = document.getElementById('pause-online-room-code-value');
+            if (roomContainer && roomVal) {
+                if (isMultiplayer && roomCode) {
+                    roomContainer.style.display = 'block';
+                    roomVal.innerText = roomCode;
+                } else {
+                    roomContainer.style.display = 'none';
+                }
+            }
         }
     }
 }
@@ -4249,7 +4626,7 @@ function applyMapConfig(c) {
 
 
 // EVENTOS DE AUDIO Y REPRODUCTOR MP3
-document.addEventListener('DOMContentLoaded', () => {
+function setupAudioAndMP3Events() {
     const sliderVol = document.getElementById('slider-settings-vol');
     const btnMute = document.getElementById('btn-settings-mute');
     const btnPrev = document.getElementById('btn-prev-song');
@@ -4304,7 +4681,12 @@ document.addEventListener('DOMContentLoaded', () => {
             playSound('menu_click');
         });
     }
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupAudioAndMP3Events);
+} else {
+    setupAudioAndMP3Events();
+}
 
 // Inicializar el gestor de boost cuando sea necesario
 // (Esto se llamará dentro de init() o al abrir el panel)
@@ -4621,4 +5003,973 @@ function getSpatialNavigationTarget(direction, focusables) {
     });
 
     return bestTarget || current;
+}
+
+
+// ==========================================
+// FUNCIONES Y CALLBACKS DEL SISTEMA MULTIJUGADOR
+// ==========================================
+
+function connectToServer(serverUrl, statusEl, controlsEl) {
+    statusEl.innerText = "CONECTANDO...";
+    statusEl.style.color = "#5ad";
+    statusEl.style.display = "block";
+    updateConnectionStatusUI('connecting');
+
+    try {
+        if (ws) {
+            ws.close();
+        }
+
+        ws = new WebSocket(serverUrl);
+
+        ws.onopen = () => {
+            statusEl.innerText = "";
+            statusEl.style.display = "none";
+            controlsEl.style.display = "block";
+
+            // Habilitar controles de sala
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = false;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = false;
+            if (inputRoomCode) inputRoomCode.disabled = false;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('connected');
+            
+            if (window.pingInterval) clearInterval(window.pingInterval);
+            window.pingInterval = setInterval(() => {
+                if (ws && ws.readyState === 1) {
+                    ws.send(JSON.stringify({ type: 'ping' }));
+                }
+            }, 10000);
+        };
+
+        ws.onerror = (err) => {
+            statusEl.innerText = "ERROR DE CONEXIÓN. REVISA EL SERVIDOR.";
+            statusEl.style.color = "#ff3366";
+            statusEl.style.display = "block";
+            console.error("WS error:", err);
+
+            // Deshabilitar controles de sala
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = true;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = true;
+            if (inputRoomCode) inputRoomCode.disabled = true;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('disconnected');
+        };
+
+        ws.onclose = () => {
+            statusEl.innerText = "DESCONECTADO.";
+            statusEl.style.color = "#ff3366";
+            statusEl.style.display = "block";
+            
+            // Deshabilitar controles de sala en lugar de ocultar la sección completa
+            const btnOnlineCreate = document.getElementById('btn-online-create');
+            const btnOnlineJoin = document.getElementById('btn-online-join');
+            const inputRoomCode = document.getElementById('online-room-code');
+            if (btnOnlineCreate) btnOnlineCreate.disabled = true;
+            if (btnOnlineJoin) btnOnlineJoin.disabled = true;
+            if (inputRoomCode) inputRoomCode.disabled = true;
+            updateSafeBoxDisabledState();
+            updateConnectionStatusUI('disconnected');
+
+            if (window.pingInterval) clearInterval(window.pingInterval);
+        };
+
+        ws.onmessage = async (event) => {
+            try {
+                let rawData = event.data;
+                if (event.data instanceof Blob) {
+                    rawData = await event.data.text();
+                }
+                const data = JSON.parse(rawData);
+
+                switch (data.type) {
+                    case 'created':
+                        roomCode = data.roomCode;
+                        multiplayerRole = 'host';
+                        statusEl.innerText = `SALA: ${roomCode} | ESPERANDO RIVAL...`;
+                        statusEl.style.color = "#5ad";
+                        statusEl.style.display = "block";
+                        document.getElementById('btn-online-create').disabled = true;
+                        document.getElementById('btn-online-join').disabled = true;
+                        
+                        // El creador entra en entrenamiento (modo libre) mientras espera al rival
+                        setTimeout(() => {
+                            startGameMulti(true);
+                        }, 1000);
+                        break;
+
+                    case 'joined':
+                        roomCode = data.roomCode;
+                        multiplayerRole = 'client';
+                        statusEl.innerText = `UNIDO A SALA ${roomCode}. INICIANDO...`;
+                        statusEl.style.color = "#22ffbb";
+                        statusEl.style.display = "block";
+                        
+                        // El cliente entra a la partida directamente
+                        setTimeout(() => {
+                            startGameMulti(false);
+                        }, 1000);
+                        break;
+
+                    case 'player_joined':
+                        statusEl.innerText = "¡RIVAL CONECTADO! PREPARANDO...";
+                        statusEl.style.color = "#22ffbb";
+                        statusEl.style.display = "block";
+                        
+                        // Cambiar cartel de entrenamiento a "CALENTAMIENTO"
+                        trainingModeText = "CALENTAMIENTO";
+                        
+                        // Mostrar mensaje de aviso
+                        addFeedMessage("¡RIVAL CONECTADO! PREPARANDO PARTIDO...");
+                        
+                        if (countdownEl) {
+                            countdownEl.style.display = 'block';
+                            countdownEl.innerText = "¡RIVAL CONECTADO!";
+                            countdownEl.style.fontSize = '32px';
+                            countdownEl.style.background = 'rgba(10, 10, 25, 0.95)';
+                            countdownEl.style.border = '3px solid #22ffbb';
+                            countdownEl.style.padding = '15px 30px';
+                            countdownEl.style.borderRadius = '0px';
+                            countdownEl.style.color = '#22ffbb';
+                            countdownEl.style.boxShadow = '0 0 25px rgba(34, 255, 187, 0.4)';
+                            countdownEl.style.textShadow = 'none';
+                            countdownEl.style.fontFamily = "'Share Tech Mono', monospace";
+                            countdownEl.style.letterSpacing = '3px';
+                        }
+                        
+                        // El host inicia el partido mostrando confirmación de listo tras 2 segundos
+                        setTimeout(() => {
+                            if (countdownEl) {
+                                countdownEl.style.display = 'none';
+                                countdownEl.style.fontSize = '';
+                                countdownEl.style.background = '';
+                                countdownEl.style.border = '';
+                                countdownEl.style.padding = '';
+                                countdownEl.style.borderRadius = '';
+                                countdownEl.style.color = '';
+                                countdownEl.style.boxShadow = '';
+                                countdownEl.style.textShadow = '';
+                                countdownEl.style.fontFamily = '';
+                                countdownEl.style.letterSpacing = '';
+                            }
+                            showReadyConfirmOverlay(true);
+                        }, 2000);
+                        break;
+
+                    case 'ready_init':
+                        if (multiplayerRole === 'client') {
+                            showReadyConfirmOverlay(false);
+                        }
+                        break;
+
+                    case 'ready_sync':
+                        if (data.player === 'host') {
+                            p1Ready = data.ready;
+                        } else if (data.player === 'client') {
+                            p2Ready = data.ready;
+                        }
+                        updateReadyUI();
+                        
+                        // Si ambos están listos, el host inicia el partido
+                        if (p1Ready && p2Ready) {
+                            if (multiplayerRole === 'host') {
+                                startMatchMulti();
+                            }
+                        }
+                        break;
+
+                    case 'start_match':
+                        startMatchClient();
+                        break;
+
+                    case 'opponent_disconnected':
+                        alert(data.message);
+                        statusEl.innerText = "El rival se desconectó.";
+                        statusEl.style.color = "#ff3366";
+                        statusEl.style.display = "block";
+                        
+                        const roomIndicator = document.getElementById('online-room-indicator');
+                        if (roomIndicator) roomIndicator.style.display = 'none';
+
+                        if (isMultiplayer) {
+                            stopBackgroundAudioLoop();
+                            isMultiplayer = false;
+                            gameState = 'menu';
+                            if (mainMenuEl) mainMenuEl.style.display = 'flex';
+                            document.getElementById('btn-online-create').disabled = false;
+                            document.getElementById('btn-online-join').disabled = false;
+                        }
+                        break;
+
+                    case 'state':
+                        if (multiplayerRole === 'host') {
+                            p2RemoteState = data.p2;
+                            if (data.ballHit && ball) {
+                                ball.x = data.ballHit.x;
+                                ball.y = data.ballHit.y;
+                                ball.z = data.ballHit.z;
+                                ball.vx = data.ballHit.vx;
+                                ball.vy = data.ballHit.vy;
+                                ball.vz = data.ballHit.vz;
+                                ball.isFireball = data.ballHit.isFireball;
+                                if (player2) player2.ballContactCooldown = 15;
+                            }
+                        } else {
+                            p1RemoteState = data.p1;
+                            p2RemoteStateAuthoritative = data.p2;
+                            ballRemoteState = data.ball;
+                            if (data.gameTime !== undefined) gameTime = data.gameTime;
+                            if (data.score) {
+                                score.blue = data.score.blue;
+                                score.orange = data.score.orange;
+                            }
+                        }
+                        break;
+
+                    case 'goal':
+                        if (multiplayerRole === 'client') {
+                            handleGoalClient(data.scorer);
+                        }
+                        break;
+
+                    case 'reset':
+                        if (multiplayerRole === 'client') {
+                            resetAfterGoalMulti();
+                        }
+                        break;
+                }
+            } catch (e) {
+                console.error("Error procesando mensaje de red:", e);
+            }
+        };
+
+    } catch (e) {
+        statusEl.innerText = "ERROR AL INICIAR WEBSOCKET.";
+        statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
+    }
+}
+
+function sendCreateRoom(statusEl) {
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'create' }));
+    } else {
+        statusEl.innerText = "NO CONECTADO AL SERVIDOR.";
+        statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
+    }
+}
+
+function sendJoinRoom(code, statusEl) {
+    if (!code || code.length !== 4) {
+        statusEl.innerText = "CÓDIGO DEBE SER DE 4 DÍGITOS.";
+        statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
+        return;
+    }
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'join', roomCode: code }));
+    } else {
+        statusEl.innerText = "NO CONECTADO AL SERVIDOR.";
+        statusEl.style.color = "#ff3366";
+        statusEl.style.display = "block";
+    }
+}
+
+function sendStateToClient() {
+    if (ws && ws.readyState === 1 && roomCode) {
+        ws.send(JSON.stringify({
+            type: 'state',
+            role: 'host',
+            ball: {
+                x: ball.x,
+                y: ball.y,
+                z: ball.z,
+                vx: ball.vx,
+                vy: ball.vy,
+                vz: ball.vz,
+                isFireball: ball.isFireball
+            },
+            p1: {
+                x: player1.x,
+                y: player1.y,
+                z: player1.z,
+                vx: player1.vx,
+                vy: player1.vy,
+                vz: player1.vz,
+                angle: player1.angle,
+                speed: player1.speed,
+                boost: player1.boost,
+                isExploded: player1.isExploded,
+                isBoosting: player1.isBoosting,
+                isDrifting: player1.isDrifting,
+                name: player1.name,
+                imgUrl: player1.imgUrl,
+                hue: player1.hue,
+                saturate: player1.saturate,
+                boostType: player1.boostType
+            },
+            p2: {
+                x: player2.x,
+                y: player2.y,
+                z: player2.z,
+                vx: player2.vx,
+                vy: player2.vy,
+                vz: player2.vz,
+                isExploded: player2.isExploded,
+                respawnTimer: player2.respawnTimer
+            },
+            gameTime: gameTime,
+            score: score
+        }));
+    }
+}
+
+function sendStateToHost() {
+    if (ws && ws.readyState === 1 && roomCode) {
+        const payload = {
+            type: 'state',
+            role: 'client',
+            p2: {
+                x: player2.x,
+                y: player2.y,
+                z: player2.z,
+                vx: player2.vx,
+                vy: player2.vy,
+                vz: player2.vz,
+                angle: player2.angle,
+                speed: player2.speed,
+                boost: player2.boost,
+                isExploded: player2.isExploded,
+                isBoosting: player2.isBoosting,
+                isDrifting: player2.isDrifting,
+                name: player2.name,
+                imgUrl: player2.imgUrl,
+                hue: player2.hue,
+                saturate: player2.saturate,
+                boostType: player2.boostType
+            }
+        };
+
+        if (player2.ballContactCooldown > 0) {
+            payload.ballHit = {
+                x: ball.x,
+                y: ball.y,
+                z: ball.z,
+                vx: ball.vx,
+                vy: ball.vy,
+                vz: ball.vz,
+                isFireball: ball.isFireball
+            };
+        }
+
+        ws.send(JSON.stringify(payload));
+    }
+}
+
+async function startGameMulti(isWaiting = false) {
+    isMultiplayer = true;
+    isTrainingMode = isWaiting;
+    if (isTrainingMode) {
+        trainingModeText = "ESPERANDO OPONENTE";
+    }
+    
+    if (mainMenuEl) mainMenuEl.style.display = 'none';
+    const menuOnlineLobby = getEl('menu-online-lobby');
+    if (menuOnlineLobby) menuOnlineLobby.style.display = 'none';
+    if (setupOverlay) setupOverlay.style.display = 'none';
+
+    const editorEl = getEl('physics-editor-overlay');
+    if (editorEl) editorEl.classList.add('hidden');
+
+    player1 = new Car(0, 0, '#5ad', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'KeyE', jump: 'Space', isPlayer: (multiplayerRole === 'host') }, "HOST (AZUL)", 'recursos/cars/car1.png');
+    player1.isPlayer = (multiplayerRole === 'host');
+
+    player2 = new Car(0, 0, '#f90', { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', boost: 'ShiftLeft', drift: 'KeyE', jump: 'Space', isPlayer: (multiplayerRole === 'client') }, "RIVAL (NARANJA)", 'recursos/cars/car3.png');
+    player2.isPlayer = (multiplayerRole === 'client');
+
+    // Aplicar personalización local al coche y al balón
+    if (multiplayerRole === 'host') {
+        player1.name = USER_CONFIG.playerName || "HOST (AZUL)";
+        player1.imgUrl = USER_CONFIG.playerCar;
+        player1.hue = USER_CONFIG.playerCarHue || 0;
+        player1.saturate = USER_CONFIG.playerCarSaturate || 100;
+        player1.boostType = USER_CONFIG.playerBoost || 'classic';
+    } else {
+        player2.name = USER_CONFIG.playerName || "RIVAL (NARANJA)";
+        player2.imgUrl = USER_CONFIG.playerCar;
+        player2.hue = USER_CONFIG.playerCarHue || 0;
+        player2.saturate = USER_CONFIG.playerCarSaturate || 100;
+        player2.boostType = USER_CONFIG.playerBoost || 'classic';
+    }
+
+    allCars = [player1, player2];
+    ball = new Ball(CONST.CONFIG.WORLD_W / 2, CONST.CONFIG.WORLD_H / 2, 'recursos/balls/ball_1.png');
+    if (ball) {
+        ball.imgUrl = USER_CONFIG.playerBall;
+    }
+
+    initAudio((multiplayerRole === 'host' ? player1 : player2), allCars);
+
+    currentZoom = 0.85;
+    targetZoom = 0.85;
+    window.currentFOV = 0.85;
+
+    resetAfterGoalMulti(true);
+
+    if (isWaiting) {
+        // El host esperando rival inicia directamente jugando sin cuenta atrás
+        gameState = 'playing';
+        if (countdownEl) countdownEl.style.display = 'none';
+    } else {
+        if (multiplayerRole === 'client') {
+            // El cliente entra en juego libre y muestra confirmación de listo
+            showReadyConfirmOverlay(false);
+        }
+    }
+
+    // Ocultar número de sala flotante de la partida principal (se muestra en pausa)
+    const roomIndicator = getEl('online-room-indicator');
+    if (roomIndicator) {
+        roomIndicator.style.display = 'none';
+    }
+
+    isPaused = false;
+    if (!gameLoopStarted) {
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+        gameLoopStarted = true;
+    }
+}
+
+function resetAfterGoalMulti(isWarmup = false) {
+    const sp1 = CONST.CONFIG.SPAWN_POINTS[0];
+    const sp2 = CONST.CONFIG.SPAWN_POINTS[2];
+
+    player1.x = sp1.x; player1.y = sp1.y; player1.angle = sp1.a;
+    player1.speed = 0; player1.vx = 0; player1.vy = 0; player1.boost = 33; player1.isExploded = false;
+
+    player2.x = sp2.x; player2.y = sp2.y; player2.angle = sp2.a;
+    player2.speed = 0; player2.vx = 0; player2.vy = 0; player2.boost = 33; player2.isExploded = false;
+
+    ball.x = CONST.CONFIG.WORLD_W / 2; ball.y = CONST.CONFIG.WORLD_H / 2;
+    ball.vx = 0; ball.vy = 0; ball.onWallTimer = 0;
+    ball.isFireball = false; ball.fireballTimer = 0; ball.visualRadius = ball.radius; ball.targetRadius = ball.radius;
+
+    skidMarks = []; particles = []; confettiParticles = []; touchHistory = [];
+
+    if (isWarmup) {
+        gameState = 'playing';
+        if (countdownEl) countdownEl.style.display = 'none';
+    } else {
+        countdownTimer = 3;
+        gameState = 'countdown';
+        if (countdownEl) countdownEl.style.display = 'block';
+        playSound('countdown');
+    }
+
+    targetZoom = 0.85;
+    if (gameOverOverlay) gameOverOverlay.style.display = 'none';
+}
+
+function checkCollisionsMulti(timeScale = 1.0) {
+    if (gameState !== 'playing' && gameState !== 'goalScored') return;
+
+    checkCarBallCollision(player1, ball, touchHistory, gameTime, timeScale);
+    checkCarBallCollision(player2, ball, touchHistory, gameTime, timeScale);
+    checkCarCarCollision(player1, player2, explosionParticles);
+
+    boostPads.forEach(pad => {
+        if (pad.active) {
+            [player1, player2].forEach(car => {
+                const dx = car.x - pad.x, dy = car.y - pad.y;
+                if (dx * dx + dy * dy < (pad.radius + car.radius) ** 2) {
+                    pad.collect(car);
+                }
+            });
+        }
+    });
+
+    checkGoalPhysics(ball);
+    
+    // Mover SOLO al jugador local P1 (P2 se mueve por red)
+    player1.move();
+
+    if (gameState === 'playing' && multiplayerRole === 'host') {
+        const scorer = ball.checkGoal();
+        if (scorer) {
+            handleGoalMulti(scorer);
+        }
+    }
+}
+
+function handleGoalMulti(scorer) {
+    if (scorer === 'blue') score.blue++; else score.orange++;
+    gameState = 'goalScored';
+    
+    addScreenShake(25);
+    addHitStop(6);
+
+    const teamColor = scorer === 'blue' ? '#5ad' : '#f90';
+    let scoringCar = null;
+    for (let i = touchHistory.length - 1; i >= 0; i--) {
+        if (touchHistory[i].car.color === teamColor) {
+            scoringCar = touchHistory[i].car;
+            break;
+        }
+    }
+    if (scoringCar) {
+        scoringCar.goals++;
+        scoringCar.score += 100;
+    }
+
+    playSound('goal_explosion', 0.8);
+
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({
+            type: 'goal',
+            scorer: scorer
+        }));
+    }
+}
+
+function handleGoalClient(scorer) {
+    if (scorer === 'blue') score.blue++; else score.orange++;
+    gameState = 'goalScored';
+    addScreenShake(25);
+    addHitStop(6);
+    playSound('goal_explosion', 0.8);
+}
+
+// --- LÓGICA DE CONFIRMACIÓN DE LISTO EN ENTRENAMIENTO ---
+function showReadyConfirmOverlay(sendNotify = false) {
+    p1Ready = false;
+    p2Ready = false;
+    
+    // El juego continúa en modo de entrenamiento/libre para que puedan conducir
+    isTrainingMode = true;
+    gameState = 'playing';
+
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden');
+    }
+    if (countdownEl) {
+        countdownEl.style.display = 'none';
+    }
+    
+    const btnReady = document.getElementById('btn-ready-confirm');
+    if (btnReady) {
+        btnReady.disabled = false;
+        btnReady.innerText = "CONFIRMAR LISTO";
+        btnReady.style.borderColor = "#2fb";
+        btnReady.style.color = "#2fb";
+    }
+    
+    updateReadyUI();
+    
+    if (sendNotify && ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'ready_init' }));
+    }
+}
+
+function updateReadyUI() {
+    const statusHost = document.getElementById('ready-status-host');
+    const statusClient = document.getElementById('ready-status-client');
+    
+    if (statusHost) {
+        if (p1Ready) {
+            statusHost.innerText = "🟢 LISTO";
+            statusHost.style.color = "#2fb";
+        } else {
+            statusHost.innerText = "🔴 NO LISTO";
+            statusHost.style.color = "#ff3366";
+        }
+    }
+    
+    if (statusClient) {
+        if (p2Ready) {
+            statusClient.innerText = "🟢 LISTO";
+            statusClient.style.color = "#2fb";
+        } else {
+            statusClient.innerText = "🔴 NO LISTO";
+            statusClient.style.color = "#ff3366";
+        }
+    }
+}
+
+function startMatchMulti() {
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // Finalizar el entrenamiento
+    isTrainingMode = false;
+
+    // Iniciar el zoom cinematográfico (cámara 0.1 a 0.85)
+    currentZoom = 0.1;
+    targetZoom = 0.85;
+    currentCamX = CONST.CONFIG.WORLD_W / 2;
+    currentCamY = CONST.CONFIG.WORLD_H / 2;
+    currentRotation = 0;
+    
+    gameState = 'zooming';
+    
+    // Notificar al cliente
+    if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ type: 'start_match' }));
+    }
+}
+
+function startMatchClient() {
+    const overlay = document.getElementById('ready-confirm-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // Finalizar el entrenamiento
+    isTrainingMode = false;
+
+    // Iniciar el zoom cinematográfico
+    currentZoom = 0.1;
+    targetZoom = 0.85;
+    currentCamX = CONST.CONFIG.WORLD_W / 2;
+    currentCamY = CONST.CONFIG.WORLD_H / 2;
+    currentRotation = 0;
+    
+    gameState = 'zooming';
+}
+
+// Configurar evento de botón de confirmación de listo
+function setupReadyConfirmButton() {
+    const btnReady = document.getElementById('btn-ready-confirm');
+    if (btnReady) {
+        btnReady.onclick = () => {
+            playSound('menu_click');
+            if (multiplayerRole === 'host') {
+                p1Ready = true;
+            } else {
+                p2Ready = true;
+            }
+            
+            btnReady.disabled = true;
+            btnReady.innerText = "ESPERANDO RIVAL...";
+            btnReady.style.borderColor = "#888";
+            btnReady.style.color = "#888";
+            
+            updateReadyUI();
+            
+            if (ws && ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                    type: 'ready_sync',
+                    player: multiplayerRole,
+                    ready: true
+                }));
+            }
+            
+            if (p1Ready && p2Ready) {
+                if (multiplayerRole === 'host') {
+                    startMatchMulti();
+                }
+            }
+        };
+    }
+}
+
+// Plegar/desplegar cuadro de confirmación listo
+function setupReadyToggle() {
+    const btnToggle = document.getElementById('btn-ready-toggle');
+    const content = document.getElementById('ready-confirm-content');
+    if (btnToggle && content) {
+        btnToggle.onclick = (e) => {
+            e.stopPropagation();
+            playSound('menu_click');
+            if (content.style.display === 'none') {
+                content.style.display = 'flex';
+                btnToggle.innerText = "OCULTAR";
+                btnToggle.parentElement.parentElement.style.boxShadow = '0 0 25px rgba(90, 173, 237, 0.4)';
+            } else {
+                content.style.display = 'none';
+                btnToggle.innerText = "MOSTRAR";
+                btnToggle.parentElement.parentElement.style.boxShadow = '0 0 10px rgba(90, 173, 237, 0.2)';
+            }
+        };
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setupReadyConfirmButton();
+        setupReadyToggle();
+    });
+} else {
+    setupReadyConfirmButton();
+    setupReadyToggle();
+}
+
+// Capturar tecla ENTER para listo
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Enter') {
+        const overlay = document.getElementById('ready-confirm-overlay');
+        if (overlay && overlay.style.display === 'flex') {
+            const btnReady = document.getElementById('btn-ready-confirm');
+            if (btnReady && !btnReady.disabled) {
+                btnReady.click();
+                e.preventDefault();
+            }
+        }
+    }
+});
+
+// --- LÓGICA DE WEB WORKER EN SEGUNDO PLANO ---
+const workerCode = `
+    let timerId = null;
+    self.onmessage = function(e) {
+        if (e.data === 'start') {
+            if (!timerId) {
+                timerId = setInterval(() => {
+                    self.postMessage('tick');
+                }, 16);
+            }
+        } else if (e.data === 'stop') {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+        }
+    };
+`;
+const blob = new Blob([workerCode], { type: 'application/javascript' });
+const workerUrl = URL.createObjectURL(blob);
+backgroundWorker = new Worker(workerUrl);
+
+function startBackgroundAudioLoop() {
+    if (!isMultiplayer) return;
+    try {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        if (!silentAudioNode && audioCtx) {
+            bgLastTime = performance.now();
+            silentAudioNode = audioCtx.createScriptProcessor(512, 1, 1);
+            silentAudioNode.onaudioprocess = function(e) {
+                const outputBuffer = e.outputBuffer;
+                const channelData = outputBuffer.getChannelData(0);
+                if (channelData) {
+                    for (let i = 0; i < channelData.length; i++) {
+                        channelData[i] = 0;
+                    }
+                }
+                
+                if (document.hidden && isMultiplayer) {
+                    const now = performance.now();
+                    const dt = Math.min((now - bgLastTime) / 1000, 0.05);
+                    bgLastTime = now;
+                    
+                    const inMatch = ['playing', 'countdown', 'goalScored', 'replay', 'zooming', 'panning'].includes(gameState);
+                    if (inMatch) {
+                        updateAll(dt);
+                    }
+                }
+            };
+            silentAudioNode.connect(audioCtx.destination);
+            console.log("SCAPS: Loop de audio silencioso en segundo plano iniciado.");
+        }
+    } catch (err) {
+        console.warn("SCAPS: No se pudo iniciar el loop de audio silencioso:", err);
+    }
+}
+
+function stopBackgroundAudioLoop() {
+    try {
+        if (silentAudioNode) {
+            silentAudioNode.disconnect();
+            silentAudioNode = null;
+            console.log("SCAPS: Loop de audio silencioso en segundo plano detenido.");
+        }
+    } catch (err) {
+        console.warn("SCAPS: No se pudo detener el loop de audio silencioso:", err);
+    }
+}
+
+backgroundWorker.onmessage = function(e) {
+    if (e.data === 'tick') {
+        if (document.hidden && isMultiplayer) {
+            // Solo usar el worker si el loop de audio silencioso no está funcionando/activo
+            if (!silentAudioNode) {
+                updateAll(0.016);
+            }
+        }
+    }
+};
+
+document.addEventListener('visibilitychange', () => {
+    if (!isMultiplayer) return;
+    if (document.hidden) {
+        bgLastTime = performance.now();
+        startBackgroundAudioLoop();
+        backgroundWorker.postMessage('start');
+    } else {
+        stopBackgroundAudioLoop();
+        backgroundWorker.postMessage('stop');
+        // Resincronizar tiempo de juego al recuperar el foco
+        lastTime = performance.now();
+    }
+});
+
+function updateRemoteCarVisuals(car, skidMarks, particles, timeScale) {
+    if (!car || car.isExploded) return;
+
+    const currentSpeed = Math.sqrt(car.vx * car.vx + car.vy * car.vy);
+    car.isSupersonic = (currentSpeed > CONST.CONFIG.CAR_MAX_BOOST_SPEED * 0.97);
+
+    if (car.skidMarkTimer === undefined) car.skidMarkTimer = 0;
+    if (car.skidMarkTimer > 0) car.skidMarkTimer -= timeScale;
+
+    if (car.prevAngle === undefined) car.prevAngle = car.angle;
+    const isTurning = Math.abs(car.angle - car.prevAngle) > 0.01;
+    car.prevAngle = car.angle;
+
+    if (car.z === 0) {
+        if (car.isSupersonic) {
+            if (car.skidMarkTimer <= 0) {
+                car.spawnSkidMark(skidMarks, true);
+                car.skidMarkTimer = 3;
+            }
+        } else if (car.isDrifting || (isTurning && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4)) {
+            if (car.skidMarkTimer <= 0) {
+                car.spawnSkidMark(skidMarks, false);
+                car.skidMarkTimer = 4;
+            }
+        }
+        if ((car.isDrifting || isTurning) && currentSpeed > CONST.CONFIG.CAR_MAX_SPEED * 0.4) {
+            car.spawnDriftSmoke(particles);
+        }
+        if (car.isBoosting) {
+            car.spawnParticles(5, car.boostType || 'classic', particles);
+        } else if (currentSpeed > 0.5) {
+            car.spawnParticles(2, 'smoke', particles);
+        }
+    } else {
+        if (car.isBoosting) {
+            car.spawnParticles(3, car.boostType || 'classic', particles);
+        }
+    }
+}
+
+function updateConnectionStatusUI(state) {
+    const btn = document.getElementById('btn-connection-status');
+    if (!btn) return;
+    
+    if (state === 'disconnected') {
+        btn.innerHTML = "SIN CONEXIÓN";
+        btn.style.borderColor = "#ff3366";
+        btn.style.color = "#ff3366";
+        btn.style.boxShadow = "0 0 15px rgba(255, 51, 102, 0.4)";
+    } else if (state === 'connecting') {
+        btn.innerHTML = "CONECTANDO...";
+        btn.style.borderColor = "#f90";
+        btn.style.color = "#f90";
+        btn.style.boxShadow = "0 0 15px rgba(255, 153, 0, 0.4)";
+    } else if (state === 'connected') {
+        btn.innerHTML = `CONECTADO <span class="connection-dot"></span>`;
+        btn.style.borderColor = "#22ffbb";
+        btn.style.color = "#22ffbb";
+        btn.style.boxShadow = "0 0 15px rgba(34, 255, 187, 0.4)";
+    }
+}
+
+function updateSafeBoxDisabledState() {
+    const hiddenCodeInput = document.getElementById('online-room-code');
+    const digitInputs = document.querySelectorAll('.safe-digit-input');
+    const dialUps = document.querySelectorAll('.safe-dial-up');
+    const dialDowns = document.querySelectorAll('.safe-dial-down');
+    
+    if (hiddenCodeInput) {
+        const isDisabled = hiddenCodeInput.disabled;
+        digitInputs.forEach(input => input.disabled = isDisabled);
+        // Style opacity of safe-box-wrapper to look faded if disabled
+        const safeWrapper = document.getElementById('safe-box-wrapper');
+        if (safeWrapper) {
+            safeWrapper.style.opacity = isDisabled ? '0.45' : '1';
+            safeWrapper.style.pointerEvents = isDisabled ? 'none' : 'auto';
+        }
+    }
+}
+
+function initSafeBoxUI() {
+    const digitInputs = document.querySelectorAll('.safe-digit-input');
+    const hiddenCodeInput = document.getElementById('online-room-code');
+    const dialUps = document.querySelectorAll('.safe-dial-up');
+    const dialDowns = document.querySelectorAll('.safe-dial-down');
+
+    function updateHiddenCode() {
+        let code = '';
+        digitInputs.forEach(input => {
+            code += input.value || '0';
+        });
+        if (hiddenCodeInput) {
+            hiddenCodeInput.value = code;
+        }
+    }
+
+    digitInputs.forEach((input, idx) => {
+        // Only allow numbers
+        input.oninput = (e) => {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (input.value.length > 0) {
+                input.value = input.value[0]; // Keep only first char
+                // Focus next
+                if (idx < 3) {
+                    digitInputs[idx + 1].focus();
+                    digitInputs[idx + 1].select();
+                }
+            }
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+
+        input.onkeydown = (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0) {
+                if (idx > 0) {
+                    digitInputs[idx - 1].focus();
+                    digitInputs[idx - 1].select();
+                }
+            }
+        };
+
+        // When focused, auto select
+        input.onfocus = () => {
+            input.select();
+        };
+    });
+
+    dialUps.forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-index'));
+            const input = digitInputs[idx];
+            let val = parseInt(input.value) || 0;
+            val = (val + 1) % 10;
+            input.value = val;
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+    });
+
+    dialDowns.forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-index'));
+            const input = digitInputs[idx];
+            let val = parseInt(input.value) || 0;
+            val = (val - 1 + 10) % 10;
+            input.value = val;
+            updateHiddenCode();
+            playSound('menu_click');
+        };
+    });
 }

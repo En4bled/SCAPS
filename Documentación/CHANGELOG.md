@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2026-05-26 - *Unificación de Código en Raíz y Limpieza*
+### Changed
+- **Unificación de Versiones (Migración a la Raíz)**:
+  - La versión multijugador (que anteriormente se ubicaba en la subcarpeta `/multi/`) se ha movido directamente a la raíz del repositorio, reemplazando a la antigua versión single player. Esto consolida el código de SCAPS en una única versión unificada que cuenta tanto con el juego local (offline) como con el multijugador online.
+  - Se eliminó la carpeta `/multi/` sobrante.
+  - Se actualizaron todos los paths de importaciones relativas (en [index.html](file:///c:/xampp/htdocs/SCAPS/index.html) y [js/main.js](file:///c:/xampp/htdocs/SCAPS/js/main.js)) de `../../js/` a `./` y se removieron los prefijos `../` obsoletos para que el juego corra desde la raíz del servidor.
+
 ## [2.1.0] - 2026-05-26 - *Bases de Boost y Chapas Persistentes*
 ### Added
 - **Pads de Base Estáticos para Boosts y Chapas**: Implementada una base visual persistente en el suelo para todos los puntos de turbo.
