@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.8] - 2026-05-26 - *Consola Limpia y Entornos Estáticos*
+### Fixed
+- **Prevención de Errores 404 en Carga de Mapas**: Se añadió una detección de entorno estático (`isStaticEnv`) en la función `loadSetupMaps` tanto para juego local ([js/main.js](file:///c:/xampp/htdocs/SCAPS/js/main.js)) como multijugador ([multi/js/main_multi.js](file:///c:/xampp/htdocs/SCAPS/multi/js/main_multi.js)). Al detectar ejecución bajo GitHub Pages o mediante protocolo `file://`, el motor omite automáticamente el `fetch` al script PHP `get_maps.php` y recurre de forma directa al fallback local, previniendo alertas 404 molestas en la consola del navegador.
+
 ## [2.0.7] - 2026-05-26 - *Multijugador Online: UI, Audio y Respawn Polished*
 ### Added
 - **Indicador de Conexión en Lobby**: Se ha añadido un punto verde con un parpadeo/pulso suave (`.connection-dot` con animación `@keyframes pulse-green`) a la derecha del botón superior de estado `CONECTADO` para indicar visualmente el estado activo.

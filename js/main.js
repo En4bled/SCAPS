@@ -3788,13 +3788,18 @@ async function loadSetupMaps(forcedDirection = '') {
     if (!mapListContainer) return;
     let maps = [];
     try {
-        try {
-            const resp = await fetch('php/get_maps.php');
-            if (resp.ok) {
-                maps = await resp.json();
+        const isStaticEnv = window.location.hostname.includes('github.io') || window.location.protocol === 'file:';
+        if (!isStaticEnv) {
+            try {
+                const resp = await fetch('php/get_maps.php');
+                if (resp.ok) {
+                    maps = await resp.json();
+                }
+            } catch (fetchErr) {
+                console.warn("SCAPS: Error al cargar mapas desde el servidor PHP.");
             }
-        } catch (fetchErr) {
-            console.warn("SCAPS: Entorno estático detectado, usando fallback local para mapas.");
+        } else {
+            console.log("SCAPS: Entorno estático detectado, usando fallback local de mapas para evitar error 404.");
         }
 
         // Asegurar al menos 10 mapas para la demostración de paginación si faltan
